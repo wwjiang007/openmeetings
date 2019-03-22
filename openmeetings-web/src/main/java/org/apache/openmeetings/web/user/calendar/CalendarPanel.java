@@ -30,8 +30,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.dao.calendar.AppointmentDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -46,7 +48,6 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -69,13 +70,11 @@ import com.googlecode.wicket.jquery.ui.form.button.Button;
 public class CalendarPanel extends UserBasePanel {
 	private static final Logger log = LoggerFactory.getLogger(CalendarPanel.class);
 	private static final long serialVersionUID = 1L;
-	private static final String JS_MARKUP = "setCalendarHeight();";
 	private final AbstractAjaxTimerBehavior refreshTimer = new AbstractAjaxTimerBehavior(Duration.seconds(10)) {
 		private static final long serialVersionUID = 1L;
 
 		@Override
 		protected void onTimer(AjaxRequestTarget target) {
-			target.appendJavaScript("setCalendarHeight();");
 			refresh(target);
 		}
 	};
@@ -92,7 +91,13 @@ public class CalendarPanel extends UserBasePanel {
 	private CalendarDialog calendarDialog;
 	private AppointmentDialog dialog;
 	private final WebMarkupContainer calendarListContainer = new WebMarkupContainer("calendarListContainer");
-	private transient HttpClient client = null; // Non-Serializable HttpClient.
+
+	// Non-Serializable HttpClient.
+	private transient HttpClient client = null;
+
+	// Context for the HttpClient. Mainly used for credentials.
+	private transient HttpClientContext context = null;
+
 	@SpringBean
 	private AppointmentDao apptDao;
 	@SpringBean
@@ -117,6 +122,7 @@ public class CalendarPanel extends UserBasePanel {
 		boolean isRtl = isRtl();
 		Options options = new Options();
 		options.set("isRTL", isRtl);
+		options.set("height", Options.asString("parent"));
 		options.set("header", isRtl ? "{left: 'agendaDay,agendaWeek,month', center: 'title', right: 'today nextYear,next,prev,prevYear'}"
 				: "{left: 'prevYear,prev,next,nextYear today', center: 'title', right: 'month,agendaWeek,agendaDay'}");
 		options.set("allDaySlot", false);
@@ -315,7 +321,7 @@ public class CalendarPanel extends UserBasePanel {
 		syncTimer.stop(handler);
 		if (client != null) {
 			apptManager.cleanupIdleConnections();
-			client.getState().clear();
+			context.getCredentialsProvider().clear();
 		}
 	}
 
@@ -338,10 +344,7 @@ public class CalendarPanel extends UserBasePanel {
 
 		Optional<AjaxRequestTarget> target = getRequestCycle().find(AjaxRequestTarget.class);
 		if (target.isPresent()) {
-			target.get().appendJavaScript(JS_MARKUP);
 			target.get().appendJavaScript("addCalButton('datepicker');");
-		} else {
-			response.render(JavaScriptHeaderItem.forScript(JS_MARKUP, this.getId()));
 		}
 	}
 
@@ -353,6 +356,15 @@ public class CalendarPanel extends UserBasePanel {
 		}
 
 		return client;
+	}
+
+	public HttpClientContext getHttpClientContext() {
+		if (context == null) {
+			context = HttpClientContext.create();
+			context.setCredentialsProvider(new BasicCredentialsProvider());
+		}
+
+		return context;
 	}
 
 	//Adds a new Event Source to the Calendar

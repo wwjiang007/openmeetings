@@ -23,6 +23,7 @@ import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.openmeetings.db.dao.user.GroupDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -30,6 +31,7 @@ import org.apache.openmeetings.db.entity.user.Group;
 import org.apache.openmeetings.db.entity.user.GroupUser;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.web.app.WebSession;
+import org.apache.wicket.injection.Injector;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.wicketstuff.select2.ChoiceProvider;
@@ -42,19 +44,23 @@ public class GroupChoiceProvider extends ChoiceProvider<Group> {
 	@SpringBean
 	private UserDao userDao;
 
+	public GroupChoiceProvider() {
+		Injector.get().inject(this);
+	}
+
 	@Override
 	public void query(String term, int page, Response<Group> response) {
 		if (WebSession.getRights().contains(User.Right.Admin)) {
 			List<Group> groups = groupDao.get(0, Integer.MAX_VALUE);
 			for (Group g : groups) {
-				if (Strings.isEmpty(term) || g.getName().toLowerCase().contains(term.toLowerCase())) {
+				if (Strings.isEmpty(term) || g.getName().toLowerCase(Locale.ROOT).contains(term.toLowerCase(Locale.ROOT))) {
 					response.add(g);
 				}
 			}
 		} else {
 			User u = userDao.get(getUserId());
 			for (GroupUser ou : u.getGroupUsers()) {
-				if (Strings.isEmpty(term) || ou.getGroup().getName().toLowerCase().contains(term.toLowerCase())) {
+				if (Strings.isEmpty(term) || ou.getGroup().getName().toLowerCase(Locale.ROOT).contains(term.toLowerCase(Locale.ROOT))) {
 					response.add(ou.getGroup());
 				}
 			}

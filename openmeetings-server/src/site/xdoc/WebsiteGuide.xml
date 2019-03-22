@@ -24,8 +24,8 @@
 			<subsection name="Required tools">
 				<div>
 					<ul>
-						<li>Sun JDK7</li>
-						<li>Apache Maven (3.3.9 or later)</li>
+						<li>JDK8</li>
+						<li>Apache Maven (3.5.0 or later)</li>
 					</ul>
 				</div>
 			</subsection>
@@ -44,7 +44,7 @@
 			<subsection name="Editing the website">
 				<div>
 					<p>
-						OpenMeetings website (<a href="http://openmeetings.apache.org/">http://openmeetings.apache.org/</a>) is a copy from the Git repository.<br />
+						OpenMeetings website (<a href="https://openmeetings.apache.org/">https://openmeetings.apache.org/</a>) is a copy from the Git repository.<br />
 						The files in the Git to be synced are at:
 						<br />
 						<a href="https://github.com/apache/openmeetings-site.git">https://github.com/apache/openmeetings-site.git</a><br/>

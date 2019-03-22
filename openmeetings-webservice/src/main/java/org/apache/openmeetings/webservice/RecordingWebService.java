@@ -53,7 +53,7 @@ import org.springframework.stereotype.Service;
  */
 @Service("recordWebService")
 @WebService(serviceName="org.apache.openmeetings.webservice.RecordingWebService", targetNamespace = TNS)
-@Features(features = "org.apache.cxf.feature.LoggingFeature")
+@Features(features = "org.apache.cxf.ext.logging.LoggingFeature")
 @Produces({MediaType.APPLICATION_JSON})
 @Path("/record")
 public class RecordingWebService extends BaseWebService {
@@ -106,7 +106,7 @@ public class RecordingWebService extends BaseWebService {
 	 * @param sid
 	 *            The SID of the User. This SID must be marked as Loggedin
 	 * @param externalType
-	 *            externalRoomType specified when creating the room
+	 *            externalType specified when creating the room
 	 * @return - list of flv recordings
 	 */
 	@WebMethod

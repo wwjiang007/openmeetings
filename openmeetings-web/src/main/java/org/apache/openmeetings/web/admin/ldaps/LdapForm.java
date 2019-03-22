@@ -32,7 +32,7 @@ import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 /**
@@ -64,8 +64,8 @@ public class LdapForm extends AdminBaseForm<LdapConfig> {
 
 	@Override
 	protected void onInitialize() {
-		add(new RequiredTextField<String>("name").setLabel(Model.of(getString("165"))));
-		add(new RequiredTextField<String>("configFileName").setLabel(Model.of(getString("1115"))));
+		add(new RequiredTextField<String>("name").setLabel(new ResourceModel("165")));
+		add(new RequiredTextField<String>("configFileName").setLabel(new ResourceModel("1115")));
 		super.onInitialize();
 	}
 
@@ -74,14 +74,12 @@ public class LdapForm extends AdminBaseForm<LdapConfig> {
 		setModelObject(ldapDao.update(getModelObject(), WebSession.getUserId()));
 		setNewVisible(false);
 		target.add(this, listContainer);
-		reinitJs(target);
 	}
 
 	@Override
 	protected void onNewSubmit(AjaxRequestTarget target, Form<?> form) {
 		this.setModelObject(new LdapConfig());
 		target.add(this);
-		reinitJs(target);
 	}
 
 	@Override
@@ -94,7 +92,6 @@ public class LdapForm extends AdminBaseForm<LdapConfig> {
 		}
 		this.setModelObject(ldapConfig);
 		target.add(this);
-		reinitJs(target);
 	}
 
 	@Override
@@ -103,6 +100,5 @@ public class LdapForm extends AdminBaseForm<LdapConfig> {
 		this.setModelObject(new LdapConfig());
 		target.add(listContainer);
 		target.add(this);
-		reinitJs(target);
 	}
 }

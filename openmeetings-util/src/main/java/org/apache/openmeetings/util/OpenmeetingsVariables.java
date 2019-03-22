@@ -71,15 +71,12 @@ public class OpenmeetingsVariables {
 	public static final String CONFIG_PATH_OFFICE = "path.office";
 	public static final String CONFIG_DOCUMENT_DPI = "document.dpi";
 	public static final String CONFIG_DOCUMENT_QUALITY = "document.quality";
-	public static final String CONFIG_FLASH_SECURE = "flash.secure";
-	public static final String CONFIG_FLASH_SECURE_PROXY = "flash.secure.proxy";
-	public static final String CONFIG_FLASH_VIDEO_CODEC = "flash.video.codec";
-	public static final String CONFIG_FLASH_VIDEO_FPS = "flash.video.fps";
-	public static final String CONFIG_FLASH_VIDEO_BANDWIDTH = "flash.video.bandwidth";
-	public static final String CONFIG_FLASH_CAM_QUALITY = "flash.cam.quality";
-	public static final String CONFIG_FLASH_MIC_RATE = "flash.mic.rate";
-	public static final String CONFIG_FLASH_ECHO_PATH = "flash.echoPath";
-	public static final String CONFIG_HEADER_XFRAME = "header.x.frame.options";
+	public static final String CONFIG_CAM_FPS = "cam.fps";
+	public static final String CONFIG_MIC_RATE = "mic.rate";
+	public static final String CONFIG_MIC_ECHO = "mic.echo.cancellation";
+	public static final String CONFIG_MIC_NOISE = "mic.noise.suppression";
+	public static final String CONFIG_CHROME_EXT_URL = "chrome.sharing.ext.url";
+	public static final String CONFIG_CSP_XFRAME = "header.csp.frame.options";
 	public static final String CONFIG_EXT_PROCESS_TTL = "external.process.ttl";
 	public static final String CONFIG_HEADER_CSP = "header.content.security.policy";
 	public static final String CONFIG_EMAIL_AT_REGISTER = "send.email.at.register";
@@ -87,17 +84,20 @@ public class OpenmeetingsVariables {
 	public static final String CONFIG_CALENDAR_ROOM_CAPACITY = "calendar.conference.rooms.default.size";
 	public static final String CONFIG_REPLY_TO_ORGANIZER = "inviter.email.as.replyto";
 	public static final String CONFIG_KEYCODE_ARRANGE = "video.arrange.keycode";
-	public static final String CONFIG_KEYCODE_EXCLUSIVE = "exclusive.audio.keycode";
+	public static final String CONFIG_KEYCODE_MUTE_OTHERS = "mute.others.keycode";
 	public static final String CONFIG_KEYCODE_MUTE = "mute.keycode";
 	public static final String CONFIG_MYROOMS_ENABLED = "personal.rooms.enabled";
 	public static final String CONFIG_REMINDER_MESSAGE = "reminder.message";
 	public static final String CONFIG_MP4_AUDIO_RATE = "mp4.audio.rate";
 	public static final String CONFIG_MP4_AUDIO_BITRATE = "mp4.audio.bitrate";
+	public static final String CONFIG_MP4_VIDEO_PRESET = "mp4.video.preset";
 	public static final String CONFIG_REST_ALLOW_ORIGIN = "rest.allow.origin";
 	public static final String CONFIG_FNAME_MIN_LENGTH = "user.fname.minimum.length";
 	public static final String CONFIG_LNAME_MIN_LENGTH = "user.lname.minimum.length";
+	public static final String CONFIG_CHAT_SEND_ON_ENTER = "chat.send.on.enter";
+	public static final String CONFIG_DISPLAY_NAME_EDITABLE = "display.name.editable";
 
-	public static final String HEADER_XFRAME_SAMEORIGIN = "SAMEORIGIN";
+	public static final String HEADER_XFRAME_SELF = "'self'";
 	public static final String HEADER_CSP_SELF = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data:; media-src 'self' blob:;";
 	public static final int RECENT_ROOMS_COUNT = 5;
 	public static final int USER_LOGIN_MINIMUM_LENGTH = 4;
@@ -105,19 +105,10 @@ public class OpenmeetingsVariables {
 	public static final String DEFAULT_APP_NAME = "OpenMeetings";
 	public static final String DEFAULT_CONTEXT_NAME = "openmeetings";
 	public static final long DEFAULT_MAX_UPLOAD_SIZE = 100 * 1024 * 1024L; // 100MB
-	public static final String FLASH_SECURE = "secure";
-	public static final String FLASH_NATIVE_SSL = "native";
-	public static final String FLASH_PORT = "rtmpPort";
-	public static final String FLASH_SSL_PORT = "rtmpsPort";
-	public static final String FLASH_VIDEO_CODEC = "videoCodec";
-	public static final String FLASH_FPS = "fps";
-	public static final String FLASH_BANDWIDTH = "bandwidth";
-	public static final String FLASH_QUALITY = "quality";
-	public static final String FLASH_ECHO_PATH = "echoPath";
-	public static final String FLASH_MIC_RATE = "micRate";
 	public static final int DEFAULT_MINUTES_REMINDER_SEND = 15;
 	public static final String DEFAULT_BASE_URL = "http://localhost:5080/openmeetings/";
 	public static final String DEFAULT_SIP_CONTEXT = "rooms";
+	public static final String DEFAULT_CHROME_EXT_URL = "https://www.webrtc-experiment.com/getSourceId/";
 
 	private static String cryptClassName = null;
 	private static String wicketApplicationName = null;
@@ -135,12 +126,23 @@ public class OpenmeetingsVariables {
 	private static Long defaultGroup = 1L;
 	private static int audioRate = 22050;
 	private static String audioBitrate = "32k";
+	private static String videoPreset = "medium";
 	private static String defaultTimezone = "Europe/Berlin";
 	private static String restAllowOrigin = null;
 	private static Class<?> appClass = null;
 	private static String sipContext = DEFAULT_SIP_CONTEXT;
 	private static int minFnameLength = USER_LOGIN_MINIMUM_LENGTH;
 	private static int minLnameLength = USER_LOGIN_MINIMUM_LENGTH;
+	private static boolean chatSendOnEnter = false;
+	private static boolean allowRegisterFrontend = false;
+	private static boolean allowRegisterSoap = false;
+	private static boolean allowRegisterOauth = false;
+	private static boolean sendVerificationEmail = false;
+	private static boolean sendRegisterEmail = false;
+	private static String contentSecurityPolicy = HEADER_CSP_SELF;
+	private static String xFrameOptions = HEADER_XFRAME_SELF;
+	private static String chromeExtensionUrl = DEFAULT_CHROME_EXT_URL;
+	private static boolean displayNameEditable = false;
 
 	private OpenmeetingsVariables() {}
 
@@ -252,6 +254,14 @@ public class OpenmeetingsVariables {
 		audioBitrate = bitrate;
 	}
 
+	public static String getVideoPreset() {
+		return videoPreset;
+	}
+
+	public static void setVideoPreset(String preset) {
+		videoPreset = preset;
+	}
+
 	public static String getDefaultTimezone() {
 		return defaultTimezone;
 	}
@@ -322,5 +332,85 @@ public class OpenmeetingsVariables {
 
 	public static void setMinLnameLength(int length) {
 		minLnameLength = length;
+	}
+
+	public static boolean getChatSenndOnEnter() {
+		return chatSendOnEnter;
+	}
+
+	public static void setChatSenndOnEnter(boolean sendOnEnter) {
+		chatSendOnEnter = sendOnEnter;
+	}
+
+	public static boolean isAllowRegisterFrontend() {
+		return allowRegisterFrontend;
+	}
+
+	public static void setAllowRegisterFrontend(boolean allow) {
+		allowRegisterFrontend = allow;
+	}
+
+	public static boolean isAllowRegisterSoap() {
+		return allowRegisterSoap;
+	}
+
+	public static void setAllowRegisterSoap(boolean allow) {
+		allowRegisterSoap = allow;
+	}
+
+	public static boolean isAllowRegisterOauth() {
+		return allowRegisterOauth;
+	}
+
+	public static void setAllowRegisterOauth(boolean allow) {
+		allowRegisterOauth = allow;
+	}
+
+	public static boolean isSendVerificationEmail() {
+		return sendVerificationEmail;
+	}
+
+	public static void setSendVerificationEmail(boolean send) {
+		sendVerificationEmail = send;
+	}
+
+	public static boolean isSendRegisterEmail() {
+		return sendRegisterEmail;
+	}
+
+	public static void setSendRegisterEmail(boolean send) {
+		sendRegisterEmail = send;
+	}
+
+	public static String getxFrameOptions() {
+		return xFrameOptions;
+	}
+
+	public static void setxFrameOptions(String options) {
+		xFrameOptions = options;
+	}
+
+	public static String getContentSecurityPolicy() {
+		return contentSecurityPolicy;
+	}
+
+	public static void setContentSecurityPolicy(String policy) {
+		contentSecurityPolicy = policy;
+	}
+
+	public static String getChromeExtensionUrl() {
+		return chromeExtensionUrl;
+	}
+
+	public static void setChromeExtensionUrl(String url) {
+		chromeExtensionUrl = url;
+	}
+
+	public static boolean isDisplayNameEditable() {
+		return displayNameEditable;
+	}
+
+	public static void setDisplayNameEditable(boolean editable) {
+		displayNameEditable = editable;
 	}
 }

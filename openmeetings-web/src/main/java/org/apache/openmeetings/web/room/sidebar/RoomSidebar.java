@@ -19,15 +19,14 @@
 package org.apache.openmeetings.web.room.sidebar;
 
 import static org.apache.openmeetings.web.app.Application.kickUser;
-import static org.apache.openmeetings.web.room.RoomBroadcaster.sendUpdatedClient;
 import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getNamedFunction;
 import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
 
-import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.openmeetings.core.remote.StreamProcessor;
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.entity.basic.Client;
-import org.apache.openmeetings.db.entity.basic.Client.Pod;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.room.Room.Right;
 import org.apache.openmeetings.db.entity.room.Room.RoomElement;
@@ -55,6 +54,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -71,14 +71,11 @@ public class RoomSidebar extends Panel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(RoomSidebar.class);
 	public static final String FUNC_TOGGLE_RIGHT = "toggleRight";
-	public static final String FUNC_TOGGLE_ACTIVITY = "toggleActivity";
 	public static final String FUNC_ACTION = "roomAction";
 	public static final String FUNC_SETTINGS = "avSettings";
 	public static final String PARAM_ACTION = "action";
-	public static final String PARAM_ACTIVITY = "activity";
 	public static final String PARAM_RIGHT = "right";
 	public static final String PARAM_UID = "uid";
-	public static final String PARAM_POD = "pod";
 	public static final String PARAM_SETTINGS = "s";
 	private final RoomPanel room;
 	private UploadDialog upload;
@@ -92,7 +89,16 @@ public class RoomSidebar extends Panel {
 	private Client kickedClient;
 	private VideoSettings settings = new VideoSettings("settings");
 	private ActivitiesPanel activities;
-	private final ListView<Client> users = new ListView<Client>("user", new ArrayList<Client>()) {
+	private final ListView<Client> users = new ListView<Client>("user", new LoadableDetachableModel<List<Client>>() {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected List<Client> load() {
+			List<Client> list = cm.listByRoom(room.getRoom().getId());
+			userCount.setDefaultModelObject(list.size());
+			return list;
+		}
+	}) {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -124,16 +130,16 @@ public class RoomSidebar extends Panel {
 							}
 						}
 						break;
-					case exclusive:
-						if (room.getClient().hasRight(Right.exclusive)) {
-							WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), cl, RoomMessage.Type.exclusive, uid));
+					case muteOthers:
+						if (room.getClient().hasRight(Right.muteOthers)) {
+							WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), cl, RoomMessage.Type.muteOthers, uid));
 						}
 						break;
 					case mute:
 					{
 						JSONObject obj = uid.isEmpty() ? new JSONObject() : new JSONObject(uid);
 						Client _c = cm.get(obj.getString("uid"));
-						if (_c == null || !_c.hasActivity(Client.Activity.broadcastA)) {
+						if (_c == null || !_c.hasActivity(Client.Activity.AUDIO)) {
 							return;
 						}
 						if (cl.hasRight(Right.moderator) || cl.getUid().equals(_c.getUid())) {
@@ -168,11 +174,7 @@ public class RoomSidebar extends Panel {
 						return;
 					}
 					if (client.hasRight(right)) {
-						if (Right.audio == right) {
-							room.denyRight(client, right, Right.video);
-						} else {
-							room.denyRight(client, right);
-						}
+						room.denyRight(client, right);
 					} else {
 						if (Right.video == right) {
 							room.allowRight(client, Right.audio, right);
@@ -188,26 +190,6 @@ public class RoomSidebar extends Panel {
 			}
 		}
 	};
-	private final AbstractDefaultAjaxBehavior toggleActivity = new AbstractDefaultAjaxBehavior() {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		protected void respond(AjaxRequestTarget target) {
-			try {
-				String uid = getRequest().getRequestParameters().getParameterValue(PARAM_UID).toString();
-				if (Strings.isEmpty(uid)) {
-					return;
-				}
-				Client.Activity a = Client.Activity.valueOf(getRequest().getRequestParameters().getParameterValue(PARAM_ACTIVITY).toString());
-				StringValue podStr = getRequest().getRequestParameters().getParameterValue(PARAM_POD);
-				Pod pod = podStr.isEmpty() ? Pod.none : Pod.valueOf(podStr.toString());
-				Client c = cm.get(uid);
-				toggleActivity(c, a, pod);
-			} catch (Exception e) {
-				log.error("Unexpected exception while toggle 'activity'", e);
-			}
-		}
-	};
 	private final AbstractDefaultAjaxBehavior avSettings = new AbstractDefaultAjaxBehavior() {
 		private static final long serialVersionUID = 1L;
 
@@ -217,14 +199,14 @@ public class RoomSidebar extends Panel {
 			if (!s.isEmpty()) {
 				ExtendedClientProperties cp = WebSession.get().getExtendedProperties();
 				Client c = room.getClient();
-				cp.setSettings(new JSONObject(s.toString())).update(c, room.isInterview());
+				cp.setSettings(new JSONObject(s.toString())).update(c);
 				if (!avInited) {
 					avInited = true;
 					if (Room.Type.conference == room.getRoom().getType()) {
-						toggleActivity(c, Client.Activity.broadcastAV, Pod.none);
+						streamProcessor.toggleActivity(c, Client.Activity.AUDIO_VIDEO);
 					}
 				}
-				sendUpdatedClient(c);
+				cm.update(c);
 				room.broadcast(c);
 			}
 		}
@@ -233,6 +215,8 @@ public class RoomSidebar extends Panel {
 
 	@SpringBean
 	private ClientManager cm;
+	@SpringBean
+	private StreamProcessor streamProcessor;
 
 	public RoomSidebar(String id, final RoomPanel room) {
 		super(id);
@@ -254,11 +238,11 @@ public class RoomSidebar extends Panel {
 		final Form<?> form = new Form<>("form");
 		ConfirmableBorderDialog confirmTrash = new ConfirmableBorderDialog("confirm-trash", getString("80"), getString("713"), form);
 		roomFiles = new RoomFilePanel("tree", room, addFolder, confirmTrash);
-		add(selfRights, userList.add(updateUsers()).setOutputMarkupId(true)
+		add(selfRights, userList.add(users).setOutputMarkupId(true)
 				, fileTab.setVisible(!room.isInterview()), roomFiles.setVisible(!room.isInterview()));
 
 		add(addFolder, settings, userCount.setOutputMarkupId(true));
-		add(toggleRight, toggleActivity, roomAction, avSettings);
+		add(toggleRight, roomAction, avSettings);
 		add(confirmKick = new ConfirmableAjaxBorder("confirm-kick", getString("603"), getString("605")) {
 			private static final long serialVersionUID = 1L;
 
@@ -277,14 +261,8 @@ public class RoomSidebar extends Panel {
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
 		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_TOGGLE_RIGHT, toggleRight, explicit(PARAM_RIGHT), explicit(PARAM_UID))));
-		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_TOGGLE_ACTIVITY, toggleActivity, explicit(PARAM_ACTIVITY), explicit(PARAM_UID), explicit(PARAM_POD))));
 		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_ACTION, roomAction, explicit(PARAM_ACTION), explicit(PARAM_UID))));
 		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_SETTINGS, avSettings, explicit(PARAM_SETTINGS))));
-	}
-
-	private ListView<Client> updateUsers() {
-		users.setList(cm.listByRoom(room.getRoom().getId()));
-		return users;
 	}
 
 	private void updateShowFiles(IPartialPageRequestHandler handler) {
@@ -300,8 +278,6 @@ public class RoomSidebar extends Panel {
 			return;
 		}
 		updateShowFiles(handler);
-		updateUsers();
-		userCount.setDefaultModelObject(users.getList().size());
 		handler.add(selfRights.update(handler), userList, userCount);
 	}
 
@@ -321,58 +297,6 @@ public class RoomSidebar extends Panel {
 		upload.open(handler);
 	}
 
-	public void toggleActivity(Client c, Client.Activity a, Pod _pod) {
-		if (c == null) {
-			return;
-		}
-		if (!activityAllowed(c, a, room.getRoom()) && room.getClient().hasRight(Right.moderator)) {
-			if (a == Client.Activity.broadcastA || a == Client.Activity.broadcastAV) {
-				c.allow(Room.Right.audio);
-			}
-			if (!room.getRoom().isAudioOnly() && (a == Client.Activity.broadcastV || a == Client.Activity.broadcastAV)) {
-				c.allow(Room.Right.video);
-			}
-		}
-		if (activityAllowed(c, a, room.getRoom())) {
-			if (a == Client.Activity.broadcastA && !c.isMicEnabled()) {
-				return;
-			}
-			if (a == Client.Activity.broadcastV && !c.isCamEnabled()) {
-				return;
-			}
-			if (a == Client.Activity.broadcastAV && !c.isMicEnabled() && !c.isCamEnabled()) {
-				return;
-			}
-			Pod pod = c.getPod();
-			c.setPod(_pod);
-			if (pod != null && pod != Pod.none && pod != c.getPod()) {
-				//pod has changed, no need to toggle
-				c.set(a);
-			} else {
-				c.toggle(a);
-			}
-			room.broadcast(c); //will update client
-		}
-	}
-
-	public static boolean activityAllowed(Client c, Client.Activity a, Room room) {
-		boolean r = false;
-		switch (a) {
-			case broadcastA:
-				r = c.hasRight(Right.audio);
-				break;
-			case broadcastV:
-				r = !room.isAudioOnly() && c.hasRight(Right.video);
-				break;
-			case broadcastAV:
-				r = !room.isAudioOnly() && c.hasRight(Right.audio) && c.hasRight(Right.video);
-				break;
-			default:
-				break;
-		}
-		return r;
-	}
-
 	public void setFilesActive(IPartialPageRequestHandler handler) {
 		handler.appendJavaScript("$('#room-sidebar-tabs').tabs('option', 'active', 1);");
 	}
@@ -382,6 +306,6 @@ public class RoomSidebar extends Panel {
 	}
 
 	public void removeActivity(String uid, IPartialPageRequestHandler handler) {
-		activities.remove(uid, handler);
+		activities.remove(handler, uid);
 	}
 }

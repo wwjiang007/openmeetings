@@ -18,11 +18,9 @@
  */
 package org.apache.openmeetings.web.user.chat;
 
-import static org.apache.openmeetings.core.util.WebSocketHelper.ID_ALL;
-import static org.apache.openmeetings.core.util.WebSocketHelper.ID_ROOM_PREFIX;
-import static org.apache.openmeetings.core.util.WebSocketHelper.ID_USER_PREFIX;
-import static org.apache.openmeetings.db.util.FormatHelper.getDisplayName;
-import static org.apache.openmeetings.web.app.WebSession.getDateFormat;
+import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ALL;
+import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ROOM_PREFIX;
+import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_USER_PREFIX;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.openmeetings.web.room.RoomPanel.isModerator;
 
@@ -31,8 +29,7 @@ import java.util.Date;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
-import org.apache.openmeetings.core.remote.MobileService;
-import org.apache.openmeetings.core.util.WebSocketHelper;
+import org.apache.openmeetings.core.util.ChatWebSocketHelper;
 import org.apache.openmeetings.db.dao.basic.ChatDao;
 import org.apache.openmeetings.db.dao.room.RoomDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -72,8 +69,6 @@ public class ChatForm extends Form<Void> {
 	private UserDao userDao;
 	@SpringBean
 	private RoomDao roomDao;
-	@SpringBean
-	private MobileService mobileService;
 
 	public ChatForm(String id) {
 		super(id);
@@ -117,7 +112,7 @@ public class ChatForm extends Form<Void> {
 					m.setMessage(txt);
 					m.setSent(new Date());
 					m.setFromUser(userDao.get(getUserId()));
-					m.setFromName(getDisplayName(getClient().getUser()));
+					m.setFromName(getClient().getUser().getDisplayName());
 					if (!process(
 							() -> getChat().isShowDashboardChat()
 							, r -> {
@@ -139,14 +134,13 @@ public class ChatForm extends Form<Void> {
 					chatDao.update(m);
 					JSONObject msg = getChat().getMessage(Arrays.asList(m));
 					if (m.getToRoom() != null) {
-						mobileService.sendChatMessage(getUid(), m, getDateFormat()); //let's send to mobile users
-						WebSocketHelper.sendRoom(m, msg);
+						ChatWebSocketHelper.sendRoom(m, msg);
 					} else if (m.getToUser() != null) {
-						WebSocketHelper.sendUser(getUserId(), msg.toString());
+						ChatWebSocketHelper.sendUser(getUserId(), m, msg);
 						msg = Chat.getMessage(m.getToUser(), Arrays.asList(m));
-						WebSocketHelper.sendUser(m.getToUser().getId(), msg.toString());
+						ChatWebSocketHelper.sendUser(m.getToUser().getId(), m, msg);
 					} else {
-						WebSocketHelper.sendAll(msg.toString());
+						ChatWebSocketHelper.sendAll(m, msg);
 					}
 					chatMessage.setDefaultModelObject("");
 					target.appendJavaScript("Chat.clean();");
@@ -156,10 +150,6 @@ public class ChatForm extends Form<Void> {
 
 	private Client getClient() {
 		return findParent(MainPanel.class).getClient();
-	}
-
-	private String getUid() {
-		return getClient().getUid();
 	}
 
 	public String getScope() {

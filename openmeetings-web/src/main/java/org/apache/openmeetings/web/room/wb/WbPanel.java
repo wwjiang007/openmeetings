@@ -18,10 +18,14 @@
  */
 package org.apache.openmeetings.web.room.wb;
 
+import static java.util.UUID.randomUUID;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_ID;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_TYPE;
+import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_HEIGHT;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_SLIDE;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_TYPE;
+import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_WIDTH;
+import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_ZOOM;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ITEMS_KEY;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.PARAM_STATUS;
@@ -46,14 +50,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.directory.api.util.Strings;
 import org.apache.openmeetings.db.dao.file.FileItemDao;
 import org.apache.openmeetings.db.dto.room.Whiteboard;
 import org.apache.openmeetings.db.dto.room.Whiteboard.ZoomMode;
@@ -85,6 +88,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +100,7 @@ import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
 public class WbPanel extends AbstractWbPanel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(WbPanel.class);
+	private static final String PARAM_UPDATED = "updated";
 	private static final int UPLOAD_WB_LEFT = 0;
 	private static final int UPLOAD_WB_TOP = 0;
 	private static final int DEFAULT_WIDTH = 640;
@@ -143,7 +148,12 @@ public class WbPanel extends AbstractWbPanel {
 		if (rp.getRoom().isHidden(RoomElement.Whiteboard)) {
 			setVisible(false);
 		} else {
-			add(new ListView<String>("clipart", Arrays.asList(OmFileHelper.getPublicClipartsDir().list())) {
+			add(new ListView<String>("clipart"
+					, Arrays.asList(OmFileHelper.getPublicClipartsDir().list())
+						.stream()
+						.sorted()
+						.collect(Collectors.toList()))
+			{
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -258,7 +268,7 @@ public class WbPanel extends AbstractWbPanel {
 								continue;
 							}
 							JSONObject sts = new JSONObject(_sts.toString()); //copy
-							sts.put("pos", sts.getDouble("pos") + (System.currentTimeMillis() - sts.getLong("updated")) * 1. / 1000);
+							sts.put("pos", sts.getDouble("pos") + (System.currentTimeMillis() - sts.getLong(PARAM_UPDATED)) * 1. / 1000);
 							arr.put(new JSONObject()
 									.put("wbId", wb.getId())
 									.put("uid", o.getString("uid"))
@@ -329,7 +339,9 @@ public class WbPanel extends AbstractWbPanel {
 				case setSize:
 				{
 					Whiteboard wb = wbm.get(roomId).get(obj.getLong("wbId"));
-					wb.setZoom(obj.getDouble("zoom"));
+					wb.setWidth(obj.getInt(ATTR_WIDTH));
+					wb.setHeight(obj.getInt(ATTR_HEIGHT));
+					wb.setZoom(obj.getDouble(ATTR_ZOOM));
 					wb.setZoomMode(ZoomMode.valueOf(obj.getString("zoomMode")));
 					wbm.update(roomId, wb);
 					sendWbOthers(WbAction.setSize, getAddWbJson(wb));
@@ -455,7 +467,7 @@ public class WbPanel extends AbstractWbPanel {
 					JSONObject po = wb.get(uid);
 					if (po != null && "video".equals(po.getString(ATTR_TYPE))) {
 						JSONObject ns = obj.getJSONObject(PARAM_STATUS);
-						po.put(PARAM_STATUS, ns.put("updated", System.currentTimeMillis()));
+						po.put(PARAM_STATUS, ns.put(PARAM_UPDATED, System.currentTimeMillis()));
 						wbm.update(roomId, wb.put(uid, po));
 						obj.put(ATTR_SLIDE, po.getInt(ATTR_SLIDE));
 						sendWbAll(WbAction.videoStatus, obj);
@@ -471,9 +483,9 @@ public class WbPanel extends AbstractWbPanel {
 	private static JSONObject getAddWbJson(final Whiteboard wb) {
 		return new JSONObject().put("wbId", wb.getId())
 				.put("name", wb.getName())
-				.put("width", wb.getWidth())
-				.put("height", wb.getHeight())
-				.put("zoom", wb.getZoom())
+				.put(ATTR_WIDTH, wb.getWidth())
+				.put(ATTR_HEIGHT, wb.getHeight())
+				.put(ATTR_ZOOM, wb.getZoom())
 				.put("zoomMode", wb.getZoomMode().name());
 	}
 
@@ -550,7 +562,7 @@ public class WbPanel extends AbstractWbPanel {
 	public void sendFileToWb(final BaseFileItem fi, boolean clean) {
 		if (isVisible() && fi.getId() != null) {
 			Whiteboards wbs = wbm.get(roomId);
-			String wuid = UUID.randomUUID().toString();
+			String wuid = randomUUID().toString();
 			Whiteboard wb = wbs.get(wbs.getActiveWb());
 			if (wb == null) {
 				return;
@@ -592,8 +604,8 @@ public class WbPanel extends AbstractWbPanel {
 							.put(ATTR_TYPE, "image")
 							.put("left", UPLOAD_WB_LEFT)
 							.put("top", UPLOAD_WB_TOP)
-							.put("width", fi.getWidth() == null ? DEFAULT_WIDTH : fi.getWidth())
-							.put("height", fi.getHeight() == null ? DEFAULT_HEIGHT : fi.getHeight())
+							.put(ATTR_WIDTH, fi.getWidth() == null ? DEFAULT_WIDTH : fi.getWidth())
+							.put(ATTR_HEIGHT, fi.getHeight() == null ? DEFAULT_HEIGHT : fi.getHeight())
 							.put("uid", wuid)
 							.put(ATTR_SLIDE, wb.getSlide())
 							;
@@ -602,7 +614,7 @@ public class WbPanel extends AbstractWbPanel {
 						file.put(PARAM_STATUS, new JSONObject()
 								.put("paused", true)
 								.put("pos", 0.0)
-								.put("updated", System.currentTimeMillis()));
+								.put(PARAM_UPDATED, System.currentTimeMillis()));
 					}
 					final String ruid = wbs.getUid();
 					if (clean) {
@@ -662,7 +674,7 @@ public class WbPanel extends AbstractWbPanel {
 		FileItem f = new FileItem();
 		f.setType(BaseFileItem.Type.WmlFile);
 		f.setRoomId(roomId);
-		f.setHash(UUID.randomUUID().toString());
+		f.setHash(randomUUID().toString());
 		f.setName(name);
 		f = fileDao.update(f);
 		return wb.save(f.getFile().toPath());

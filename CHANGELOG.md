@@ -5,6 +5,139 @@ Licensed under Apache License 2.0 - http://www.apache.org/licenses/LICENSE-2.0
 See http://issues.apache.org/jira/browse/OPENMEETINGS-* (where * is the number of the issue below)  
 See https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-* (where * is the number of CVE below)
 
+
+Release Notes - Openmeetings - Version 4.0.8
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-1889] - Microphone does not work when video is disabled for mobile client
+    * [OPENMEETINGS-1974] - Video on WB might be not clickable
+    * [OPENMEETINGS-1976] - User List displays FN/LN where chat shows Disaply name
+    * [OPENMEETINGS-1979] - Login via VK API is not working
+    * [OPENMEETINGS-1980] - Group logo files are not being renamed after import
+    * [OPENMEETINGS-1982] - Mobile user is not added to user list.
+    * [OPENMEETINGS-1983] - upload audio file (ex mp3) for straming, and whiteboard player
+    * [OPENMEETINGS-1986] - using backspace
+    * [OPENMEETINGS-1987] - User without moderation rights shouldn't see activity notifications that require action of a moderator
+    * [OPENMEETINGS-1988] - Display the same repeated request for room rights only once
+    * [OPENMEETINGS-1989] - If connection is lost and the room reloaded the same user is showed twice
+    * [OPENMEETINGS-1990] - Chat timestamps should use the receiver's datetime format
+    * [OPENMEETINGS-1991] - For flexible text boxes, the cursor above the closing X is wrong.
+    * [OPENMEETINGS-2008] - chat still visible for connected clients after clean
+    * [OPENMEETINGS-2014] - Wrong profile pic url in video pod
+    * [OPENMEETINGS-2015] - Pointer shouldn't be scaled
+    * [OPENMEETINGS-2017] - Safari Mac browser no play some format videos at whiteboard
+    * [OPENMEETINGS-2018] - Download as PNG is broken
+    * [OPENMEETINGS-2020] - Autoclean seems to be broken
+    * [OPENMEETINGS-2024] - Math Formula rendering broken
+
+* Improvement
+    * [OPENMEETINGS-1984] - White Out Tool
+    * [OPENMEETINGS-1985] - Longer Page
+    * [OPENMEETINGS-1994] - Math form dialog: Add link or help to the required syntax
+    * [OPENMEETINGS-1996] - If the list of activity notifications is collapsed, mods do not get any information about incoming requests
+    * [OPENMEETINGS-1997] - You can't confirm the drawing board renaming with Enter
+    * [OPENMEETINGS-2001] - Separate notifications for activities and actions
+    * [OPENMEETINGS-2002] - A confirmation should be obtained before closing a Quick Poll for all.
+    * [OPENMEETINGS-2006] - OM should work as expected under Java11
+    * [OPENMEETINGS-2012] - Integrate Wso2 Identity Server
+
+* Task
+    * [OPENMEETINGS-1975] - Library versions need to be updated (4.0.8)
+
+
+Release Notes - Openmeetings - Version 4.0.7
+================================================================================================================
+
+* Sub-task
+    * [OPENMEETINGS-1931] - Hack with session cookie config need to be removed
+
+* Bug
+    * [OPENMEETINGS-1870] - use kick-funktion in roomWebService
+    * [OPENMEETINGS-1888] - No reply button to PM (Private Message)
+    * [OPENMEETINGS-1945] - When clic pause video button become white window only if mouse is over it
+    * [OPENMEETINGS-1957] - How to perform a logout process for an external user (student or teacher)
+    * [OPENMEETINGS-1963] - Menu User Cannot Work
+    * [OPENMEETINGS-1964] - Save as JPG should be removed from the menu
+
+* Improvement
+    * [OPENMEETINGS-1636] - Upgrade AppointmentManager from HttpClient 3.x to 4.x
+    * [OPENMEETINGS-1846] - Need a way to invalidate "endless" invatation
+    * [OPENMEETINGS-1851] - Ability to chose what is displayed in the User panel in conference rooms
+    * [OPENMEETINGS-1934] - Delete a single object
+    * [OPENMEETINGS-1950] - duplication of archived polls
+    * [OPENMEETINGS-1966] - Play chat notification sound anytime message is sent
+    * [OPENMEETINGS-1967] - Healthceck API to be added/enhanced
+    * [OPENMEETINGS-1970] - Use Authorization header for OAuth2 plugin
+    * [OPENMEETINGS-1971] - Accept nested profile object in OAuth2
+    * [OPENMEETINGS-1972] - Support SVG at whiteboard
+
+* Task
+    * [OPENMEETINGS-1954] - Library versions need to be updated (4.0.7)
+
+
+Release Notes - Openmeetings - Version 4.0.6
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-1924] - List of available devices is not loaded if click on Camera and mic settings twice
+    * [OPENMEETINGS-1925] - String value field on the Admin->configuration tab should be displayed as text area instead of text field
+    * [OPENMEETINGS-1927] - Unable to add files to whiteboard from Admin conference rooms
+    * [OPENMEETINGS-1930] - OpenMeetings 4.0.5 in Public Room when try record icedtea-web error
+    * [OPENMEETINGS-1938] - Import restores purged data
+    * [OPENMEETINGS-1943] - Tomcat version should not be displayed
+    * [OPENMEETINGS-1944] - Bug various
+    * [OPENMEETINGS-1946] - When recording with audio and later play it there is no audio
+    * [OPENMEETINGS-1949] - duplicated messages
+    * [OPENMEETINGS-1952] - allow.soap.register setting is being checked instead of allow.frontend.register
+    * [OPENMEETINGS-1953] - When send.email.with.verification is enable give an error
+
+* Improvement
+    * [OPENMEETINGS-1929] - Code need to be enhanced
+    * [OPENMEETINGS-1932] - First camera/mic should be autoselected it it wasn't explicitly denied
+    * [OPENMEETINGS-1937] - Method for room hash generation should return ERROR in case of invalid parameters
+    * [OPENMEETINGS-1947] -  How to know whether a user is in room or not
+
+* Task
+    * [OPENMEETINGS-1928] - Library versions need to be updated (4.0.6)
+
+
+Release Notes - Openmeetings - Version 4.0.5
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-1876] - Floating menu obscures page on Safari
+    * [OPENMEETINGS-1882] - Can't delete user - E-Mail required
+    * [OPENMEETINGS-1890] - Uploaded image is duplicated for new groups
+    * [OPENMEETINGS-1895] - Polling result is reversed
+    * [OPENMEETINGS-1898] - Meeting invitation time and profile update problem issue.
+    * [OPENMEETINGS-1900] - LDAP fails to map picture uri
+    * [OPENMEETINGS-1905] - 'Clear whiteboard' doesn't clear 2+ WB
+    * [OPENMEETINGS-1906] - installation fails on new MySql driver
+    * [OPENMEETINGS-1908] - Whiteboards automatically begin switching back and forth quickly and uncontrollably
+    * [OPENMEETINGS-1909] - Room title and sharring icon are not visible
+    * [OPENMEETINGS-1911] - Impossible to set language for hash
+    * [OPENMEETINGS-1912] - Video is not resized when user change video settings
+    * [OPENMEETINGS-1914] - Typo in language files need to be fixed
+    * [OPENMEETINGS-1919] - Drag Files not always work as expected
+    * [OPENMEETINGS-1923] - copy result at network test page doesn't work
+
+* New Feature
+    * [OPENMEETINGS-1142] - simplify OM to look like skype
+    * [OPENMEETINGS-1671] - background music for moderated rooms
+
+* Improvement
+    * [OPENMEETINGS-1884] - The text tool of a text-field to text-Area
+    * [OPENMEETINGS-1891] - Change default mapping of Return key for chat
+    * [OPENMEETINGS-1896] - Notification to user to close browser tab after changing webcam and mic settings
+    * [OPENMEETINGS-1903] - Bengali language need to be added
+    * [OPENMEETINGS-1907] - cleanRoomFiles method is redundant
+    * [OPENMEETINGS-1921] - Wording need to be improved
+
+* Task
+    * [OPENMEETINGS-1897] - Library versions need to be updated (4.0.5)
+
+
 Release Notes - Openmeetings - Version 4.0.4
 ================================================================================================================
 

@@ -27,7 +27,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
@@ -38,12 +37,10 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 @Entity
-@NamedQueries({
-	@NamedQuery(name="getNondeletedLdapConfigs", query="SELECT u FROM LdapConfig u WHERE u.deleted = false")
-	, @NamedQuery(name="getLdapConfigById", query="SELECT c FROM LdapConfig c WHERE c.id = :id AND c.deleted = false")
-	, @NamedQuery(name="countNondeletedLdapConfigs", query="SELECT COUNT(c.id) FROM LdapConfig c WHERE c.deleted = false")
-	, @NamedQuery(name="getActiveLdapConfigs", query="SELECT c FROM LdapConfig c WHERE c.deleted = false AND c.active = :isActive ORDER BY c.id")
-})
+@NamedQuery(name="getNondeletedLdapConfigs", query="SELECT u FROM LdapConfig u WHERE u.deleted = false")
+@NamedQuery(name="getLdapConfigById", query="SELECT c FROM LdapConfig c WHERE c.id = :id AND c.deleted = false")
+@NamedQuery(name="countNondeletedLdapConfigs", query="SELECT COUNT(c.id) FROM LdapConfig c WHERE c.deleted = false")
+@NamedQuery(name="getActiveLdapConfigs", query="SELECT c FROM LdapConfig c WHERE c.deleted = false AND c.active = :isActive ORDER BY c.id")
 @Table(name = "ldapconfig")
 @Root(name="ldapconfig")
 public class LdapConfig extends HistoricalEntity {
@@ -54,7 +51,7 @@ public class LdapConfig extends HistoricalEntity {
 	private Long id;
 
 	@Column(name = "name")
-	@Element(data = true)
+	@Element(data = true, required = false)
 	private String name;
 
 	@Column(name = "config_file_name")
@@ -62,7 +59,7 @@ public class LdapConfig extends HistoricalEntity {
 	private String configFileName;
 
 	@Column(name = "add_domain_to_user_name", nullable = false)
-	@Element(data = true)
+	@Element(data = true, required = false)
 	private boolean addDomainToUserName;
 
 	@Column(name = "domain")
@@ -70,7 +67,7 @@ public class LdapConfig extends HistoricalEntity {
 	private String domain;
 
 	@Column(name = "is_active", nullable = false)
-	@Element(data = true, name = "isActive")
+	@Element(data = true, name = "isActive", required = false)
 	private boolean active;
 
 	@ManyToOne(fetch = FetchType.EAGER)

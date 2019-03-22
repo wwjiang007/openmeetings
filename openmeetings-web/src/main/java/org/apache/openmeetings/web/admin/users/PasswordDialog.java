@@ -29,6 +29,7 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableConsumer;
 
@@ -39,8 +40,8 @@ import com.googlecode.wicket.kendo.ui.panel.KendoFeedbackPanel;
 
 public class PasswordDialog extends AbstractFormDialog<String> {
 	private static final long serialVersionUID = 1L;
-	private DialogButton ok;
-	private DialogButton cancel;
+	private DialogButton btnOk;
+	private DialogButton btnCancel;
 	protected final KendoFeedbackPanel feedback = new KendoFeedbackPanel("feedback", new Options("button", true));
 	private final Form<String> form = new Form<>("form");
 	private final PasswordTextField pass = new PasswordTextField("password", Model.of(""));
@@ -58,21 +59,21 @@ public class PasswordDialog extends AbstractFormDialog<String> {
 
 	@Override
 	protected void onInitialize() {
-		setTitle(Model.of(getString("537")));
-		ok = new DialogButton("ok", getString("54"));
-		cancel = new DialogButton("cancel", getString("lbl.cancel"));
-		add(form.add(feedback, pass.setRequired(false).setLabel(Model.of(getString("110"))).setOutputMarkupPlaceholderTag(true).setOutputMarkupId(true)));
+		setTitle(new ResourceModel("537"));
+		btnOk = new DialogButton("ok", getString("54"));
+		btnCancel = new DialogButton("cancel", getString("lbl.cancel"));
+		add(form.add(feedback, pass.setRequired(false).setLabel(new ResourceModel("110")).setOutputMarkupPlaceholderTag(true).setOutputMarkupId(true)));
 		super.onInitialize();
 	}
 
 	@Override
 	protected List<DialogButton> getButtons() {
-		return Arrays.asList(ok, cancel);
+		return Arrays.asList(btnOk, btnCancel);
 	}
 
 	@Override
 	public DialogButton getSubmitButton() {
-		return ok;
+		return btnOk;
 	}
 
 	@Override
@@ -93,7 +94,7 @@ public class PasswordDialog extends AbstractFormDialog<String> {
 
 	@Override
 	public void onClick(AjaxRequestTarget target, DialogButton button) {
-		if (!form.hasError() || !button.equals(ok)) {
+		if (!form.hasError() || !button.equals(btnOk)) {
 			super.onClick(target, button);
 		}
 	}

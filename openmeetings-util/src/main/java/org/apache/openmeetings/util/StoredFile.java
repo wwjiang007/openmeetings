@@ -19,7 +19,7 @@
 package org.apache.openmeetings.util;
 
 import static org.apache.openmeetings.util.OmFileHelper.FILE_NAME_FMT;
-import static org.apache.openmeetings.util.OmFileHelper.JPG_MIME_TYPE;
+import static org.apache.openmeetings.util.OmFileHelper.PNG_MIME_TYPE;
 import static org.apache.openmeetings.util.OmFileHelper.getFileExt;
 import static org.apache.tika.metadata.TikaMetadataKeys.RESOURCE_NAME_KEY;
 import static org.apache.tika.mime.MediaType.application;
@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.tika.config.TikaConfig;
@@ -53,10 +54,10 @@ public class StoredFile {
 			application("x-tika-msoffice"), application("x-tika-ooxml"), application("msword")
 			, application("vnd.wordperfect"), application("rtf")));
 
-	private static final MediaType MIME_JPG = MediaType.parse(JPG_MIME_TYPE);
+	private static final MediaType MIME_PNG = MediaType.parse(PNG_MIME_TYPE);
 	private static final Set<MediaType> PDF_TYPES = new HashSet<>(Arrays.asList(application("pdf"), application("postscript")));
 	private static final Set<MediaType> CHART_TYPES = new HashSet<>();
-	private static final Set<MediaType> AS_IS_TYPES = new HashSet<>(Arrays.asList(MIME_JPG));
+	private static final Set<MediaType> AS_IS_TYPES = new HashSet<>(Arrays.asList(MIME_PNG));
 	private static final String ACCEPT_STRING;
 	private static TikaConfig tika;
 	static {
@@ -110,7 +111,7 @@ public class StoredFile {
 			ext = getFileExt(_name);
 		} else {
 			name = _name;
-			ext = _ext.toLowerCase();
+			ext = _ext.toLowerCase(Locale.ROOT);
 		}
 		Metadata md = new Metadata();
 		md.add(RESOURCE_NAME_KEY, String.format(FILE_NAME_FMT, name, ext));
@@ -153,11 +154,11 @@ public class StoredFile {
 		return PDF_TYPES.contains(mime);
 	}
 
-	public boolean isJpg() {
+	public boolean isPng() {
 		if (mime == null) {
 			return false;
 		}
-		return MIME_JPG.equals(mime);
+		return MIME_PNG.equals(mime);
 	}
 
 	public boolean isImage() {
@@ -167,11 +168,18 @@ public class StoredFile {
 		return MIME_IMAGE.equals(mime.getType());
 	}
 
+	public boolean isAudio() {
+		if (mime == null) {
+			return false;
+		}
+		return MIME_AUDIO.equals(mime.getType());
+	}
+
 	public boolean isVideo() {
 		if (mime == null) {
 			return false;
 		}
-		return MIME_AUDIO.equals(mime.getType()) || MIME_VIDEO.equals(mime.getType());
+		return isAudio() || MIME_VIDEO.equals(mime.getType());
 	}
 
 	public boolean isChart() {

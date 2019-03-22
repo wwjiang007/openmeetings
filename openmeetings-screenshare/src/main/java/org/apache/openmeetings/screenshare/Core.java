@@ -19,6 +19,7 @@
 package org.apache.openmeetings.screenshare;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.UUID.randomUUID;
 import static org.apache.openmeetings.screenshare.util.Util.getQurtzProps;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -29,7 +30,6 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.openmeetings.screenshare.gui.ScreenDimensions;
@@ -58,6 +58,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 	private static final Logger log = getLogger(Core.class);
+	private static final String STATUS_EXC = "Exception: ";
+	private static final String METH_SHARE_ACTION = "screenSharerAction";
 	static final String QUARTZ_GROUP_NAME = "ScreenShare";
 	static final String QUARTZ_REMOTE_JOB_NAME = "RemoteJob";
 	static final String QUARTZ_REMOTE_TRIGGER_NAME = "RemoteTrigger";
@@ -231,7 +233,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 		} catch (NullPointerException npe) {
 			//noop
 		} catch (Exception err) {
-			frame.setStatus("Exception: " + err);
+			frame.setStatus(STATUS_EXC + err);
 			log.error("[sendCursorStatus]", err);
 		}
 	}
@@ -302,7 +304,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 	}
 
 	void handleException(Throwable e) {
-		frame.setStatus("Exception: " + e);
+		frame.setStatus(STATUS_EXC + e);
 		if (e instanceof ConnectException) {
 			fallbackUsed = true;
 			connect(sid);
@@ -320,7 +322,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			}
 		} catch (Exception err) {
 			log.error("captureScreenStart Exception: ", err);
-			frame.setStatus("Exception: " + err);
+			frame.setStatus(STATUS_EXC + err);
 		}
 	}
 
@@ -349,10 +351,10 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			if (Red5.getConnectionLocal() == null) {
 				Red5.setConnectionLocal(instance.getConnection());
 			}
-			instance.invoke("screenSharerAction", new Object[] { map }, this);
+			instance.invoke(METH_SHARE_ACTION, new Object[] { map }, this);
 		} catch (Exception err) {
 			log.error("captureScreenStop Exception: ", err);
-			frame.setStatus("Exception: " + err);
+			frame.setStatus(STATUS_EXC + err);
 		}
 	}
 
@@ -401,7 +403,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 		}
 
 		String method = invoke.getCall().getServiceMethodName();
-		if ("screenSharerAction".equals(method)) {
+		if (METH_SHARE_ACTION.equals(method)) {
 			Object[] args = invoke.getCall().getArguments();
 			if (args != null && args.length > 0) {
 				@SuppressWarnings("unchecked")
@@ -542,7 +544,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 						}
 						capture.setStreamId((Number)o);
 					}
-					final String broadcastId = UUID.randomUUID().toString();
+					final String broadcastId = randomUUID().toString();
 					log.debug("createPublishStream result stream id: {}; name: {}", capture.getStreamId(), broadcastId);
 					instance.publish(capture.getStreamId(), broadcastId, "live", this);
 
@@ -553,7 +555,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 						capture.start();
 					}
 				}
-			} else if ("screenSharerAction".equals(method)) {
+			} else if (METH_SHARE_ACTION.equals(method)) {
 				Object result = returnMap.get("result");
 				if ("stopAll".equals(result)) {
 					log.trace("Stopping to stream, there is neither a Desktop Sharing nor Recording anymore");

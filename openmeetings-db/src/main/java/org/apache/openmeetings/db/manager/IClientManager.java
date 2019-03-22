@@ -23,16 +23,16 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.openmeetings.db.entity.basic.Client;
-import org.apache.openmeetings.db.entity.basic.IClient;
 
 public interface IClientManager {
 	Client get(String uid);
 	Client getBySid(String sid);
 	String uidBySid(String sid);
+	List<Client> list();
 	List<Client> listByRoom(Long roomId);
 	Collection<Client> listByUser(Long userId);
 	Client update(Client c);
-	void exit(IClient c);
+	void exit(Client c);
 
 
 	/**

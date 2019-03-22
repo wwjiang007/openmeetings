@@ -36,6 +36,7 @@ import java.util.Map.Entry;
 
 import org.apache.openmeetings.db.entity.file.FileItem;
 import org.apache.openmeetings.util.NullStringer;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,9 @@ public class Whiteboard implements Serializable {
 	public static final String ATTR_FILE_ID = "fileId";
 	public static final String ATTR_FILE_TYPE = "fileType";
 	public static final String ATTR_SLIDE = "slide";
+	public static final String ATTR_WIDTH = "width";
+	public static final String ATTR_HEIGHT = "height";
+	public static final String ATTR_ZOOM = "zoom";
 	public enum ZoomMode {
 		fullFit
 		, pageWidth
@@ -150,7 +154,8 @@ public class Whiteboard implements Serializable {
 	}
 
 	public JSONObject remove(Object oid) {
-		return new JSONObject(roomItems.remove(oid));
+		final String obj = roomItems.remove(oid);
+		return Strings.isEmpty(obj) ? null : new JSONObject(obj);
 	}
 
 	public boolean isEmpty() {

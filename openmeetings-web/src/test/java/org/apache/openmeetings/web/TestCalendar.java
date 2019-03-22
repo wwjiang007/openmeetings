@@ -18,14 +18,13 @@
  */
 package org.apache.openmeetings.web;
 
+import static java.util.UUID.randomUUID;
 import static org.junit.Assert.assertEquals;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.openmeetings.AbstractWicketTester;
-import org.apache.openmeetings.db.dao.calendar.AppointmentDao;
 import org.apache.openmeetings.db.entity.calendar.Appointment;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.util.OmException;
@@ -34,7 +33,6 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.util.tester.FormTester;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.googlecode.wicket.jquery.ui.calendar.CalendarView;
 import com.googlecode.wicket.jquery.ui.widget.dialog.ButtonAjaxBehavior;
@@ -43,8 +41,6 @@ import com.googlecode.wicket.jquery.ui.widget.menu.Menu;
 public class TestCalendar extends AbstractWicketTester {
 	private static final String PATH_APPOINTMENT_DLG = String.format("%s:appointment", PATH_CHILD);
 	private static final String PATH_APPOINTMENT_DLG_FRM = String.format("%s:appForm", PATH_APPOINTMENT_DLG);
-	@Autowired
-	private AppointmentDao appointmentDao;
 
 	@Test
 	public void testEventCreate() throws OmException {
@@ -67,7 +63,7 @@ public class TestCalendar extends AbstractWicketTester {
 			tester.executeBehavior((AbstractAjaxBehavior)cal.get("form:calendar").getBehaviorById(0)); //select-event
 			FormTester appTester = tester.newFormTester(PATH_APPOINTMENT_DLG_FRM);
 			//check inviteeType:groupContainer:groups is invisible for regular user
-			String title = String.format("title%s", UUID.randomUUID());
+			String title = String.format("title%s", randomUUID());
 			appTester.setValue("title", title);
 			ButtonAjaxBehavior save = getButtonBehavior(PATH_APPOINTMENT_DLG, "save");
 			tester.executeBehavior(save);

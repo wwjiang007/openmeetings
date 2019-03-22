@@ -21,29 +21,25 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
 	<div class="adminPanelColumnTable">
-		<span wicket:id="navigator">[dataview navigator]</span>
-		<table class="adminListTable">
+		<div class="adminNav" wicket:id="navigator">[dataview navigator]</div>
+		<table class="list-table">
 			<thead>
-				<tr>
-					<th class="two_column_layout_column1 ui-widget-header"><span wicket:id="orderById"></span><wicket:message key="188" /></th>
-					<th class="two_column_layout_column2 ui-widget-header"><span wicket:id="orderByName"></span><wicket:message key="165" /></th>
+				<tr class="ui-widget-header">
+					<th class="col-1"><span wicket:id="orderById"></span><wicket:message key="188" /></th>
+					<th class="col-11"><span wicket:id="orderByName"></span><wicket:message key="165" /></th>
 				</tr>
 			</thead>
+			<tbody wicket:id="listContainer">
+				<tr wicket:id="oauthServersList">
+					<td class="col-1"><div class="col-wrapper"><span wicket:id="id"></span></div></td>
+					<td class="col-11"><div class="col-wrapper"><span wicket:id="name"></span></div></td>
+				</tr>
+			</tbody>
 		</table>
-		<div class="tableWrapper" id="adminTable">
-			<table class="adminListTable">
-				<tbody wicket:id="listContainer">
-					<tr wicket:id="oauthServersList">
-						<td class="two_column_layout_column1"><div class="two_column_layout_divcolumn1"><span wicket:id="id"></span></div></td>
-						<td class="two_column_layout_column2"><div class="two_column_layout_divcolumn2"><span wicket:id="name"></span></div></td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
 	</div>
 	<div class="adminPanelColumnForm">
 		<form wicket:id="form" class="adminForm">
-			<div wicket:id="buttons"></div>
+			<div class="actions" wicket:id="buttons"></div>
 			<div class="scrollcontent" id="adminForm">
 				<fieldset class="ui-widget-content">
 					<legend class="ui-widget-header"><wicket:message key="1581" /></legend>
@@ -69,30 +65,57 @@
 						<label wicket:for="requestKeyUrl"><wicket:message key="1578" /></label><input type="text" wicket:id="requestKeyUrl"/>
 					</div>
 					<div class="formelement">
+						<label wicket:for="requestTokenMethod"><wicket:message key="admin.oauth.req.token.method"/></label><select wicket:id="requestTokenMethod"></select>
+					</div>
+					<div class="formelement">
 						<label wicket:for="requestTokenUrl"><wicket:message key="1579" /></label><input type="text" wicket:id="requestTokenUrl"/>
 					</div>
 					<div class="formelement">
 						<label wicket:for="requestTokenAttributes"><wicket:message key="1586" /></label><input type="text" wicket:id="requestTokenAttributes"/>
 					</div>
 					<div class="formelement">
+						<label wicket:for="requestInfoMethod"><wicket:message key="admin.oauth.req.info.method"/></label><select wicket:id="requestInfoMethod"></select>
+					</div>
+					<div class="formelement">
 						<label wicket:for="requestInfoUrl"><wicket:message key="1580" /></label><input type="text" wicket:id="requestInfoUrl"/>
 					</div>
-					<div class="formelement">
-						<label wicket:for="requestTokenMethod">Request method</label><select wicket:id="requestTokenMethod"></select>
-					</div>
-					<div class="formelement">
-						<label wicket:for="loginParamName"><wicket:message key="1582" /></label><input type="text" wicket:id="loginParamName"/>
-					</div>
-					<div class="formelement">
-						<label wicket:for="emailParamName"><wicket:message key="1583" /></label><input type="text" wicket:id="emailParamName"/>
-					</div>
-					<div class="formelement">
-						<label wicket:for="firstnameParamName"><wicket:message key="1584" /></label><input type="text" wicket:id="firstnameParamName"/>
-					</div>
-					<div class="formelement">
-						<label wicket:for="lastnameParamName"><wicket:message key="1585" /></label><input type="text" wicket:id="lastnameParamName"/>
-					</div>
+					<!-- Attribute mapping -->
+					<fieldset class="ui-widget-content">
+						<legend class="ui-widget-header"><wicket:message key="admin.oauth.user.mapping" /></legend>
+						<form wicket:id="mappingForm">
+							<div class="formelement">
+								<label wicket:for="omAttr"><wicket:message key="admin.oauth.attr.om" /></label>
+								<input type="text" class="input" wicket:id="omAttr"/>
+							</div>
+							<div class="formelement">
+								<label wicket:for="oauthAttr"><wicket:message key="admin.oauth.attr.oauth" /></label>
+								<input type="text" class="input" wicket:id="oauthAttr"/>
+							</div>
+							<button type="button" wicket:id="addMapping"><wicket:message key="1261"/></button>
+						</form>
+						<table class="list-table small">
+							<thead>
+								<tr class="ui-widget-header">
+									<th class="col-7"><wicket:message key="admin.oauth.attr.om" /></th>
+									<th class="col-4"><wicket:message key="admin.oauth.attr.oauth" /></th>
+									<th class="col-1"><wicket:message key=275 /></th>
+								</tr>
+							</thead>
+							<tbody wicket:id="attrsContainer">
+								<tr wicket:id="mapping">
+									<td class="col-7"><div class="col-wrapper"><span wicket:id="key"></span></div></td>
+									<td class="col-4"><div class="col-wrapper"><span wicket:id="value"></span></div></td>
+									<td class="col-1">
+										<div class="ui-button ui-widget ui-corner-all ui-button-icon-only ui-state-error" wicket:id="delete" wicket:message="title:80">
+											<span class="ui-button-icon ui-icon ui-icon-closethick"></span>&nbsp;
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</fieldset>
 				</fieldset>
+				<div class="bottom-bumper"></div>
 			</div>
 		</form>
 	</div>

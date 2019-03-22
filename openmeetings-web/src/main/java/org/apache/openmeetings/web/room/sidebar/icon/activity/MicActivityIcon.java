@@ -19,19 +19,18 @@
 package org.apache.openmeetings.web.room.sidebar.icon.activity;
 
 import org.apache.openmeetings.db.entity.basic.Client.Activity;
-import org.apache.openmeetings.db.entity.room.Room.Right;
 
 public class MicActivityIcon extends RoomActivityIcon {
 	private static final long serialVersionUID = 1L;
 
 	public MicActivityIcon(String id, String uid) {
-		super(id, uid, Activity.broadcastA);
+		super(id, uid, Activity.AUDIO);
 		mainCssClass = "activity mic bumper ";
 	}
 
 	@Override
 	protected String getTitle() {
-		return getString(getClient().hasRight(Right.audio) ? "1607" : "1606");
+		return getString(getClient().hasActivity(Activity.AUDIO) ? "microphone.off" : "microphone.on");
 	}
 
 	@Override

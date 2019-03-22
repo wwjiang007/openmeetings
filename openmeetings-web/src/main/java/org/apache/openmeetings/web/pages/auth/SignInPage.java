@@ -20,8 +20,8 @@ package org.apache.openmeetings.web.pages.auth;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_IGNORE_BAD_SSL;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REGISTER_FRONTEND;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getBaseUrl;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isAllowRegisterFrontend;
 import static org.apache.openmeetings.web.app.Application.urlForPage;
 
 import java.io.DataOutputStream;
@@ -34,6 +34,9 @@ import java.net.URLEncoder;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -47,6 +50,7 @@ import org.apache.openmeetings.db.dao.server.OAuth2Dao;
 import org.apache.openmeetings.db.dao.user.IUserManager;
 import org.apache.openmeetings.db.dto.user.OAuthUser;
 import org.apache.openmeetings.db.entity.server.OAuthServer;
+import org.apache.openmeetings.db.entity.server.OAuthServer.RequestInfoMethod;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.entity.user.User.Type;
 import org.apache.openmeetings.util.OmException;
@@ -89,7 +93,7 @@ public class SignInPage extends BaseInitedPage {
 			try {
 				long serverId = oauthid.toLong(-1);
 				OAuthServer server = oauthDao.get(serverId);
-				log.debug("OAuthServer=" + server);
+				log.debug("OAuthServer={}", server);
 				if (server == null) {
 					log.warn("OAuth server id={} not found", serverId);
 					return;
@@ -103,7 +107,7 @@ public class SignInPage extends BaseInitedPage {
 						return;
 					}
 					log.debug("OAuthInfo={}", authInfo);
-					OAuthUser user = getAuthParams(authInfo.accessToken, code, server);
+					OAuthUser user = getAuthParams(authInfo, code, server);
 					loginViaOAuth2(user, serverId);
 				} else { // redirect to get code
 					showAuth(server);
@@ -145,7 +149,7 @@ public class SignInPage extends BaseInitedPage {
 	}
 
 	boolean allowRegister() {
-		return cfgDao.getBool(CONFIG_REGISTER_FRONTEND, false);
+		return isAllowRegisterFrontend();
 	}
 
 	boolean allowOAuthLogin() {
@@ -158,32 +162,29 @@ public class SignInPage extends BaseInitedPage {
 	}
 
 	// ============= OAuth2 methods =============
+	private static Map<String, String> getInitParams(final OAuthServer s) {
+		Map<String, String> params = new HashMap<>();
+		params.put("{$client_id}", s.getClientId());
+		params.put("{$redirect_uri}", getRedirectUri(s));
+		return params;
+	}
+
 	public static void showAuth(final OAuthServer s) {
-		String authUrl = prepareUrlParams(s.getRequestKeyUrl(), s.getClientId(), getRedirectUri(s), null, null, null);
+		String authUrl = prepareUrl(s.getRequestKeyUrl(), getInitParams(s));
 		log.debug("redirectUrl={}", authUrl);
 		throw new RedirectToUrlException(authUrl);
 	}
 
-	public static String prepareUrlParams(String urlTemplate, String clientId, String redirectUri, String secret, String token, String code) {
+	private static String prepareUrl(String urlTemplate, Map<String, String> params) {
 		String result = urlTemplate;
-		if (clientId != null) {
-			result = result.replace("{$client_id}", clientId);
-		}
-		if (secret != null) {
-			result = result.replace("{$client_secret}", secret);
-		}
-		if (token != null) {
-			result = result.replace("{$access_token}", token);
-		}
-		if (redirectUri != null) {
-			try {
-				result = result.replace("{$redirect_uri}", URLEncoder.encode(redirectUri, UTF_8.name()));
-			} catch (UnsupportedEncodingException e) {
-				log.error("Unexpected exception while encoding URI", e);
+		for (Entry<String, String> e : params.entrySet()) {
+			if (e.getValue() != null) {
+				try {
+					result = result.replace(e.getKey(), URLEncoder.encode(e.getValue(), UTF_8.name()));
+				} catch (UnsupportedEncodingException err) {
+					log.error("Unexpected exception while encoding URI param {}", e, err);
+				}
 			}
-		}
-		if (code != null) {
-			result = result.replace("{$code}", code);
 		}
 		return result;
 	}
@@ -232,41 +233,41 @@ public class SignInPage extends BaseInitedPage {
 		}
 	}
 
+	private static Map<String, String> getParams(final OAuthServer s, String code, AuthInfo authInfo) {
+		Map<String, String> params = getInitParams(s);
+		params.put("{$client_id}", s.getClientId());
+		params.put("{$client_secret}", s.getClientSecret());
+		if (authInfo != null) {
+			params.put("{$access_token}", authInfo.accessToken);
+			params.put("{$user_id}", authInfo.userId);
+		}
+		if (code != null) {
+			params.put("{$code}", code);
+		}
+		return params;
+	}
+
 	private AuthInfo getToken(String code, OAuthServer server) throws IOException {
 		String requestTokenBaseUrl = server.getRequestTokenUrl();
 		// build url params to request auth token
 		String requestTokenParams = server.getRequestTokenAttributes();
-		requestTokenParams = prepareUrlParams(requestTokenParams, server.getClientId(), getRedirectUri(server)
-				, server.getClientSecret(), null, code);
+		requestTokenParams = prepareUrl(requestTokenParams, getParams(server, code, null));
 		// request auth token
-		HttpURLConnection urlConnection = (HttpURLConnection) new URL(requestTokenBaseUrl).openConnection();
-		prepareConnection(urlConnection);
-		urlConnection.setRequestMethod("POST");
-		urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-		urlConnection.setRequestProperty("charset", UTF_8.name());
-		urlConnection.setRequestProperty("Content-Length", String.valueOf(requestTokenParams.length()));
-		urlConnection.setDoInput(true);
-		urlConnection.setDoOutput(true);
-		urlConnection.setUseCaches(false);
-		DataOutputStream paramsOutputStream = new DataOutputStream(urlConnection.getOutputStream());
+		HttpURLConnection connection = (HttpURLConnection) new URL(requestTokenBaseUrl).openConnection();
+		prepareConnection(connection);
+		connection.setRequestMethod(server.getRequestTokenMethod().name());
+		connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		connection.setRequestProperty("charset", UTF_8.name());
+		connection.setRequestProperty("Content-Length", String.valueOf(requestTokenParams.length()));
+		connection.setDoInput(true);
+		connection.setDoOutput(true);
+		connection.setUseCaches(false);
+		DataOutputStream paramsOutputStream = new DataOutputStream(connection.getOutputStream());
 		paramsOutputStream.writeBytes(requestTokenParams);
 		paramsOutputStream.flush();
-		String sourceResponse = IOUtils.toString(urlConnection.getInputStream(), UTF_8);
+		String sourceResponse = IOUtils.toString(connection.getInputStream(), UTF_8);
 		// parse json result
-		AuthInfo result = new AuthInfo();
-		JSONObject json = new JSONObject(sourceResponse);
-		if (json.has("access_token")) {
-			result.accessToken = json.getString("access_token");
-		}
-		if (json.has("refresh_token")) {
-			result.refreshToken = json.getString("refresh_token");
-		}
-		if (json.has("token_type")) {
-			result.tokenType = json.getString("token_type");
-		}
-		if (json.has("expires_in")) {
-			result.expiresIn = json.getLong("expires_in");
-		}
+		AuthInfo result = new AuthInfo(sourceResponse);
 		// access token must be specified
 		if (result.accessToken == null) {
 			log.error("Response doesn't contain access_token field:\n {}", sourceResponse);
@@ -275,17 +276,22 @@ public class SignInPage extends BaseInitedPage {
 		return result;
 	}
 
-	private OAuthUser getAuthParams(String token, String code, OAuthServer server) throws IOException {
+	private OAuthUser getAuthParams(AuthInfo authInfo, String code, OAuthServer server) throws IOException {
 		// prepare url
 		String requestInfoUrl = server.getRequestInfoUrl();
-		requestInfoUrl = prepareUrlParams(requestInfoUrl, server.getClientId(), getRedirectUri(server)
-				, server.getClientSecret(), token, code);
+		requestInfoUrl = prepareUrl(requestInfoUrl, getParams(server, code, authInfo));
 		// send request
-		URLConnection connection = new URL(requestInfoUrl).openConnection();
+		HttpURLConnection connection = (HttpURLConnection) new URL(requestInfoUrl).openConnection();
+		if (server.getRequestInfoMethod() == RequestInfoMethod.HEADER) {
+			connection.setRequestProperty("Authorization", String.format("Bearer %s", authInfo.accessToken));
+		} else {
+			connection.setRequestMethod(server.getRequestInfoMethod().name());
+		}
 		prepareConnection(connection);
-		String sourceResponse = IOUtils.toString(connection.getInputStream(), UTF_8);
+		String json = IOUtils.toString(connection.getInputStream(), UTF_8);
+		log.debug("User info={}", json);
 		// parse json result
-		return new OAuthUser(sourceResponse, server);
+		return new OAuthUser(json, server);
 	}
 
 	private void loginViaOAuth2(OAuthUser user, long serverId) throws IOException, NoSuchAlgorithmException {
@@ -299,16 +305,31 @@ public class SignInPage extends BaseInitedPage {
 	}
 
 	private static class AuthInfo {
-		String accessToken;
-		String refreshToken;
-		String tokenType;
-		long expiresIn;
+		final String accessToken;
+		final String refreshToken;
+		final String tokenType;
+		final String userId;
+		final long expiresIn;
+
+		AuthInfo(String jsonStr) {
+			log.debug("AuthInfo={}", jsonStr);
+			JSONObject json = new JSONObject(jsonStr);
+			accessToken = json.optString("access_token");
+			refreshToken = json.optString("refresh_token");
+			tokenType = json.optString("token_type");
+			userId = json.optString("user_id");
+			expiresIn = json.optLong("expires_in");
+		}
 
 		@Override
 		public String toString() {
-			return "AuthInfo [accessToken=" + accessToken + ", refreshToken="
-					+ refreshToken + ", tokenType=" + tokenType
-					+ ", expiresIn=" + expiresIn + "]";
+			return new StringBuilder()
+				.append("AuthInfo [accessToken=").append(accessToken)
+				.append(", refreshToken=").append(refreshToken)
+				.append(", tokenType=").append(tokenType)
+				.append(", userId=").append(userId)
+				.append(", expiresIn=").append(expiresIn)
+				.append("]").toString();
 		}
 	}
 }

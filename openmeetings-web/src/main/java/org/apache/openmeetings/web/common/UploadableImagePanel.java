@@ -21,12 +21,17 @@ package org.apache.openmeetings.web.common;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getMaxUploadSize;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.apache.openmeetings.util.StoredFile;
 import org.apache.openmeetings.web.util.upload.BootstrapFileUploadBehavior;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormSubmitBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.form.upload.UploadProgressBar;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -38,52 +43,99 @@ import org.slf4j.LoggerFactory;
 public abstract class UploadableImagePanel extends ImagePanel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(UploadableImagePanel.class);
+	private static final String HOVER = "$('.profile .ui-button-icon.ui-icon.ui-icon-closethick.remove').hover(function (e) {$(this).toggleClass('ui-widget-content', e.type === 'mouseenter');});";
 	private final FileUploadField fileUploadField = new FileUploadField("image", new ListModel<FileUpload>());
+	private final Form<Void> form = new Form<>("form");
+	private final boolean delayed;
 
-	public UploadableImagePanel(String id) {
+	public UploadableImagePanel(String id, boolean delayed) {
 		super(id);
+		this.delayed = delayed;
 	}
 
 	protected abstract void processImage(StoredFile sf, File f) throws Exception;
 
+	protected abstract void deleteImage() throws Exception;
+
 	@Override
 	protected void onInitialize() {
 		super.onInitialize();
-		final Form<Void> form = new Form<>("form");
 		form.setMultiPart(true);
 		form.setMaxSize(Bytes.bytes(getMaxUploadSize()));
 		// Model is necessary here to avoid writing image to the User object
 		form.add(fileUploadField);
 		form.add(new UploadProgressBar("progress", form, fileUploadField));
-		fileUploadField.add(new AjaxFormSubmitBehavior(form, "change") {
-			private static final long serialVersionUID = 1L;
+		form.addOrReplace(getImage());
+		if (delayed) {
+			add(new WebMarkupContainer("remove").add(AttributeModifier.append("onclick"
+					, "$(this).parent().find('.fileinput').fileinput('clear');")));
+		} else {
+			add(new ConfirmableAjaxBorder("remove", getString("80"), getString("833")) {
+				private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void onSubmit(AjaxRequestTarget target) {
-				FileUpload fu = fileUploadField.getFileUpload();
-				if (fu != null) {
-					File temp = null;
+				@Override
+				protected void onSubmit(AjaxRequestTarget target) {
 					try {
-						temp = fu.writeToTempFile();
-						StoredFile sf = new StoredFile(fu.getClientFileName(), temp);
-						if (sf.isImage()) {
-							processImage(sf, temp);
-						}
+						deleteImage();
 					} catch (Exception e) {
 						log.error("Error", e);
-					} finally {
-						if (temp != null && temp.exists()) {
-							log.debug("Temp file was deleted ? {}", temp.delete());
-						}
-						fu.closeStreams();
-						fu.delete();
 					}
+					update(Optional.of(target));
 				}
-				update();
-				target.add(profile, form);
-			}
-		});
+			});
+			fileUploadField.add(new AjaxFormSubmitBehavior(form, "change") {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				protected void onSubmit(AjaxRequestTarget target) {
+					process(Optional.of(target));
+				}
+			});
+		}
 		add(form.setOutputMarkupId(true));
 		add(BootstrapFileUploadBehavior.INSTANCE);
+	}
+
+	@Override
+	public void renderHead(IHeaderResponse response) {
+		super.renderHead(response);
+		response.render(OnDomReadyHeaderItem.forScript(HOVER));
+	}
+
+	@Override
+	public void update() {
+		profile.addOrReplace(new WebMarkupContainer("img").setVisible(false));
+		form.addOrReplace(getImage());
+	}
+
+	private void update(Optional<AjaxRequestTarget> target) {
+		update();
+		target.ifPresent(t -> {
+			t.add(profile, form);
+			t.appendJavaScript(HOVER);
+		});
+	}
+
+	public void process(Optional<AjaxRequestTarget> target) {
+		FileUpload fu = fileUploadField.getFileUpload();
+		if (fu != null) {
+			File temp = null;
+			try {
+				temp = fu.writeToTempFile();
+				StoredFile sf = new StoredFile(fu.getClientFileName(), temp);
+				if (sf.isImage()) {
+					processImage(sf, temp);
+				}
+			} catch (Exception e) {
+				log.error("Error", e);
+			} finally {
+				if (temp != null && temp.exists()) {
+					log.debug("Temp file was deleted ? {}", temp.delete());
+				}
+				fu.closeStreams();
+				fu.delete();
+			}
+		}
+		update(target);
 	}
 }

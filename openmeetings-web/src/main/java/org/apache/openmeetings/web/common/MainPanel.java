@@ -42,6 +42,7 @@ import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.basic.IWsClient;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.user.PrivateMessage;
+import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.entity.user.User.Right;
 import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.app.ClientManager;
@@ -61,6 +62,7 @@ import org.apache.openmeetings.web.util.ExtendedClientProperties;
 import org.apache.openmeetings.web.util.OmUrlFragment;
 import org.apache.openmeetings.web.util.OmUrlFragment.MenuActions;
 import org.apache.openmeetings.web.util.OmUrlFragment.MenuParams;
+import org.apache.openmeetings.web.util.ProfileImageResourceReference;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -69,6 +71,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.devutils.debugbar.DebugBar;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
@@ -103,7 +106,7 @@ public class MainPanel extends Panel {
 	private InviteUserToRoomDialog inviteUser;
 
 	@SpringBean
-	private ClientManager clientManager;
+	private ClientManager cm;
 	@SpringBean
 	private ConfigurationDao cfgDao;
 	@SpringBean
@@ -125,11 +128,28 @@ public class MainPanel extends Panel {
 			private static final long serialVersionUID = 1L;
 
 			@Override
+			public void renderHead(IHeaderResponse response) {
+				super.renderHead(response);
+				StringBuilder handlers = new StringBuilder()
+						.append("Wicket.Event.subscribe(Wicket.Event.Topic.AJAX_CALL_FAILURE, hideBusyIndicator);")
+						.append("Wicket.Event.subscribe(Wicket.Event.Topic.AJAX_CALL_BEFORE, showBusyIndicator);")
+						.append("Wicket.Event.subscribe(Wicket.Event.Topic.AJAX_CALL_SUCCESS, hideBusyIndicator);")
+						.append("Wicket.Event.subscribe(Wicket.Event.Topic.AJAX_CALL_COMPLETE, hideBusyIndicator);")
+						.append("Wicket.Event.subscribe(Wicket.Event.Topic.WebSocket.Opened, function() { Wicket.WebSocket.send('socketConnected'); });");
+				response.render(OnDomReadyHeaderItem.forScript(handlers));
+			}
+
+			@Override
 			protected void onConnect(ConnectedMessage msg) {
 				ExtendedClientProperties cp = WebSession.get().getExtendedProperties();
-				final Client client = new Client(getSession().getId(), msg.getKey().hashCode(), getUserId(), userDao);
+				final User u = userDao.get(getUserId());
+				final Client client = new Client(
+						getSession().getId()
+						, msg.getKey().hashCode()
+						, u
+						, ProfileImageResourceReference.getUrl(getRequestCycle(), u));
 				uid = client.getUid();
-				clientManager.add(cp.update(client));
+				cm.add(cp.update(client));
 				log.debug("WebSocketBehavior::onConnect [uid: {}, session: {}, key: {}]", client.getUid(), msg.getSessionId(), msg.getKey());
 			}
 
@@ -152,7 +172,7 @@ public class MainPanel extends Panel {
 			protected void closeHandler(AbstractClientMessage msg) {
 				super.closeHandler(msg);
 				if (uid != null) {
-					clientManager.exit(getClient());
+					cm.exit(getClient());
 					uid = null;
 				}
 			}
@@ -372,6 +392,7 @@ public class MainPanel extends Panel {
 
 	public void updateContents(OmUrlFragment f, IPartialPageRequestHandler handler, boolean updateFragment) {
 		BasePanel npanel = getPanel(f.getArea(), f.getType());
+		log.debug("updateContents:: npanels IS null ? {}, client IS null ? {}", npanel == null, getClient() == null);
 		if (npanel != null) {
 			if (getClient() != null) {
 				updateContents(npanel, handler);
@@ -412,11 +433,15 @@ public class MainPanel extends Panel {
 		return chat;
 	}
 
+	public MessageDialog getMessageDialog() {
+		return newMessage;
+	}
+
 	public String getUid() {
 		return uid;
 	}
 
 	public Client getClient() {
-		return clientManager.get(uid);
+		return cm.get(uid);
 	}
 }

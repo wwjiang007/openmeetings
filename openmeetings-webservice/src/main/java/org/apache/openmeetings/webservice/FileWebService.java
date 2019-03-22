@@ -65,7 +65,7 @@ import org.springframework.stereotype.Service;
  */
 @Service("fileWebService")
 @WebService(serviceName="org.apache.openmeetings.webservice.FileWebService", targetNamespace = TNS)
-@Features(features = "org.apache.cxf.feature.LoggingFeature")
+@Features(features = "org.apache.cxf.ext.logging.LoggingFeature")
 @Produces({MediaType.APPLICATION_JSON})
 @Path("/file")
 public class FileWebService extends BaseWebService {
@@ -150,7 +150,7 @@ public class FileWebService extends BaseWebService {
 			, @Multipart(value = "stream", type = MediaType.APPLICATION_OCTET_STREAM, required = false) @WebParam(name="stream") InputStream stream
 			)
 	{
-		return performCall(sid, User.Right.Room, sd -> {
+		return performCall(sid, User.Right.Soap, sd -> {
 			FileItem f = file == null ? null : file.get();
 			if (f == null || f.getId() != null) {
 				throw new ServiceException("Bad id");
@@ -173,6 +173,26 @@ public class FileWebService extends BaseWebService {
 	}
 
 	/**
+	 * Get all files by external type
+	 *
+	 * @param sid
+	 *            The SID of the User. This SID must be marked as logged in
+	 * @param externalType
+	 *            External type for file listing
+	 * @return - the list of file for given external type
+	 */
+	@WebMethod
+	@GET
+	@Path("/{externaltype}")
+	public List<FileItemDTO> getAllExternal(@WebParam(name="sid") @QueryParam("sid") String sid
+			, @WebParam(name="externaltype") @PathParam("externaltype") String externalType
+			)
+	{
+		log.debug("getAllExternal::externalType {}", externalType);
+		return performCall(sid, User.Right.Soap, sd -> FileItemDTO.list(fileDao.getExternal(externalType)));
+	}
+
+	/**
 	 * Get a File Explorer Object by a given Room
 	 *
 	 * @param sid
@@ -189,7 +209,7 @@ public class FileWebService extends BaseWebService {
 			)
 	{
 		log.debug("getRoom::roomId {}", roomId);
-		return performCall(sid, User.Right.Room, sd -> {
+		return performCall(sid, User.Right.Soap, sd -> {
 			FileExplorerObject fileExplorerObject = new FileExplorerObject();
 
 			// Home File List

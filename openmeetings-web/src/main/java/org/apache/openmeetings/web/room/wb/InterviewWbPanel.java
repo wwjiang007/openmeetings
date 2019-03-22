@@ -20,18 +20,23 @@ package org.apache.openmeetings.web.room.wb;
 
 import java.io.IOException;
 
+import org.apache.openmeetings.core.remote.StreamProcessor;
+import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.file.BaseFileItem;
 import org.apache.openmeetings.db.entity.room.Room.Right;
 import org.apache.openmeetings.web.room.RoomPanel;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.github.openjson.JSONObject;
 
 public class InterviewWbPanel extends AbstractWbPanel {
 	private static final long serialVersionUID = 1L;
 	public static final ResourceReference INTERVIEWWB_JS_REFERENCE = new JavaScriptResourceReference(WbPanel.class, "interviewwb.js");
+	@SpringBean
+	private StreamProcessor streamProcessor;
 
 	public InterviewWbPanel(String id, RoomPanel rp) {
 		super(id, rp);
@@ -49,24 +54,16 @@ public class InterviewWbPanel extends AbstractWbPanel {
 
 	@Override
 	protected void processWbAction(WbAction a, JSONObject obj, AjaxRequestTarget target) throws IOException {
-		/*
 		Client c = rp.getClient();
-		if (c.hasRight(Room.Right.moderator)) {
-			switch (a) {
-				case startRecording:
-					if (getBean(StreamClientManager.class).getRecordingCount(c.getRoomId()) < 1) {
-						getBean(ScopeApplicationAdapter.class).startInterviewRecording(c);
-					}
-					break;
-				case stopRecording:
-					if (getBean(StreamClientManager.class).getRecordingCount(c.getRoomId()) < 1) {
-						getBean(ScopeApplicationAdapter.class).stopInterviewRecording(c);
-					}
-					break;
-				default:
-					//no-op
-			}
+		switch (a) {
+			case startRecording:
+				streamProcessor.startRecording(c);
+				break;
+			case stopRecording:
+				streamProcessor.stopRecording(c);
+				break;
+			default:
+				//no-op
 		}
-		*/
 	}
 }

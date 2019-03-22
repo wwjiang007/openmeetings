@@ -53,9 +53,6 @@ public class NetTestWebService {
 	private static final int JITTER_PACKET_SIZE = 1024;
 	private static final int MAX_UPLOAD_SIZE = 16 * 1024 * 1024;
 
-	public NetTestWebService() {
-	}
-
 	@GET
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	@Path("/")
@@ -104,7 +101,8 @@ public class NetTestWebService {
 			return;
 		}
 		byte[] b = new byte[1024];
-		int totalCount = 0, count = 0;
+		int totalCount = 0
+				, count;
 		while ((count = stream.read(b)) > -1) {
 			totalCount += count;
 		};

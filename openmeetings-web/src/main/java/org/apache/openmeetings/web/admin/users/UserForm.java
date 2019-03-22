@@ -18,11 +18,12 @@
  */
 package org.apache.openmeetings.web.admin.users;
 
+import static java.util.UUID.randomUUID;
 import static org.apache.openmeetings.db.dao.user.UserDao.getNewUserInstance;
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasAdminLevel;
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasGroupAdminLevel;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_AT_REGISTER;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getMinLoginLength;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isSendRegisterEmail;
 import static org.apache.openmeetings.web.app.WebSession.getRights;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.wicket.validation.validator.StringValidator.minimumLength;
@@ -33,10 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.openmeetings.core.util.StrongPasswordValidator;
-import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.dao.server.LdapConfigDao;
 import org.apache.openmeetings.db.dao.server.OAuth2Dao;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -66,6 +65,7 @@ import org.apache.wicket.markup.html.panel.IMarkupSourcingStrategy;
 import org.apache.wicket.markup.html.panel.PanelMarkupSourcingStrategy;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.danekja.java.util.function.serializable.SerializableConsumer;
@@ -96,8 +96,6 @@ public class UserForm extends AdminBaseForm<User> {
 	private final DropDownChoice<Long> domainId = new DropDownChoice<>("domainId");
 	private final PasswordDialog adminPass = new PasswordDialog("adminPass");
 	@SpringBean
-	private ConfigurationDao cfgDao;
-	@SpringBean
 	private UserDao userDao;
 	@SpringBean
 	private EmailManager emainManager;
@@ -118,9 +116,9 @@ public class UserForm extends AdminBaseForm<User> {
 		super.onInitialize();
 		add(mainContainer);
 		mainContainer.add(generalForm = new GeneralUserForm("general", getModel(), true));
-		mainContainer.add(password.setResetPassword(false).setLabel(Model.of(getString("110"))).setRequired(false)
+		mainContainer.add(password.setResetPassword(false).setLabel(new ResourceModel("110")).setRequired(false)
 				.add(passValidator = new StrongPasswordValidator(getModelObject())));
-		login.setLabel(Model.of(getString("108")));
+		login.setLabel(new ResourceModel("108"));
 		mainContainer.add(login.add(minimumLength(getMinLoginLength())));
 
 		mainContainer.add(new DropDownChoice<>("type", Arrays.asList(Type.values())).add(new OnChangeAjaxBehavior() {
@@ -243,9 +241,9 @@ public class UserForm extends AdminBaseForm<User> {
 	private void saveUser(AjaxRequestTarget target, String pass) {
 		User u = getModelObject();
 		final boolean isNew = u.getId() == null;
-		boolean sendEmailAtRegister = cfgDao.getBool(CONFIG_EMAIL_AT_REGISTER, false);
+		boolean sendEmailAtRegister = isSendRegisterEmail();
 		if (isNew && sendEmailAtRegister) {
-			u.setActivatehash(UUID.randomUUID().toString());
+			u.setActivatehash(randomUUID().toString());
 		}
 		try {
 			u = userDao.update(u, pass, getUserId());
@@ -266,7 +264,6 @@ public class UserForm extends AdminBaseForm<User> {
 		setModelObject(userDao.get(getModelObject().getId()));
 		setNewVisible(false);
 		target.add(this, listContainer);
-		reinitJs(target);
 	}
 
 	@Override
@@ -343,7 +340,6 @@ public class UserForm extends AdminBaseForm<User> {
 		updateDomain(target);
 		if (target != null) {
 			target.add(this, listContainer);
-			reinitJs(target);
 		}
 	}
 

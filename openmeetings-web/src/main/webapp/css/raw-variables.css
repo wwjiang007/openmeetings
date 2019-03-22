@@ -1,0 +1,53 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License") +  you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+body {
+	--header-height: 50px;
+	--menu-height: 36px;
+	--level-color: #ADFF2F;
+	--rooms-header-height: 70px;
+	--tabs-height: 45px;
+	--buffer-height: 4px;
+}
+body.no-header {
+	--header-height: 0ch; /* 0px is being stripped by YUI compressor*/
+}
+body.no-menu {
+	--menu-height: 0ch; /* 0px is being stripped by YUI compressor*/
+}
+.adminPanel {
+	--lbl-nav-height: 0ch; /* 0px is being stripped by YUI compressor*/
+	--nav-height: 30px;
+	--list-width: 518px;
+}
+.adminPanelColumnTable.label {
+	--lbl-nav-height: 40px;
+}
+.adminPanelColumnForm {
+	--actions-height: 0ch; /* 0px is being stripped by YUI compressor*/
+}
+.adminPanelColumnForm .adminForm {
+	--actions-height: 40px;
+}
+.recording-panel {
+	--info-height: 115px;
+}
+.file.tree {
+	--tree-header-height: 36px;
+	--tree-footer-height: 40px;
+}

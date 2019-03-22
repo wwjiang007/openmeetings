@@ -28,4 +28,9 @@ public class OmPagingNavigator extends AjaxPagingNavigator {
 		super(id, pageable);
 	}
 
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
+		getPagingNavigation().setViewSize(5);
+	}
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.db.dao.user;
 
+import static org.apache.openmeetings.db.util.DaoHelper.setLimits;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.PARAM_USER_ID;
 
 import java.util.Date;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UserContactDao {
 	private static final Logger log = LoggerFactory.getLogger(UserContactDao.class);
+	private static final String PARAM_OWNERID = "ownerId";
 	@PersistenceContext
 	private EntityManager em;
 	@Autowired
@@ -72,13 +74,13 @@ public class UserContactDao {
 	 * @return rowcount of update
 	 */
 	public Integer deleteAllUserContacts(Long ownerId) {
-		return em.createNamedQuery("deleteAllUserContacts").setParameter("ownerId",ownerId).executeUpdate();
+		return em.createNamedQuery("deleteAllUserContacts").setParameter(PARAM_OWNERID,ownerId).executeUpdate();
 	}
 
 	public UserContact get(Long userId, Long ownerId) {
 		List<UserContact> ll = em.createNamedQuery("getContactByUserOwner", UserContact.class)
 				.setParameter(PARAM_USER_ID, userId)
-				.setParameter("ownerId", ownerId)
+				.setParameter(PARAM_OWNERID, ownerId)
 				.getResultList();
 		log.info("number of contacts:: " + (ll == null ? null : ll.size()));
 		return ll != null && ll.size() == 1 ? ll.get(0) : null;
@@ -89,12 +91,10 @@ public class UserContactDao {
 		return c == null ? false : !c.isPending();
 	}
 
-	public List<UserContact> get(long ownerId, int first, int count) {
-		TypedQuery<UserContact> q = em.createNamedQuery("getContactsByUser", UserContact.class);
-		q.setParameter(PARAM_USER_ID, ownerId);
-		q.setFirstResult(first);
-		q.setMaxResults(count);
-		return q.getResultList();
+	public List<UserContact> get(long ownerId, long first, long count) {
+		return setLimits(
+				em.createNamedQuery("getContactsByUser", UserContact.class).setParameter(PARAM_USER_ID, ownerId)
+				, first, count).getResultList();
 	}
 
 	public long count(long ownerId) {
@@ -105,7 +105,7 @@ public class UserContactDao {
 
 	public List<UserContact> getContactsByUserAndStatus(Long ownerId, boolean pending) {
 		return em.createNamedQuery("getContactsByUserAndStatus", UserContact.class)
-				.setParameter("ownerId", ownerId)
+				.setParameter(PARAM_OWNERID, ownerId)
 				.setParameter("pending", pending)
 				.getResultList();
 	}
@@ -145,7 +145,7 @@ public class UserContactDao {
 			em.persist(c);
 		} else {
 			c.setUpdated(new Date());
-			em.merge(c);
+			c = em.merge(c);
 		}
 		return c;
 	}

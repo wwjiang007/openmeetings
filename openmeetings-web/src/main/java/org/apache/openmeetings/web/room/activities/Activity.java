@@ -29,16 +29,29 @@ public class Activity implements Serializable {
 	public enum Type {
 		roomEnter
 		, roomExit
-		, reqRightModerator
-		, reqRightPresenter
-		, reqRightWb
-		, reqRightShare
-		, reqRightRemote
-		, reqRightA
-		, reqRightAv
-		, reqRightMute
-		, reqRightExclusive
-		, haveQuestion
+		, reqRightModerator(true)
+		, reqRightPresenter(true)
+		, reqRightWb(true)
+		, reqRightShare(true)
+		, reqRightRemote(true)
+		, reqRightA(true)
+		, reqRightAv(true)
+		, reqRightMuteOthers(true)
+		, haveQuestion(true);
+
+		private final boolean action;
+
+		private Type() {
+			this(false);
+		}
+
+		private Type(boolean action) {
+			this.action = action;
+		}
+
+		public boolean isAction() {
+			return action;
+		}
 	}
 	private final String id;
 	private final String uid;

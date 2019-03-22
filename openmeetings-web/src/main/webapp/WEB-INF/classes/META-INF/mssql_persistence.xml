@@ -36,8 +36,7 @@
 		<class>org.apache.openmeetings.db.entity.file.FileItemLog</class>
 		<class>org.apache.openmeetings.db.entity.log.ConferenceLog</class>
 		<class>org.apache.openmeetings.db.entity.record.Recording</class>
-		<class>org.apache.openmeetings.db.entity.record.RecordingMetaData</class>
-		<class>org.apache.openmeetings.db.entity.record.RecordingMetaDelta</class>
+		<class>org.apache.openmeetings.db.entity.record.RecordingChunk</class>
 		<class>org.apache.openmeetings.db.entity.room.Invitation</class>
 		<class>org.apache.openmeetings.db.entity.room.Room</class>
 		<class>org.apache.openmeetings.db.entity.room.RoomFile</class>
@@ -64,6 +63,10 @@
 			<property name="openjpa.ConnectionProperties"
 				value="DriverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
 					, Url=jdbc:sqlserver://localhost:1433;databaseName=openmeetings
+					, maxTotal=100
+					, maxIdle=100
+					, minIdle=0
+					, maxWaitMillis=10000
 					, Username=${db_user}
 					, Password=${db_pass}" />
 			<property name="openjpa.jdbc.SynchronizeMappings" value="buildSchema" />

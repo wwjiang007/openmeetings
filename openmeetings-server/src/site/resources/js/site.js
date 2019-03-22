@@ -21,6 +21,13 @@ $(document).ready(function() {
 	// "New" markers
 	var topics = ["Call For Logo"];
 	for (var i = 0; i < topics.length; ++i) {
-		$('ul.nav li a[title="' + topics[i] + '"').append('&nbsp;&nbsp;<span class="label label-success">New</span>')
+		$('ul.nav li a[title="' + topics[i] + '"').append('&nbsp;&nbsp;<span class="badge badge-success">New</span>')
 	}
+	// "ACNA" banner on the right
+	$('.bannerRight').parent().parent().append(
+		$('<div class="float-right">')
+			.append($('<a href="https://www.apache.org/events/current-event" class="apachecon-banner bannerRight">')
+				.append($('<img src="https://www.apache.org/events/current-event-234x60.png">'))
+				)
+		);
 })

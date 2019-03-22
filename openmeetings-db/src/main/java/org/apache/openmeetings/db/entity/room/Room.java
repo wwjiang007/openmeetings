@@ -36,11 +36,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -62,26 +60,24 @@ import org.simpleframework.xml.Root;
 	, @FetchGroup(name = "roomGroups", attributes = { @FetchAttribute(name = "groups") })
 	, @FetchGroup(name = "roomFiles", attributes = { @FetchAttribute(name = "files") })
 })
-@NamedQueries({
-	@NamedQuery(name = "getNondeletedRooms", query = "SELECT r FROM Room r WHERE r.deleted = false"),
-	@NamedQuery(name = "getPublicRooms", query = "SELECT r from Room r WHERE r.ispublic = true and r.deleted = false and r.type = :type"),
-	@NamedQuery(name = "getRoomByOwnerAndTypeId", query = "SELECT r FROM Room as r WHERE r.ownerId = :ownerId "
-					+ "AND r.type = :type AND r.deleted = false"),
-	@NamedQuery(name = "selectMaxFromRooms", query = "SELECT COUNT(r.id) from Room r WHERE r.deleted = false AND r.name LIKE :search "),
-	@NamedQuery(name = "getRoomByExternalId", query = "SELECT r FROM Room as r "
-			+ "WHERE r.externalId = :externalId AND r.externalType = :externalType "
-			+ "AND r.type = :type AND r.deleted = false"),
-	@NamedQuery(name = "getPublicRoomsOrdered", query = "SELECT r from Room r WHERE r.ispublic= true AND r.deleted= false AND r.appointment = false ORDER BY r.name ASC"),
-	@NamedQuery(name = "getRoomById", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id = :id"),
-	@NamedQuery(name = "getRoomsByIds", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id IN :ids"),
-	@NamedQuery(name = "getSipRoomIdsByIds", query = "SELECT r.id FROM Room r WHERE r.deleted = false AND r.sipEnabled = true AND r.id IN :ids"),
-	@NamedQuery(name = "countRooms", query = "SELECT COUNT(r) FROM Room r WHERE r.deleted = false"),
-	@NamedQuery(name = "getBackupRooms", query = "SELECT r FROM Room r ORDER BY r.id"),
-	@NamedQuery(name = "getRoomsCapacityByIds", query = "SELECT SUM(r.capacity) FROM Room r WHERE r.deleted = false AND r.id IN :ids")
-	, @NamedQuery(name = "getGroupRooms", query = "SELECT DISTINCT rg.room FROM RoomGroup rg LEFT JOIN FETCH rg.room "
-			+ "WHERE rg.group.id = :groupId AND rg.room.deleted = false AND rg.room.appointment = false "
-			+ "ORDER BY rg.room.name ASC")
-})
+@NamedQuery(name = "getNondeletedRooms", query = "SELECT r FROM Room r WHERE r.deleted = false")
+@NamedQuery(name = "getPublicRooms", query = "SELECT r from Room r WHERE r.ispublic = true and r.deleted = false and r.type = :type")
+@NamedQuery(name = "getRoomByOwnerAndTypeId", query = "SELECT r FROM Room as r WHERE r.ownerId = :ownerId "
+				+ "AND r.type = :type AND r.deleted = false")
+@NamedQuery(name = "selectMaxFromRooms", query = "SELECT COUNT(r.id) from Room r WHERE r.deleted = false AND r.name LIKE :search ")
+@NamedQuery(name = "getRoomByExternalId", query = "SELECT r FROM Room as r "
+		+ "WHERE r.externalId = :externalId AND r.externalType = :externalType "
+		+ "AND r.type = :type AND r.deleted = false")
+@NamedQuery(name = "getPublicRoomsOrdered", query = "SELECT r from Room r WHERE r.ispublic= true AND r.deleted= false AND r.appointment = false ORDER BY r.name ASC")
+@NamedQuery(name = "getRoomById", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id = :id")
+@NamedQuery(name = "getRoomsByIds", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id IN :ids")
+@NamedQuery(name = "getSipRoomIdsByIds", query = "SELECT r.id FROM Room r WHERE r.deleted = false AND r.sipEnabled = true AND r.id IN :ids")
+@NamedQuery(name = "countRooms", query = "SELECT COUNT(r) FROM Room r WHERE r.deleted = false")
+@NamedQuery(name = "getBackupRooms", query = "SELECT r FROM Room r ORDER BY r.id")
+@NamedQuery(name = "getRoomsCapacityByIds", query = "SELECT SUM(r.capacity) FROM Room r WHERE r.deleted = false AND r.id IN :ids")
+@NamedQuery(name = "getGroupRooms", query = "SELECT DISTINCT rg.room FROM RoomGroup rg LEFT JOIN FETCH rg.room "
+		+ "WHERE rg.group.id = :groupId AND rg.room.deleted = false AND rg.room.appointment = false "
+		+ "ORDER BY rg.room.name ASC")
 @Table(name = "room")
 @Root(name = "room")
 @XmlRootElement
@@ -102,8 +98,7 @@ public class Room extends HistoricalEntity {
 		, remoteControl
 		, audio
 		, video
-		, mute
-		, exclusive
+		, muteOthers
 	}
 
 	@XmlType(namespace="org.apache.openmeetings.room.element")
@@ -265,10 +260,6 @@ public class Room extends HistoricalEntity {
 	@Element(data = true, required = false)
 	private boolean filesOpened;
 
-	@Column(name = "auto_video_select", nullable = false)
-	@Element(data = true, required = false)
-	private boolean autoVideoSelect;
-
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "roomId")
 	@ForeignKey(enabled = true)
@@ -298,9 +289,6 @@ public class Room extends HistoricalEntity {
 	@ElementDependent
 	@org.simpleframework.xml.Transient
 	private List<RoomFile> files = new ArrayList<>();
-
-	@Transient
-	private List<StreamClient> currentusers;
 
 	public String getComment() {
 		return comment;
@@ -342,14 +330,6 @@ public class Room extends HistoricalEntity {
 
 	public void setIspublic(boolean ispublic) {
 		this.ispublic = ispublic;
-	}
-
-	public List<StreamClient> getCurrentusers() {
-		return currentusers;
-	}
-
-	public void setCurrentusers(List<StreamClient> currentusers) {
-		this.currentusers = currentusers;
 	}
 
 	public long getCapacity() {
@@ -523,14 +503,6 @@ public class Room extends HistoricalEntity {
 
 	public void setFilesOpened(boolean filesOpened) {
 		this.filesOpened = filesOpened;
-	}
-
-	public boolean isAutoVideoSelect() {
-		return autoVideoSelect;
-	}
-
-	public void setAutoVideoSelect(boolean autoVideoSelect) {
-		this.autoVideoSelect = autoVideoSelect;
 	}
 
 	public boolean isSipEnabled() {

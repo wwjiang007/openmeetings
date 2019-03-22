@@ -56,13 +56,6 @@
 				<db_user>sa</db_user>
 				<db_pass>ass</db_pass>
 			</properties>
-			<dependencies>
-				<dependency>
-					<groupId>com.microsoft.sqlserver</groupId>
-					<artifactId>mssql-jdbc</artifactId>
-					<version>${mssql.version}</version>
-				</dependency>
-			</dependencies>
 		</profile>
 		<profile>
 			<id>Jenkins</id>
@@ -95,17 +88,18 @@
 						<configuration>
 							<charset>UTF-8</charset>
 							<cssSourceFiles>
-								<cssSourceFile>nettest.css</cssSourceFile>
-								<cssSourceFile>general.css</cssSourceFile>
-								<cssSourceFile>activities.css</cssSourceFile>
-								<cssSourceFile>admin.css</cssSourceFile>
-								<cssSourceFile>calendar.css</cssSourceFile>
-								<cssSourceFile>cssemoticons.css</cssSourceFile>
-								<cssSourceFile>chat.css</cssSourceFile>
-								<cssSourceFile>menu.css</cssSourceFile>
-								<cssSourceFile>room.css</cssSourceFile>
-								<cssSourceFile>tree.css</cssSourceFile>
-								<cssSourceFile>wb.css</cssSourceFile>
+								<cssSourceFile>raw-variables.css</cssSourceFile>
+								<cssSourceFile>raw-nettest.css</cssSourceFile>
+								<cssSourceFile>raw-general.css</cssSourceFile>
+								<cssSourceFile>raw-activities.css</cssSourceFile>
+								<cssSourceFile>raw-admin.css</cssSourceFile>
+								<cssSourceFile>raw-calendar.css</cssSourceFile>
+								<cssSourceFile>raw-cssemoticons.css</cssSourceFile>
+								<cssSourceFile>raw-chat.css</cssSourceFile>
+								<cssSourceFile>raw-menu.css</cssSourceFile>
+								<cssSourceFile>raw-room.css</cssSourceFile>
+								<cssSourceFile>raw-tree.css</cssSourceFile>
+								<cssSourceFile>raw-wb.css</cssSourceFile>
 							</cssSourceFiles>
 							<cssFinalFile>theme.css</cssFinalFile>
 						</configuration>
@@ -118,7 +112,7 @@
 						<configuration>
 							<charset>UTF-8</charset>
 							<cssSourceFiles>
-								<cssSourceFile>general-rtl.css</cssSourceFile>
+								<cssSourceFile>raw-general-rtl.css</cssSourceFile>
 							</cssSourceFiles>
 							<cssFinalFile>theme-rtl.css</cssFinalFile>
 						</configuration>
@@ -132,8 +126,8 @@
 							<charset>UTF-8</charset>
 							<jsSourceDir>../java/org/apache/openmeetings/web/room/wb</jsSourceDir>
 							<jsSourceFiles>
-								<jsSourceFile>wb-all.js</jsSourceFile>
-								<jsSourceFile>interview-area.js</jsSourceFile>
+								<jsSourceFile>raw-wb-area-base.js</jsSourceFile>
+								<jsSourceFile>raw-interview-area.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>interviewwb.js</jsFinalFile>
 							<jsTargetDir>../generated-sources/main/java/org/apache/openmeetings/web/room/wb/</jsTargetDir>
@@ -152,25 +146,27 @@
 								<jsSourceFile>fabric.js</jsSourceFile>
 								<jsSourceFile>MathJax-config.js</jsSourceFile>
 								<jsSourceFile>MathJax.js</jsSourceFile>
-								<jsSourceFile>wb-all.js</jsSourceFile>
-								<jsSourceFile>tool-util.js</jsSourceFile>
-								<jsSourceFile>player.js</jsSourceFile>
-								<jsSourceFile>tool-base.js</jsSourceFile>
-								<jsSourceFile>tool-pointer.js</jsSourceFile>
-								<jsSourceFile>tool-apointer.js</jsSourceFile>
-								<jsSourceFile>tool-shape-base.js</jsSourceFile>
-								<jsSourceFile>tool-text.js</jsSourceFile>
-								<jsSourceFile>tool-math.js</jsSourceFile>
-								<jsSourceFile>tool-paint.js</jsSourceFile>
-								<jsSourceFile>tool-shape.js</jsSourceFile>
-								<jsSourceFile>tool-line.js</jsSourceFile>
-								<jsSourceFile>tool-uline.js</jsSourceFile>
-								<jsSourceFile>tool-rect.js</jsSourceFile>
-								<jsSourceFile>tool-ellipse.js</jsSourceFile>
-								<jsSourceFile>tool-arrow.js</jsSourceFile>
-								<jsSourceFile>tool-clipart.js</jsSourceFile>
-								<jsSourceFile>wb-board.js</jsSourceFile>
-								<jsSourceFile>wb-area.js</jsSourceFile>
+								<jsSourceFile>raw-wb-area-base.js</jsSourceFile>
+								<jsSourceFile>raw-tool-util.js</jsSourceFile>
+								<jsSourceFile>raw-player.js</jsSourceFile>
+								<jsSourceFile>raw-tool-base.js</jsSourceFile>
+								<jsSourceFile>raw-tool-pointer.js</jsSourceFile>
+								<jsSourceFile>raw-tool-apointer.js</jsSourceFile>
+								<jsSourceFile>raw-tool-shape-base.js</jsSourceFile>
+								<jsSourceFile>raw-tool-text.js</jsSourceFile>
+								<jsSourceFile>raw-tool-whiteout.js</jsSourceFile>
+								<jsSourceFile>raw-tool-textbox.js</jsSourceFile>
+								<jsSourceFile>raw-tool-math.js</jsSourceFile>
+								<jsSourceFile>raw-tool-paint.js</jsSourceFile>
+								<jsSourceFile>raw-tool-shape.js</jsSourceFile>
+								<jsSourceFile>raw-tool-line.js</jsSourceFile>
+								<jsSourceFile>raw-tool-uline.js</jsSourceFile>
+								<jsSourceFile>raw-tool-rect.js</jsSourceFile>
+								<jsSourceFile>raw-tool-ellipse.js</jsSourceFile>
+								<jsSourceFile>raw-tool-arrow.js</jsSourceFile>
+								<jsSourceFile>raw-tool-clipart.js</jsSourceFile>
+								<jsSourceFile>raw-wb-board.js</jsSourceFile>
+								<jsSourceFile>raw-wb-area.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>wb.js</jsFinalFile>
 							<jsTargetDir>../generated-sources/main/java/org/apache/openmeetings/web/room/wb/</jsTargetDir>
@@ -188,15 +184,14 @@
 							<jsSourceFiles>
 								<jsSourceFile>fileinput.js</jsSourceFile>
 							</jsSourceFiles>
-							<jsFinalFile>fileinput.js</jsFinalFile>
+							<jsFinalFile>omfileinput.js</jsFinalFile>
 							<jsTargetDir>../generated-sources/main/java/org/apache/openmeetings/web/util/upload</jsTargetDir>
 							<jsEngine>CLOSURE</jsEngine>
 							<cssSourceDir>../java/org/apache/openmeetings/web/util/upload</cssSourceDir>
 							<cssSourceFiles>
 								<cssSourceFile>fileinput.css</cssSourceFile>
 							</cssSourceFiles>
-							<skipMerge>true</skipMerge>
-							<cssFinalFile>fileinput.css</cssFinalFile>
+							<cssFinalFile>omfileinput.css</cssFinalFile>
 							<cssTargetDir>../generated-sources/main/java/org/apache/openmeetings/web/util/upload</cssTargetDir>
 						</configuration>
 					</execution>
@@ -210,10 +205,10 @@
 							<jsSourceDir>../java/org/apache/openmeetings/web/room</jsSourceDir>
 							<jsSourceFiles>
 								<jsSourceFile>jquery.dialogextend.js</jsSourceFile>
-								<jsSourceFile>video-util.js</jsSourceFile>
-								<jsSourceFile>video.js</jsSourceFile>
-								<jsSourceFile>video-manager.js</jsSourceFile>
-								<jsSourceFile>room-base.js</jsSourceFile>
+								<jsSourceFile>raw-video.js</jsSourceFile>
+								<jsSourceFile>raw-video-manager.js</jsSourceFile>
+								<jsSourceFile>raw-sharer.js</jsSourceFile>
+								<jsSourceFile>raw-room.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>room.js</jsFinalFile>
 							<jsEngine>CLOSURE</jsEngine>
@@ -229,7 +224,8 @@
 							<charset>UTF-8</charset>
 							<jsSourceDir>../java/org/apache/openmeetings/web/room</jsSourceDir>
 							<jsSourceFiles>
-								<jsSourceFile>settings-base.js</jsSourceFile>
+								<jsSourceFile>raw-video-util.js</jsSourceFile>
+								<jsSourceFile>raw-settings.js</jsSourceFile>
 								<jsSourceFile>kurento-utils.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>settings.js</jsFinalFile>
@@ -246,7 +242,7 @@
 							<charset>UTF-8</charset>
 							<jsSourceDir>../java/org/apache/openmeetings/web/room</jsSourceDir>
 							<jsSourceFiles>
-								<jsSourceFile>nettest-base.js</jsSourceFile>
+								<jsSourceFile>raw-nettest.js</jsSourceFile>
 								<jsSourceFile>network.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>nettest.js</jsFinalFile>
@@ -263,8 +259,8 @@
 							<charset>UTF-8</charset>
 							<jsSourceDir>../java/org/apache/openmeetings/web/user/chat</jsSourceDir>
 							<jsSourceFiles>
-								<jsSourceFile>cssemoticons.js</jsSourceFile>
-								<jsSourceFile>chat-base.js</jsSourceFile>
+								<jsSourceFile>raw-cssemoticons.js</jsSourceFile>
+								<jsSourceFile>raw-chat.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>chat.js</jsFinalFile>
 							<jsEngine>CLOSURE</jsEngine>
@@ -278,7 +274,29 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
 					<archiveClasses>true</archiveClasses>
-					<packagingExcludes>**/*.class</packagingExcludes>
+					<packagingExcludes>
+						**/*.class,
+						**/raw-*.css,
+						**/raw-*.js,
+						**/fabric.js,
+						**/MathJax*.js,
+						**/fileinput.js,
+						**/fileinput.css,
+						**/jquery.dialogextend.js,
+						**/kurento-utils.js,
+						**/network.js
+					</packagingExcludes>
+					<warSourceExcludes>
+						**/raw-*.css,
+						**/raw-*.js,
+						**/fabric.js,
+						**/MathJax*.js,
+						**/fileinput.js,
+						**/fileinput.css,
+						**/jquery.dialogextend.js,
+						**/kurento-utils.js,
+						**/network.js
+					</warSourceExcludes>
 					<filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
 					<webResources>
 						<webResource>
@@ -355,6 +373,12 @@
 									<version>3.3.0</version>
 									<type>zip</type>
 								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.openmeetings</groupId>
+									<artifactId>test-backup</artifactId>
+									<version>4.0.4</version>
+									<type>zip</type>
+								</artifactItem>
 							</artifactItems>
 							<overWriteReleases>false</overWriteReleases>
 							<overWriteSnapshots>false</overWriteSnapshots>
@@ -398,6 +422,17 @@
 									<includes>
 										<include>**</include>
 									</includes>
+									<excludes>
+										<exclude>**/raw-*.css</exclude>
+										<exclude>**/raw-*.js</exclude>
+										<exclude>**/fabric.js</exclude>
+										<exclude>**/MathJax*.js</exclude>
+										<exclude>**/fileinput.js</exclude>
+										<exclude>**/fileinput.css</exclude>
+										<exclude>**/jquery.dialogextend.js</exclude>
+										<exclude>**/kurento-utils.js</exclude>
+										<exclude>**/network.js</exclude>
+									</excludes>
 									<filtering>true</filtering>
 								</resource>
 							</resources>
@@ -422,6 +457,17 @@
 										<include>**/*.xml</include>
 										<include>**/*.properties</include>
 									</includes>
+									<excludes>
+										<exclude>**/raw-*.css</exclude>
+										<exclude>**/raw-*.js</exclude>
+										<exclude>**/fabric.js</exclude>
+										<exclude>**/MathJax*.js</exclude>
+										<exclude>**/fileinput.js</exclude>
+										<exclude>**/fileinput.css</exclude>
+										<exclude>**/jquery.dialogextend.js</exclude>
+										<exclude>**/kurento-utils.js</exclude>
+										<exclude>**/network.js</exclude>
+									</excludes>
 								</resource>
 								<resource>
 									<directory>${project.parent.basedir}/openmeetings-service/src/main/java</directory>
@@ -491,7 +537,6 @@
 					<systemPropertyVariables>
 						<om.home>${project.build.directory}/test-root</om.home>
 						<languages.home>${project.build.directory}/test-root/languages</languages.home>
-						<red5.root>red5.root</red5.root>
 						<backups.dir>${old-backups.dir}</backups.dir>
 						<catalina.useNaming>true</catalina.useNaming>
 						<current_openmeetings_log_dir>${project.build.directory}</current_openmeetings_log_dir>
@@ -506,7 +551,7 @@
 				<plugin>
 					<groupId>org.eclipse.jetty</groupId>
 					<artifactId>jetty-maven-plugin</artifactId>
-					<version>${jetty9.version}</version>
+					<version>${jetty.version}</version>
 					<configuration>
 						<systemProperties>
 							<systemProperty>
@@ -656,7 +701,6 @@
 		<dependency>
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>cxf-rt-rs-client</artifactId>
-			<version>${cxf.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -666,14 +710,30 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>${pdfbox.version}</version>
+			<groupId>javax.websocket</groupId>
+			<artifactId>javax.websocket-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
 			<artifactId>tomcat-embed-websocket</artifactId>
 			<version>${tomcat.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-test-framework</artifactId>
+			<version>2.0.0.AM25</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.directory.api</groupId>
+					<artifactId>api-ldap-schema-data</artifactId>
+				</exclusion>
+			</exclusions>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

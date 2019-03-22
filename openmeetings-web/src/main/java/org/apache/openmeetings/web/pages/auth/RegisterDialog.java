@@ -18,17 +18,16 @@
  */
 package org.apache.openmeetings.web.pages.auth;
 
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_AT_REGISTER;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_VERIFICATION;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getBaseUrl;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getMinLoginLength;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isSendRegisterEmail;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isSendVerificationEmail;
 import static org.apache.wicket.validation.validator.StringValidator.minimumLength;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.openmeetings.core.util.StrongPasswordValidator;
-import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.dao.user.IUserManager;
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.user.Address;
@@ -51,6 +50,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.validation.IValidatable;
@@ -83,8 +83,6 @@ public class RegisterDialog extends NonClosableDialog<String> {
 	MessageDialog confirmRegistration;
 	private boolean sendConfirmation = false;
 	private boolean sendEmailAtRegister = false;
-	@SpringBean
-	private ConfigurationDao cfgDao;
 	@SpringBean
 	private IUserManager userManager;
 	@SpringBean
@@ -155,13 +153,11 @@ public class RegisterDialog extends NonClosableDialog<String> {
 	@Override
 	protected void onOpen(IPartialPageRequestHandler handler) {
 		String baseURL = getBaseUrl();
-		sendEmailAtRegister = cfgDao.getBool(CONFIG_EMAIL_AT_REGISTER, false);
-		sendConfirmation = !Strings.isEmpty(baseURL) && cfgDao.getBool(CONFIG_EMAIL_VERIFICATION, false);
+		sendEmailAtRegister = isSendRegisterEmail();
+		sendConfirmation = !Strings.isEmpty(baseURL) && isSendVerificationEmail();
 		String messageCode = "account.created";
 		if (sendConfirmation && sendEmailAtRegister) {
 			messageCode = "warn.notverified";
-		} else if (sendConfirmation) {
-			messageCode = "1591";
 		}
 		confirmRegistration.setModelObject(getString(messageCode));
 		reset(handler);
@@ -193,12 +189,14 @@ public class RegisterDialog extends NonClosableDialog<String> {
 	@Override
 	protected void onSubmit(AjaxRequestTarget target, DialogButton btn) {
 		try {
-			userManager.registerUser(login, password, lastName
+			Object o = userManager.registerUser(login, password, lastName
 					, firstName, email, country, lang, tzModel.getObject());
+			if (o instanceof String) {
+				confirmRegistration.setModelObject(getString((String)o));
+			}
 		} catch (Exception e) {
 			log.error("[registerUser]", e);
 		}
-
 		confirmRegistration.open(target);
 	}
 
@@ -232,9 +230,9 @@ public class RegisterDialog extends NonClosableDialog<String> {
 		@Override
 		protected void onInitialize() {
 			super.onInitialize();
-			firstNameField.setLabel(Model.of(getString("117")));
-			lastNameField.setLabel(Model.of(getString("136")));
-			loginField.add(minimumLength(getMinLoginLength())).setLabel(Model.of(getString("114")));
+			firstNameField.setLabel(new ResourceModel("117"));
+			lastNameField.setLabel(new ResourceModel("136"));
+			loginField.add(minimumLength(getMinLoginLength())).setLabel(new ResourceModel("114"));
 			passwordField.setResetPassword(true).add(new StrongPasswordValidator(new User()) {
 				private static final long serialVersionUID = 1L;
 
@@ -247,9 +245,9 @@ public class RegisterDialog extends NonClosableDialog<String> {
 					setUser(u);
 					super.validate(pass);
 				}
-			}).setLabel(Model.of(getString("110")));
-			confirmPassword.setLabel(Model.of(getString("116")));
-			emailField.add(RfcCompliantEmailAddressValidator.getInstance()).setLabel(Model.of(getString("119")));
+			}).setLabel(new ResourceModel("110"));
+			confirmPassword.setLabel(new ResourceModel("116"));
+			emailField.add(RfcCompliantEmailAddressValidator.getInstance()).setLabel(new ResourceModel("119"));
 			add(new AjaxButton("submit") { // FAKE button so "submit-on-enter" works as expected
 				private static final long serialVersionUID = 1L;
 

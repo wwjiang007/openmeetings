@@ -18,7 +18,7 @@
  */
 package org.apache.openmeetings.web.util;
 
-import static org.apache.openmeetings.util.OmFileHelper.JPG_MIME_TYPE;
+import static org.apache.openmeetings.util.OmFileHelper.PNG_MIME_TYPE;
 import static org.apache.openmeetings.util.OmFileHelper.SIP_USER_ID;
 
 import java.io.File;
@@ -59,7 +59,7 @@ public class ProfileImageResourceReference extends ResourceReference {
 	}
 
 	public static String getUrl(RequestCycle rc, User u) {
-		String uri = u.getPictureuri();
+		String uri = u.getPictureUri();
 		if (!isAbsolute(uri)) {
 			File img = OmFileHelper.getUserProfilePicture(u.getId(), uri);
 			uri = rc.urlFor(new ProfileImageResourceReference()
@@ -80,7 +80,7 @@ public class ProfileImageResourceReference extends ResourceReference {
 
 	@Override
 	public IResource getResource() {
-		return new ByteArrayResource(JPG_MIME_TYPE) {
+		return new ByteArrayResource(PNG_MIME_TYPE) {
 			private static final long serialVersionUID = 1L;
 			private Long userId = null;
 			private String uri = null;
@@ -92,7 +92,7 @@ public class ProfileImageResourceReference extends ResourceReference {
 					PageParameters params = attributes.getParameters();
 					try {
 						userId = params.get("id").toOptionalLong();
-						uri = SIP_USER_ID.equals(userId) ? null : userDao.get(userId).getPictureuri();
+						uri = SIP_USER_ID.equals(userId) ? null : userDao.get(userId).getPictureUri();
 					} catch (Exception e) {
 						// no-op, junk filter
 					}

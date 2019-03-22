@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.web.room.menu;
 
-import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_JPG;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_PDF;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_PNG;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.isSipEnabled;
@@ -38,7 +37,6 @@ public class ActionsSubMenu implements Serializable {
 	private final SipDialerDialog sipDialer;
 	private final RoomPanel room;
 	private final RoomMenuPanel mp;
-	private final StartSharingButton shareBtn;
 	private RoomMenuItem actionsMenu;
 	private RoomMenuItem inviteMenuItem;
 	private RoomMenuItem shareMenuItem;
@@ -47,14 +45,12 @@ public class ActionsSubMenu implements Serializable {
 	private RoomMenuItem applyAvMenuItem;
 	private RoomMenuItem sipDialerMenuItem;
 	private RoomMenuItem downloadPngMenuItem;
-	private RoomMenuItem downloadJpgMenuItem;
 	private RoomMenuItem downloadPdfMenuItem;
 	private final boolean visible;
 
-	public ActionsSubMenu(final RoomPanel room, final RoomMenuPanel mp, final StartSharingButton shareBtn) {
+	public ActionsSubMenu(final RoomPanel room, final RoomMenuPanel mp) {
 		this.room = room;
 		this.mp = mp;
-		this.shareBtn = shareBtn;
 		RoomInvitationForm rif = new RoomInvitationForm("form", room.getRoom().getId());
 		mp.add(invite = new InvitationDialog("invite", rif));
 		rif.setDialog(invite);
@@ -78,7 +74,7 @@ public class ActionsSubMenu implements Serializable {
 
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				shareBtn.onClick(target);
+				target.appendJavaScript("Sharer.open();");
 			}
 		};
 		applyModerMenuItem = new RoomMenuItem(mp.getString("784"), mp.getString("1481"), false) {
@@ -121,14 +117,6 @@ public class ActionsSubMenu implements Serializable {
 				download(target, EXTENSION_PNG);
 			}
 		};
-		downloadJpgMenuItem = new RoomMenuItem(mp.getString("download.jpg"), mp.getString("download.jpg")) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onClick(AjaxRequestTarget target) {
-				download(target, EXTENSION_JPG);
-			}
-		};
 		downloadPdfMenuItem = new RoomMenuItem(mp.getString("download.pdf"), mp.getString("download.pdf")) {
 			private static final long serialVersionUID = 1L;
 
@@ -148,7 +136,6 @@ public class ActionsSubMenu implements Serializable {
 		actionsMenu.getItems().add(applyAvMenuItem);
 		actionsMenu.getItems().add(sipDialerMenuItem);
 		actionsMenu.getItems().add(downloadPngMenuItem);
-		actionsMenu.getItems().add(downloadJpgMenuItem);
 		actionsMenu.getItems().add(downloadPdfMenuItem);
 		return actionsMenu;
 	}
@@ -159,9 +146,8 @@ public class ActionsSubMenu implements Serializable {
 		}
 		boolean isInterview = Room.Type.interview == r.getType();
 		downloadPngMenuItem.setEnabled(!isInterview);
-		downloadJpgMenuItem.setEnabled(!isInterview);
 		downloadPdfMenuItem.setEnabled(!isInterview);
-		actionsMenu.setEnabled((moder && visible) || (!moder && r.isAllowUserQuestions()));
+		actionsMenu.setEnabled(moder || r.isAllowUserQuestions());
 		inviteMenuItem.setEnabled(notExternalUser && moder);
 		boolean shareVisible = room.screenShareAllowed();
 		shareMenuItem.setEnabled(shareVisible);

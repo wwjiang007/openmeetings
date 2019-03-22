@@ -28,7 +28,7 @@
 	<artifactId>openmeetings-core</artifactId>
 	<packaging>jar</packaging>
 	<name>Openmeetings Core</name>
-	<description>Module for OpenMeetings core and red5 related classes and services</description>
+	<description>Module for OpenMeetings core classes and services</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
 	</properties>
@@ -98,7 +98,7 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-client</artifactId>
-			<version>6.7.1</version>
+			<version>6.9.1</version>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
@@ -106,6 +106,21 @@
 			<artifactId>openmeetings-util</artifactId>
 			<version>${project.version}</version>
 			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-module-junit4</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.powermock</groupId>
+			<artifactId>powermock-api-mockito2</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

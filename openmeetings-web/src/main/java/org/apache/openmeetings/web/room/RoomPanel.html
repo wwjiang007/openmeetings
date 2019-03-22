@@ -42,7 +42,10 @@
 	</div>
 	<div style="display:none">
 		<div id="user-video">
-			<div class="video"></div>
+			<div class="video">
+				<canvas width="10" class="level-meter" wicket:message="title:767"></canvas>
+				<div class="mute-others" wicket:message="title:video.muteothers"></div>
+			</div>
 			<div class="footer ui-state-highlight">
 				<div class="on"><wicket:message key="video.mic.on"/></div>
 				<div class="off" style="display:none;"><wicket:message key="video.mic.off"/></div>
@@ -65,24 +68,67 @@
 				</li>
 			</ul>
 		</div>
-		<div id="exclusive-confirm" wicket:message="title:1428,data-btn-ok:54,data-btn-cancel:lbl.cancel">
+		<div id="muteothers-confirm" wicket:message="title:ulist.right.muteothers.grant, data-btn-ok:54, data-btn-cancel:lbl.cancel">
 			<div style="padding: 4px;" class="ui-state-highlight ui-corner-all">
-				<span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span><wicket:message key="1539"/>
+				<span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span><wicket:message key="ulist.user.muteothers.confirm"/>
 			</div>
 			<br/>
-			<input id="exclusive-confirm-dont-show" type="checkbox"/><label for="exclusive-confirm-dont-show"><wicket:message key="64"/></label>
+			<input id="muteothers-confirm-dont-show" type="checkbox"/><label for="muteothers-confirm-dont-show"><wicket:message key="64"/></label>
 		</div>
 		<div id="clipboard-dialog" wicket:message="title:1121,data-btn-ok:54">
 			<p><span class="ui-icon ui-icon-alert" style="float:left; margin:12px 12px 20px 0;"></span><span class="text"></span></p>
 		</div>
 		<div id="quick-vote-template">
-			<div class="close clickable"><wicket:message key="85" /></div>
+			<div class="close clickable"><wicket:message key="85"/></div>
 			<div class="control pro">
 				<span class="badge">0</span>
 			</div>
 			<div class="control con">
 				<span class="badge">0</span>
 			</div>
+		</div>
+		<div id="quick-confirmation" wicket:message="title:832, data-btn-ok:54, data-btn-cancel:lbl.cancel">
+			<wicket:message key="1419"/>
+		</div>
+		<div id="sharer" wicket:message="title:730">
+			<h2 class="alert" style="display: none">Screen-sharing is not supported in your browser</h2>
+			<div class="container">
+				<div>
+					<span class="label"><wicket:message key="734"/></span>
+					<select name="type" class="type">
+						<option value="screen">Screen</option>
+						<option value="window">Window</option>
+						<option value="application">Application</option>
+						<option value="tab">Tab</option>
+					</select>
+				</div>
+				<div>
+					<span class="label"><wicket:message key="740"/></span>
+					<input class="width" type="number" value="800"/>
+				</div>
+				<div>
+					<span class="label"><wicket:message key="741"/></span>
+					<input class="height" type="number" value="600"/>
+				</div>
+				<div>
+					<span class="label"><wicket:message key="1089"/></span>
+					<select name="fps" class="fps">
+						<option value="2">2 FPS</option>
+						<option value="5">5 FPS</option>
+						<option value="10" selected>10 FPS</option>
+						<option value="15">15 FPS</option>
+						<option value="20">20 FPS</option>
+						<option value="25">25 FPS</option>
+						<option value="30">30 FPS</option>
+					</select>
+				</div>
+				<hr/>
+				<button class="share-start-stop" wicket:message="data-start:732, data-stop:733"><wicket:message key="732"/></button>
+				<button class="record-start-stop ui-state-error" wicket:message="data-start:871, data-stop:872"><wicket:message key="871"/></button>
+			</div>
+		</div>
+		<div id="ask-permission" wicket:message="title:video.permission.title, data-btn-ok:54">
+			<wicket:message key="video.permission.text"/>
 		</div>
 	</div>
 </wicket:panel>

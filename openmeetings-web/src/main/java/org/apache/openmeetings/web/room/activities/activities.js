@@ -1,7 +1,8 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
 var Activities = function() {
 	const closedHeight = 20, timeout = 10000;
-	let activities, aclean, area, openedHeight = 345, openedHeightPx = openedHeight + 'px', inited = false;
+	let activities, aclean, modArea, area, openedHeight = 345
+		, openedHeightPx = openedHeight + 'px', inited = false;
 
 	function _load() {
 		const s = Settings.load();
@@ -70,7 +71,9 @@ var Activities = function() {
 		}
 	}
 	function _hightlight() {
-		if (!inited) return;
+		if (!inited) {
+			return;
+		}
 		if (isClosed()) {
 			$('.control.block', activities).addClass('ui-state-highlight');
 		}
@@ -81,13 +84,22 @@ var Activities = function() {
 	function _action(name, val) {
 		activityAction($('.room.box').data('room-id'), name, val);
 	}
-	function _remove(id) {
-		$('#' + _getId(id)).remove();
+	function _remove(ids) {
+		for (let i = 0; i < ids.length; ++i) {
+			$('#' + _getId(ids[i])).remove();
+		}
+		_updateCount();
 	}
 	function _clearItem(id) {
 		if (aclean.prop('checked')) {
-			_remove(id);
+			_remove([id]);
 		}
+	}
+	function _updateCount() {
+		if (!inited) {
+			return;
+		}
+		$('.control.block .badge', activities).text(modArea.find('.activity').length);
 	}
 
 	return {
@@ -101,7 +113,7 @@ var Activities = function() {
 				, disabled: isClosed()
 				, alsoResize: '#activities .area'
 				, minHeight: 195
-				, resize: function(event, ui) {
+				, resize: function() {
 					activities.css({'top': ''});
 				}
 				, stop: function(event, ui) {
@@ -109,7 +121,8 @@ var Activities = function() {
 					openedHeightPx = openedHeight + 'px';
 				}
 			});
-			area = activities.find('.area');
+			modArea = activities.find('.area .actions');
+			area = activities.find('.area .activities');
 			aclean = $('#activity-auto-clean');
 			aclean.change(function() {
 				const s = _load();
@@ -119,9 +132,12 @@ var Activities = function() {
 			});
 			_updateClean(_load(), aclean);
 			inited = true;
+			_updateCount();
 		}
 		, toggle: function() {
-			if (!inited) return;
+			if (!inited) {
+				return;
+			}
 			if (isClosed()) {
 				_open();
 			} else {
@@ -130,9 +146,11 @@ var Activities = function() {
 		}
 		, findUser: _findUser
 		, add: function(obj) {
-			if (!inited) return;
+			if (!inited) {
+				return;
+			}
 			const _id = _getId(obj.id);
-			area.append(OmUtil.tmpl('#activity-stub', _id).data(obj));
+			(obj.action ? modArea : area).append(OmUtil.tmpl('#activity-stub', _id).data(obj));
 			const a = $('#' + _id).addClass(obj.cssClass);
 			a.find('.activity-close,.activity-accept,.activity-decline,.activity-find').addClass(Settings.isRtl ? 'align-left' : 'align-right');
 			const acpt = a.find('.activity-accept');
@@ -153,12 +171,15 @@ var Activities = function() {
 			} else {
 				fnd.hide();
 			}
-			a.find('.activity-close').click(function() { a.remove(); _action('close', obj.id); });
+			a.find('.activity-close').click(function() {
+				_action('close', obj.id);
+			});
 			a.find('.activity-text').text(obj.text);
 			_hightlight();
 			if (aclean.prop('checked') && a.hasClass('auto-clean')) {
 				setTimeout(_clearItem.bind(null, obj.id), timeout);
 			}
+			_updateCount();
 		}
 		, remove: _remove
 	};

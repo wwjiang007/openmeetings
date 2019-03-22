@@ -61,6 +61,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
@@ -80,8 +81,8 @@ public class SignInDialog extends NonClosableDialog<String> {
 	private Form<String> form;
 	private DialogButton loginBtn;
 	private DialogButton registerBtn;
-	private String password;
-	private String login;
+	private final PasswordTextField passField = new PasswordTextField("pass", Model.of(""));
+	private final RequiredTextField<String> loginField = new RequiredTextField<>("login", Model.of(""));
 	private boolean rememberMe = false;
 	private RegisterDialog r;
 	private ForgetPasswordDialog f;
@@ -188,9 +189,9 @@ public class SignInDialog extends NonClosableDialog<String> {
 
 	@Override
 	protected void onSubmit(AjaxRequestTarget target, DialogButton btn) {
-		if (domain.getAddDomainToUserName()) {
-			login = login + "@" + domain.getDomain();
-		}
+		final String login = String.format(domain.getAddDomainToUserName() ? "%s@%s" : "%s"
+				, loginField.getModelObject(), domain.getDomain());
+		final String password = passField.getModelObject();
 		OmAuthenticationStrategy strategy = getAuthenticationStrategy();
 		WebSession ws = WebSession.get();
 		Type type = domain.getId() > 0 ? Type.ldap : Type.user;
@@ -226,8 +227,6 @@ public class SignInDialog extends NonClosableDialog<String> {
 
 	class SignInForm extends StatelessForm<String> {
 		private static final long serialVersionUID = 1L;
-		private PasswordTextField passField;
-		private RequiredTextField<String> loginField;
 
 		public SignInForm(String id) {
 			super(id);
@@ -236,8 +235,7 @@ public class SignInDialog extends NonClosableDialog<String> {
 				alreadyLoggedIn();
 			}
 			add(feedback.setOutputMarkupId(true));
-			add(loginField = new RequiredTextField<>("login", new PropertyModel<String>(SignInDialog.this, "login")));
-			add(passField = new PasswordTextField("pass", new PropertyModel<String>(SignInDialog.this, "password")).setResetPassword(true));
+			add(loginField, passField.setResetPassword(true));
 			List<LdapConfig> ldaps = ldapDao.get();
 			int selectedLdap = cfgDao.getInt(CONFIG_DEFAULT_LDAP_ID, 0);
 			domain = ldaps.get(selectedLdap < ldaps.size() && selectedLdap > 0 ? selectedLdap : 0);
@@ -304,8 +302,8 @@ public class SignInDialog extends NonClosableDialog<String> {
 
 		@Override
 		protected void onInitialize() {
-			loginField.setLabel(Model.of(getString("114")));
-			passField.setLabel(Model.of(getString("110")));
+			loginField.setLabel(new ResourceModel("114"));
+			passField.setLabel(new ResourceModel("110"));
 			super.onInitialize();
 		}
 

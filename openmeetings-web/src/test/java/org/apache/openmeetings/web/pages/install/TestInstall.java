@@ -38,6 +38,8 @@ import static org.junit.Assert.assertNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
@@ -68,14 +70,29 @@ public class TestInstall {
 
 	public static void setDerbyHome(File f) throws IOException {
 		System.setProperty(DERBY_HOME, f.getCanonicalPath());
+		try {
+			Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			log.error("Fail to re-init Derby", e);
+		}
 	}
 
 	public static void resetDerbyHome() {
+		try {
+			DriverManager.getConnection("jdbc:derby:;shutdown=true");
+		} catch (SQLException e) {
+			if ("XJ015".equals(e.getSQLState()) && 50000 == e.getErrorCode()) {
+				log.info("Derby shutdown successfully");
+			} else {
+				log.error("Fail to shutdown Derby", e);
+			}
+		}
 		System.getProperties().remove(DERBY_HOME);
 	}
 
 	@Before
 	public void setUp() throws IOException {
+		log.info("Going to perform setup for TestInstall");
 		AbstractSpringTest.setOmHome();
 		setWicketApplicationName(DEFAULT_APP_NAME);
 		tempFolder = Files.createTempDirectory("omtempdb").toFile();
@@ -84,14 +101,17 @@ public class TestInstall {
 		assertNotNull("Web session should not be null", WebSession.get());
 		Locale[] locales = Locale.getAvailableLocales();
 		tester.getSession().setLocale(locales[rnd.nextInt(locales.length)]);
-		log.debug("Setup complete");
+		log.info("Setup complete");
 	}
 
 	@After
 	public void tearDown() throws IOException {
+		log.info("Going to perform clean-up for TestInstall");
 		AbstractWicketTester.destroy(tester);
+		log.info("WicketTester is destroyed");
 		resetDerbyHome();
 		deleteDirectory(tempFolder);
+		log.info("Clean-up complete");
 	}
 
 	@Test
@@ -104,7 +124,7 @@ public class TestInstall {
 		assertNotNull("Model should NOT be null", wiz.getWizardModel().getActiveStep());
 
 		ButtonAjaxBehavior prev = getButtonBehavior(tester, WIZARD_PATH, "PREV");
-		 //check enabled, add check for other buttons on other steps
+		//check enabled, add check for other buttons on other steps
 		assertFalse("Prev button should be disabled", prev.getButton().isEnabled());
 		ButtonAjaxBehavior next = getButtonBehavior(tester, WIZARD_PATH, "NEXT");
 		ButtonAjaxBehavior finish = getButtonBehavior(tester, WIZARD_PATH, SUBMIT);

@@ -18,23 +18,26 @@
  */
 package org.apache.openmeetings.core.util.ws;
 
+import org.apache.openmeetings.util.NullStringer;
 import org.apache.openmeetings.util.ws.IClusterWsMessage;
+
+import com.github.openjson.JSONObject;
 
 public class WsMessageUser implements IClusterWsMessage {
 	private static final long serialVersionUID = 1L;
 	private final Long userId;
 	private final String msg;
 
-	public WsMessageUser(Long userId, String msg) {
+	public WsMessageUser(Long userId, JSONObject msg) {
 		this.userId = userId;
-		this.msg = msg;
+		this.msg = msg.toString(new NullStringer());
 	}
 
 	public Long getUserId() {
 		return userId;
 	}
 
-	public String getMsg() {
-		return msg;
+	public JSONObject getMsg() {
+		return new JSONObject(msg);
 	}
 }

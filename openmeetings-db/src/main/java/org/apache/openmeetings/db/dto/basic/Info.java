@@ -18,8 +18,6 @@
  */
 package org.apache.openmeetings.db.dto.basic;
 
-import static org.apache.openmeetings.util.OpenmeetingsVariables.isInitComplete;
-
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -35,13 +33,11 @@ public class Info implements Serializable {
 	private final String version;
 	private final String revision;
 	private final String buildDate;
-	private final boolean inited;
 
 	public Info() {
 		version = Version.getVersion();
 		revision = Version.getRevision();
 		buildDate = Version.getBuildDate();
-		inited = isInitComplete();
 	}
 
 	public String getVersion() {
@@ -54,9 +50,5 @@ public class Info implements Serializable {
 
 	public String getBuildDate() {
 		return buildDate;
-	}
-
-	public boolean isInited() {
-		return inited;
 	}
 }

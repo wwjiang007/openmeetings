@@ -58,7 +58,7 @@
 		<section name="Apache OpenMeetings - Features and overview">
 			<p> Openmeetings provides video conferencing, instant messaging,
 				white board, collaborative document editing and other groupware
-				tools using API functions of the Red5 Streaming Server for Remoting
+				tools using API functions of the Kurento Media Server for Remoting
 				and Streaming.
 			</p>
 			<p>
@@ -68,44 +68,86 @@
 			</p>
 		</section>
 		<section name="News">
-			<div class="bs-callout bs-callout-danger">
-				<b>Version 4.0.4 released!</b>
-				<div>Release 4.0.4, provides following improvements:<br/>
-					<div class="bs-callout bs-callout-danger">The purpose of this release is to provide GDPR compatible version of OpenMeetings</div>
-					<br/>
-					Room:<br/>
+			<div class="bd-callout bd-callout-danger">
+				<h4>Version 4.0.8 released!</h4>
+				<div>Release 4.0.8, provides following improvements:<br/>
+					Mobile client:
 					<ul>
-						<li>Performance is improved</li>
-						<li>Audio/Video streams were not closed in IE</li>
-						<li>File conversion on Windows is improved</li>
+						<li>Mobile clients are displayed in user list</li>
+						<li>Audio/Video switching is more stable</li>
+					</ul>
+					OAuth:
+					<ul>
+						<li>VK based OAuth login is fixed</li>
+						<li>Integrate Wso2 Identity Server</li>
+					</ul>
+					Activities&amp;Actions:
+					<ul>
+						<li>Less actions for non-moderators</li>
+						<li>No duplicated actions are displayed</li>
+					</ul>
+					White board:
+					<ul>
+						<li>Video on WB works in latest Safari</li>
+						<li>White Out tool is added</li>
+						<li>Whiteboard size can be tuned</li>
+						<li>Link to LaTeX guide is added</li>
+					</ul>
+					Room User list:
+					<ul>
+						<li>Issue with user's display name is fixed</li>
+						<li>"Ghost" users are not displayed in the room</li>
 					</ul>
 					<br/>
 					Other fixes and improvements
-					<div class="bs-callout bs-callout-info">Please update to this release from any previous OpenMeetings release</div>
+					<div class="bd-callout bd-callout-info">Please update to this release from any previous OpenMeetings release</div>
 				</div>
 				<br/>
 
 				<span>
-					9 issues are fixed please check <br/>
-					<a href="https://www.apache.org/dist/openmeetings/4.0.4/CHANGELOG.md">CHANGELOG</a> and
-					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12343045">Detailed list</a>
+					30 issues are fixed please check <br/>
+					<a href="https://www.apache.org/dist/openmeetings/4.0.8/CHANGELOG.md">CHANGELOG</a> and
+					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12344753">Detailed list</a>
 				</span>
 				<span> See <a href="downloads.html">Downloads page</a>.</span>
-				<span class="date">(2018-05-25)</span>
+				<span class="date">(2019-03-08)</span>
 			</div>
-			<div class="bs-callout bs-callout-info">
+			<div class="bd-callout bd-callout-info">
 				<span class="date"><a href="NewsArchive.html">You can find older news here</a></span>
 			</div>
 		</section>
-
-		<section name="Community">
-			<div class="bs-callout bs-callout-info">
-				<b>Who we are</b>
-				<span><a href="team-list.html">List of committers</a>.</span>
+		<section name="Events">
+			<div>
+				<h4>Nearest ApacheCon:</h4>
+				<div class="row">
+					<div class="col-md-1"></div>
+					<div class="col-md-8">
+						<a href="https://www.apache.org/events/current-event">
+							<img alt="ASF Current Events" src="https://www.apache.org/events/current-event-234x60.png"/>
+						</a>
+					</div>
+				</div>
 			</div>
-			<div class="bs-callout bs-callout-info">
-				<b>Users!</b>
-				<span>We'd love to have you involved. Check out the <a href="get-involved.html">Get involved</a>.</span>
+			<div>
+				<h4>Other Apache Events</h4>
+				<div class="row">
+					<div class="col-md-1"></div>
+					<div class="col-md-8">
+						For the many smaller Apache project-related events, see <a href="http://events.apache.org/">events.apache.org</a>.
+					</div>
+				</div>
+			</div>
+		</section>
+		<section name="Community">
+			<div class="bd-callout bd-callout-info">
+				<div class="h4">Who we are</div>
+				<div>
+					<a href="team.html">Here</a> is the list of our commiters. Contributions are welcome :)
+				</div>
+			</div>
+			<div class="bd-callout bd-callout-info">
+				<div class="h4">Users!</div>
+				<div>We'd love to have you involved. Check out the <a href="get-involved.html">Get involved</a>.</div>
 			</div>
 		</section>
 
@@ -218,12 +260,12 @@
 								Allow/Deny Remote Control Screen
 							</li>
 							<li>
-								<img src="images/microphone_exclusive.png" class="alignnone" title="Right for exclusive audio" alt="" />
-								Allow/Deny right for exclusive audio
+								<img src="images/microphone_mute_others.png" class="alignnone" title="Right for 'Mute others'" alt="" />
+								Allow/Deny right for 'Mute others'
 							</li>
 							<li>
-								<img src="images/micro_small.png" class="alignnone" title="Exclusive audio" alt="" />
-								Give exclusive audio to others or self
+								<img src="images/micro_small.png" class="alignnone" title="Mute others" alt="" />
+								Let one user to speak while others are muted
 							</li>
 							<li>
 								<img src="images/webcam_add.png" class="alignnone" title="Video" alt="" />

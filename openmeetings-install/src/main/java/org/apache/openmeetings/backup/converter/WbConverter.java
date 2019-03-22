@@ -19,6 +19,7 @@
 package org.apache.openmeetings.backup.converter;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.math.NumberUtils.toLong;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_ID;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_TYPE;
@@ -37,7 +38,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.openmeetings.db.dto.room.Whiteboard;
@@ -51,6 +51,9 @@ import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.xml.XppDriver;
+import com.thoughtworks.xstream.security.NoTypePermission;
+import com.thoughtworks.xstream.security.NullPermission;
+import com.thoughtworks.xstream.security.PrimitiveTypePermission;
 
 public class WbConverter {
 	private static final Logger log = LoggerFactory.getLogger(WbConverter.class);
@@ -67,7 +70,7 @@ public class WbConverter {
 	}
 
 	private static void add(Whiteboard wb, JSONObject o) {
-		String uid = UUID.randomUUID().toString();
+		String uid = randomUUID().toString();
 		wb.put(uid, o.put("uid", uid));
 	}
 
@@ -197,10 +200,10 @@ public class WbConverter {
 			src = String.format("./public/%s", src.substring(idx));
 		}
 		add(wb, init(wb, props)
-			.put(ATTR_TYPE, TYPE_IMAGE)
-			.put("omType", "Clipart")
-			.put(PARAM__SRC, src)
-			.put("angle", props.get(3)));
+				.put(ATTR_TYPE, TYPE_IMAGE)
+				.put("omType", "Clipart")
+				.put(PARAM__SRC, src)
+				.put("angle", props.get(3)));
 	}
 
 	private static long getFileId(String src) {
@@ -221,9 +224,9 @@ public class WbConverter {
 			return;
 		}
 		add(wb, init(wb, props)
-			.put(ATTR_TYPE, TYPE_IMAGE)
-			.put(ATTR_FILE_TYPE, BaseFileItem.Type.Image.name())
-			.put(ATTR_FILE_ID, fileId));
+				.put(ATTR_TYPE, TYPE_IMAGE)
+				.put(ATTR_FILE_TYPE, BaseFileItem.Type.Image.name())
+				.put(ATTR_FILE_ID, fileId));
 	}
 
 	private static void processDoc(Whiteboard wb, List<?> props) {
@@ -235,9 +238,9 @@ public class WbConverter {
 			return;
 		}
 		add(wb, init(wb, props, false)
-			.put(ATTR_TYPE, TYPE_IMAGE)
-			.put(ATTR_FILE_TYPE, BaseFileItem.Type.Presentation.name())
-			.put(ATTR_FILE_ID, fileId));
+				.put(ATTR_TYPE, TYPE_IMAGE)
+				.put(ATTR_FILE_TYPE, BaseFileItem.Type.Presentation.name())
+				.put(ATTR_FILE_ID, fileId));
 	}
 
 	private static void processVid(Whiteboard wb, List<?> props) {
@@ -245,9 +248,9 @@ public class WbConverter {
 			return;
 		}
 		add(wb, init(wb, props)
-			.put(ATTR_TYPE, TYPE_IMAGE)
-			.put(ATTR_FILE_TYPE, BaseFileItem.Type.Video.name())
-			.put(ATTR_FILE_ID, props.get(1)));
+				.put(ATTR_TYPE, TYPE_IMAGE)
+				.put(ATTR_FILE_TYPE, BaseFileItem.Type.Video.name())
+				.put(ATTR_FILE_ID, props.get(1)));
 	}
 
 	public static Whiteboard convert(FileItem fi) {
@@ -305,10 +308,15 @@ public class WbConverter {
 		File file = new File(OmFileHelper.getUploadWmlDir(), name);
 		log.debug("filepathComplete: {}", file);
 
-		XStream xStream = new XStream(new XppDriver());
-		xStream.setMode(XStream.NO_REFERENCES);
+		XStream xstream = new XStream(new XppDriver());
+		xstream.setMode(XStream.NO_REFERENCES);
+		xstream.addPermission(NoTypePermission.NONE);
+		xstream.addPermission(NullPermission.NULL);
+		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+		xstream.allowTypeHierarchy(List.class);
+		xstream.allowTypeHierarchy(String.class);
 		try (InputStream is = new FileInputStream(file); BufferedReader reader = new BufferedReader(new InputStreamReader(is, UTF_8))) {
-			return (List<?>) xStream.fromXML(reader);
+			return (List<?>) xstream.fromXML(reader);
 		} catch (Exception err) {
 			log.error("loadWmlFile", err);
 		}

@@ -45,7 +45,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -56,20 +55,18 @@ import org.apache.openmeetings.util.OmFileHelper;
 import org.simpleframework.xml.Element;
 
 @Entity
-@NamedQueries({
-	@NamedQuery(name = "getFileById", query = "SELECT f FROM BaseFileItem f WHERE f.deleted = false AND f.id = :id")
-	, @NamedQuery(name = "getAnyFileById", query = "SELECT f FROM BaseFileItem f WHERE f.id = :id")
-	, @NamedQuery(name = "getFileByHash", query = "SELECT f FROM BaseFileItem f WHERE f.deleted = false AND f.hash = :hash")
-	, @NamedQuery(name = "getAllFileItemsForRoom", query = "SELECT f FROM BaseFileItem f"
-			+ " WHERE f.deleted = false AND f.type <> :folder"
-			+ " AND (f.roomId IS NULL OR f.roomId = :roomId)"
-			+ " AND (f.groupId IS NULL OR f.groupId IN :groups)"
-			+ " AND f.ownerId IS NULL" // not loading personal files
-			+ " AND f.name LIKE :name"
-			+ " ORDER BY f.name")
-	, @NamedQuery(name = "getFileItemsByIds", query = "SELECT f FROM BaseFileItem f"
-			+ " WHERE f.deleted = false AND f.id IN :ids")
-})
+@NamedQuery(name = "getFileById", query = "SELECT f FROM BaseFileItem f WHERE f.deleted = false AND f.id = :id")
+@NamedQuery(name = "getAnyFileById", query = "SELECT f FROM BaseFileItem f WHERE f.id = :id")
+@NamedQuery(name = "getFileByHash", query = "SELECT f FROM BaseFileItem f WHERE f.deleted = false AND f.hash = :hash")
+@NamedQuery(name = "getAllFileItemsForRoom", query = "SELECT f FROM BaseFileItem f"
+		+ " WHERE f.deleted = false AND f.type <> :folder"
+		+ " AND (f.roomId IS NULL OR f.roomId = :roomId)"
+		+ " AND (f.groupId IS NULL OR f.groupId IN :groups)"
+		+ " AND f.ownerId IS NULL" // not loading personal files
+		+ " AND f.name LIKE :name"
+		+ " ORDER BY f.name")
+@NamedQuery(name = "getFileItemsByIds", query = "SELECT f FROM BaseFileItem f"
+		+ " WHERE f.deleted = false AND f.id IN :ids")
 @Table(name = "om_file")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class BaseFileItem extends HistoricalEntity {
@@ -271,7 +268,14 @@ public abstract class BaseFileItem extends HistoricalEntity {
 					f = new File(getUploadWmlDir(), String.format(FILE_NAME_FMT, getHash(), ext == null ? EXTENSION_WML : ext));
 					break;
 				case Image:
-					f = new File(d, String.format(FILE_NAME_FMT, getHash(), ext == null ? EXTENSION_JPG : ext));
+					if (ext == null) {
+						f = new File(d, String.format(FILE_NAME_FMT, getHash(), EXTENSION_PNG));
+						if (!f.exists()) {
+							f = new File(d, String.format(FILE_NAME_FMT, getHash(), EXTENSION_JPG)); // backward compatibility
+						}
+					} else {
+						f = new File(d, String.format(FILE_NAME_FMT, getHash(), ext));
+					}
 					break;
 				case Recording:
 					f = new File(getStreamsHibernateDir(), String.format(FILE_NAME_FMT, getHash(), ext == null ? EXTENSION_MP4 : ext));
@@ -364,7 +368,7 @@ public abstract class BaseFileItem extends HistoricalEntity {
 		Set<String> exclusions = new HashSet<>();
 
 		OriginalFilter() {
-			exclusions.add(EXTENSION_JPG);
+			exclusions.add(EXTENSION_PNG);
 			exclusions.add("swf");
 			if (Type.Presentation == getType()) {
 				exclusions.add(EXTENSION_PDF);

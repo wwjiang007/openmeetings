@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.webservice;
 
+import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.apache.openmeetings.AbstractJUnitDefaults.adminUsername;
 import static org.apache.openmeetings.AbstractJUnitDefaults.createPass;
@@ -33,11 +34,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.UUID;
 
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.Response;
 
+import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.dto.basic.ServiceResult;
 import org.apache.openmeetings.db.dto.basic.ServiceResult.Type;
 import org.apache.openmeetings.db.dto.room.RoomOptionsDTO;
@@ -51,7 +52,7 @@ import org.apache.wicket.util.string.StringValue;
 import org.junit.Test;
 
 public class TestUserService extends AbstractWebServiceTest {
-	private static final String DUMMY_PICTURE_URL = "http://openmeetings.apache.org/images/logo.png";
+	private static final String DUMMY_PICTURE_URL = "https://openmeetings.apache.org/images/logo.png";
 
 	@Test
 	public void invalidLoginTest() {
@@ -113,9 +114,9 @@ public class TestUserService extends AbstractWebServiceTest {
 		assertTrue("Login via secure hash should be successful", ws.isSignedIn());
 		Long userId1 = WebSession.getUserId();
 		assertNotEquals(userId0, userId1);
-		User u = userDao.get(userId1);
+		User u = getBean(UserDao.class).get(userId1);
 		assertNotNull("User should be created successfuly", u);
-		assertEquals("Picture URL should be preserved", DUMMY_PICTURE_URL, u.getPictureuri());
+		assertEquals("Picture URL should be preserved", DUMMY_PICTURE_URL, u.getPictureUri());
 	}
 
 	@Test
@@ -124,7 +125,7 @@ public class TestUserService extends AbstractWebServiceTest {
 		String tz = TimeZone.getTimeZone(tzList[rnd.nextInt(tzList.length)]).getID();
 		ServiceResult r = login();
 		UserDTO u = new UserDTO();
-		String uuid = UUID.randomUUID().toString();
+		String uuid = randomUUID().toString();
 		u.setLogin("test" + uuid);
 		u.setPassword(createPass());
 		u.setFirstname("testF" + uuid);

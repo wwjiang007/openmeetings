@@ -24,20 +24,25 @@ import java.util.List;
 
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.user.User;
+import org.apache.wicket.injection.Injector;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.select2.ChoiceProvider;
 import org.wicketstuff.select2.Response;
 
 public abstract class AdminUserChoiceProvider extends ChoiceProvider<User> {
 	private static final long serialVersionUID = 1L;
-	public static final int PAGE_SIZE = 20;
+	public static final long PAGE_SIZE = 20;
 	@SpringBean
 	private UserDao userDao;
+
+	public AdminUserChoiceProvider() {
+		Injector.get().inject(this);
+	}
 
 	@Override
 	public String getIdValue(User choice) {
 		Long id = choice.getId();
-		return id == null ? null : "" + id;
+		return id == null ? null : String.valueOf(id);
 	}
 
 	@Override

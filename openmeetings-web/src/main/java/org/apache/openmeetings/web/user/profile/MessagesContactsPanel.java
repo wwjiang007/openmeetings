@@ -52,6 +52,7 @@ import org.apache.openmeetings.web.common.UserBasePanel;
 import org.apache.openmeetings.web.data.DataViewContainer;
 import org.apache.openmeetings.web.data.OmOrderByBorder;
 import org.apache.openmeetings.web.data.SearchableDataProvider;
+import org.apache.openmeetings.web.user.MessageDialog;
 import org.apache.openmeetings.web.user.rooms.RoomEnterBehavior;
 import org.apache.openmeetings.web.util.ContactsHelper;
 import org.apache.wicket.AttributeModifier;
@@ -81,13 +82,12 @@ import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.plugins.fixedheadertable.FixedHeaderTableBehavior;
 import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
 
 public class MessagesContactsPanel extends UserBasePanel {
 	private static final long serialVersionUID = 1L;
 	private static final Long MOVE_CHOOSE = Long.valueOf(-1);
+	private static final String CSS_UNREAD = "unread";
 	private static final String SELECT_CHOOSE = "1252";
 	private static final String SELECT_ALL = "1239";
 	private static final String SELECT_NONE = "1240";
@@ -109,14 +109,15 @@ public class MessagesContactsPanel extends UserBasePanel {
 	private final WebMarkupContainer contacts = new WebMarkupContainer("contacts");
 	private final DataViewContainer<PrivateMessage> dataContainer;
 	private final Set<Long> selectedMessages = new HashSet<>();
+	private Long lastSelected = null;
 	private final Set<Long> allMessages = new HashSet<>();
 	private final Set<Long> readMessages = new HashSet<>();
 	private final Set<Long> unreadMessages = new HashSet<>();
 	private final Button toInboxBtn = new Button("toInboxBtn");
 	private final Button deleteBtn = new Button("deleteBtn");
+	private final Button replyBtn = new Button("replyBtn");
 	private final Button readBtn = new Button("readBtn");
 	private final Button unreadBtn = new Button("unreadBtn");
-	private final FixedHeaderTableBehavior fixedTable = new FixedHeaderTableBehavior("#messagesTable", new Options("height", 100));
 	private final DropDownChoice<String> selectDropDown = new DropDownChoice<>(
 		"msgSelect", Model.of(SELECT_CHOOSE)
 		, Arrays.asList(SELECT_CHOOSE, SELECT_ALL, SELECT_NONE, SELECT_UNREAD, SELECT_READ)
@@ -261,7 +262,7 @@ public class MessagesContactsPanel extends UserBasePanel {
 				unreadMessages.clear();
 				String sort = getSort() == null ? "" : "m." + getSort().getProperty();
 				boolean isAsc = getSort() == null ? true : getSort().isAscending();
-				return getDao().get(getUserId(), selectedFolderModel.getObject(), search, sort, isAsc, (int)first, (int)count).iterator();
+				return getDao().get(getUserId(), selectedFolderModel.getObject(), search, sort, isAsc, first, count).iterator();
 			}
 
 			@Override
@@ -302,7 +303,7 @@ public class MessagesContactsPanel extends UserBasePanel {
 						target.add(container);
 					}
 				});
-				StringBuilder cssClass = new StringBuilder(m.getIsRead() ? "" : "unread");
+				StringBuilder cssClass = new StringBuilder(m.getIsRead() ? "" : CSS_UNREAD);
 				if (selectedMessages.contains(id)) {
 					if (cssClass.length() > 0) {
 						cssClass.append(" ");
@@ -333,14 +334,30 @@ public class MessagesContactsPanel extends UserBasePanel {
 
 		add(buttons.setOutputMarkupId(true));
 		buttons.add(toInboxBtn.add(new AjaxEventBehavior(EVT_CLICK) {
-			private static final long serialVersionUID = 1L;
+				private static final long serialVersionUID = 1L;
 
-			@Override
-			protected void onEvent(AjaxRequestTarget target) {
-				msgDao.moveMailsToFolder(selectedMessages, INBOX_FOLDER_ID);
-				selectFolder(selectedFolder, selectedFolderModel.getObject(), target);
-			}
-		}));
+				@Override
+				protected void onEvent(AjaxRequestTarget target) {
+					msgDao.moveMailsToFolder(selectedMessages, INBOX_FOLDER_ID);
+					selectFolder(selectedFolder, selectedFolderModel.getObject(), target);
+				}
+			}));
+		buttons.add(replyBtn.add(new AjaxEventBehavior(EVT_CLICK) {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				protected void onEvent(AjaxRequestTarget target) {
+					PrivateMessage opm = msgDao.get(lastSelected);
+					if (opm != null) {
+						MessageDialog newDlg = getMainPanel().getMessageDialog();
+						PrivateMessage pm = newDlg.reset(true).getModelObject();
+						pm.setTo(opm.getFrom());
+						pm.setSubject(String.format("%s %s", getString("messages.subject.re"), opm.getSubject()));
+						pm.setMessage(String.format("<br/><blockquote class=\"quote\">%s</blockquote>", opm.getMessage()));
+						newDlg.open(target);
+					}
+				}
+			}));
 		buttons.add(deleteBtn.add(new AjaxEventBehavior(EVT_CLICK) {
 				private static final long serialVersionUID = 1L;
 
@@ -424,7 +441,7 @@ public class MessagesContactsPanel extends UserBasePanel {
 
 			@Override
 			public Iterator<? extends UserContact> iterator(long first, long count) {
-				return contactDao.get(getUserId(), (int)first, (int)count).iterator();
+				return contactDao.get(getUserId(), first, count).iterator();
 			}
 
 			@Override
@@ -450,7 +467,7 @@ public class MessagesContactsPanel extends UserBasePanel {
 				final Long contactId = uc.getId();
 				final Long userId = uc.getOwner().getId();
 				if (uc.isPending()) {
-					item.add(AttributeModifier.append(ATTR_CLASS, "unread"));
+					item.add(AttributeModifier.append(ATTR_CLASS, CSS_UNREAD));
 				}
 				item.add(new Label("name", getName(uc)));
 				item.add(new WebMarkupContainer("accept").add(new AjaxEventBehavior(EVT_CLICK) {
@@ -533,6 +550,7 @@ public class MessagesContactsPanel extends UserBasePanel {
 		readBtn.setEnabled(!TRASH_FOLDER_ID.equals(selFldr) && !selectedMessages.isEmpty());
 		unreadBtn.setEnabled(!TRASH_FOLDER_ID.equals(selFldr) && !selectedMessages.isEmpty());
 		toInboxBtn.setVisible(!INBOX_FOLDER_ID.equals(selFldr) && !SENT_FOLDER_ID.equals(selFldr) && !selectedMessages.isEmpty());
+		replyBtn.setEnabled(lastSelected != null);
 		target.add(buttons);
 	}
 
@@ -546,7 +564,10 @@ public class MessagesContactsPanel extends UserBasePanel {
 		selectedMessage.addOrReplace(new Label("to", msg == null ? "" : getEmail(msg.getTo())));
 		selectedMessage.addOrReplace(new Label("subj", msg == null ? "" : msg.getSubject()));
 		selectedMessage.addOrReplace(new Label("body", msg == null ? "" : msg.getMessage()).setEscapeModelStrings(false));
-		if (msg != null) {
+		if (msg == null) {
+			lastSelected = null;
+		} else {
+			lastSelected = id;
 			Room r = msg.getRoom();
 			if (r != null) {
 				Appointment a = apptDao.getByRoom(r.getId());
@@ -563,7 +584,6 @@ public class MessagesContactsPanel extends UserBasePanel {
 	}
 
 	void updateTable(AjaxRequestTarget target) {
-		container.add(fixedTable);
 		if (target != null) {
 			target.add(container);
 		}

@@ -50,7 +50,7 @@
 			604800000	== 7 days
 	 -->
 	<bean id="cleanupJob" class="org.apache.openmeetings.service.quartz.scheduler.CleanupJob"
-			p:sessionTimeout="1800000" p:testSetupTimeout="3600000" p:roomFilesTtl="3600000" p:resetHashTtl="86400000"
+			p:sessionTimeout="1800000" p:testSetupTimeout="3600000" p:resetHashTtl="86400000"
 			p:confLogTtl="604800000" />
 	<!-- sessions clean-up -->
 	<bean id="cleanSessionsJobDetails" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean"
@@ -62,11 +62,6 @@
 			p:targetObject-ref="cleanupJob" p:targetMethod="cleanTestSetup" p:concurrent="false" />
 	<bean id="triggerCleanTestSetup" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean"
 			p:jobDetail-ref="cleanTestSetupJobDetail" p:startDelay="1800000" p:repeatInterval="1800000" />
-	<!-- room files clean-up -->
-	<bean id="cleanRoomFilesJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean"
-			p:targetObject-ref="cleanupJob" p:targetMethod="cleanRoomFiles" p:concurrent="false" />
-	<bean id="triggerCleanRoomFiles" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean"
-			p:jobDetail-ref="cleanRoomFilesJobDetail" p:startDelay="10000" p:repeatInterval="1800000" />
 	<!-- expired recordings clean-up -->
 	<bean id="cleanExpiredRecJobDetails" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean"
 			p:targetObject-ref="cleanupJob" p:targetMethod="cleanExpiredRecordings" p:concurrent="false" />
@@ -95,6 +90,10 @@
 			p:targetObject-ref="reminderJob" p:targetMethod="loadRss" p:concurrent="false" />
 	<bean id="triggerLoadRss" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean"
 			p:jobDetail-ref="loadRssJobDetail" p:startDelay="5000" p:repeatInterval="600000"/>
+	<bean id="checkHealthJobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean"
+			p:targetObject-ref="reminderJob" p:targetMethod="checkHealth" p:concurrent="false" />
+	<bean id="triggerCheckHealth" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean"
+			p:jobDetail-ref="checkHealthJobDetail" p:startDelay="5000" p:repeatInterval="15000"/>
 
 	<!-- Mail related jobs -->
 	<bean id="resetSendingMailStatus" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean"
@@ -111,7 +110,6 @@
 			<list>
 				<ref bean="triggerCleanSessions" />
 				<ref bean="triggerCleanTestSetup" />
-				<ref bean="triggerCleanRoomFiles" />
 				<ref bean="triggerCleanExpiredRec" />
 				<ref bean="triggerCleanExpiredResetHash" />
 				<ref bean="triggerCleanPersonalData" />
@@ -120,6 +118,7 @@
 				<ref bean="triggerResetSendingMailStatus" />
 				<ref bean="triggerSendMails" />
 				<ref bean="triggerLoadRss" />
+				<ref bean="triggerCheckHealth" />
 			</list>
 		</property>
 	</bean>
@@ -143,4 +142,17 @@
 		<property name="maxPoolSize" value="10" />
 		<property name="queueCapacity" value="25" />
 	</bean>
+
+	<!-- Kurento -->
+	<bean id="kurentoHandler" class="org.apache.openmeetings.core.remote.KurentoHandler" init-method="init" destroy-method="destroy"
+			p:kurentoWsUrl="ws://127.0.0.1:8888/kurento"
+			p:checkTimeout="10000"
+			p:watchThreadCount="10"
+			p:turnUrl=""
+			p:turnUser=""
+			p:turnSecret=""
+			p:turnMode="rest"
+			p:turnTtl="60"
+			p:objCheckTimeout="200"
+			/>
 </beans>

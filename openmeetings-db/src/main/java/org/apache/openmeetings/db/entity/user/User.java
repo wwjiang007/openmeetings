@@ -20,6 +20,7 @@ package org.apache.openmeetings.db.entity.user;
 
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getSipContext;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.isSipEnabled;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -41,7 +42,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -56,10 +56,13 @@ import org.apache.openjpa.persistence.FetchGroup;
 import org.apache.openjpa.persistence.FetchGroups;
 import org.apache.openjpa.persistence.LoadFetchGroup;
 import org.apache.openjpa.persistence.jdbc.ForeignKey;
+import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.entity.HistoricalEntity;
+import org.apache.openmeetings.db.entity.label.OmLanguage;
 import org.apache.openmeetings.db.entity.server.Sessiondata;
 import org.apache.openmeetings.util.crypt.CryptProvider;
 import org.apache.openmeetings.util.crypt.MD5;
+import org.apache.wicket.util.string.Strings;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
@@ -76,28 +79,26 @@ import org.simpleframework.xml.Root;
 	@FetchGroup(name = "backupexport", attributes = { @FetchAttribute(name = "password") })
 	, @FetchGroup(name = "groupUsers", attributes = { @FetchAttribute(name = "groupUsers")})
 })
-@NamedQueries({
-	@NamedQuery(name = "getUserById", query = "SELECT u FROM User u WHERE u.id = :id"),
-	@NamedQuery(name = "getUsersByIds", query = "select c from User c where c.id IN :ids"),
-	@NamedQuery(name = "getUserByLogin", query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.login = :login AND ((:domainId = 0 AND u.domainId IS NULL) OR (:domainId > 0 AND u.domainId = :domainId))"),
-	@NamedQuery(name = "getUserByEmail", query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.address.email = :email AND ((:domainId = 0 AND u.domainId IS NULL) OR (:domainId > 0 AND u.domainId = :domainId))"),
-	@NamedQuery(name = "getUserByHash",  query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.resethash = :resethash"),
-	@NamedQuery(name = "getUserByExpiredHash",  query = "SELECT u FROM User u WHERE u.resetDate < :date"),
-	@NamedQuery(name = "getContactByEmailAndUser", query = "SELECT u FROM User u WHERE u.deleted = false AND u.address.email = :email AND u.type = :type AND u.ownerId = :ownerId"),
-	@NamedQuery(name = "selectMaxFromUsersWithSearch", query = "select count(c.id) from User c "
-			+ "where c.deleted = false " + "AND ("
-			+ "lower(c.login) LIKE :search "
-			+ "OR lower(c.firstname) LIKE :search "
-			+ "OR lower(c.lastname) LIKE :search )"),
-	@NamedQuery(name = "getAllUsers", query = "SELECT u FROM User u ORDER BY u.id"),
-	@NamedQuery(name = "getPassword", query = "SELECT u.password FROM User u WHERE u.deleted = false AND u.id = :userId "),
-	@NamedQuery(name = "updatePassword", query = "UPDATE User u SET u.password = :password WHERE u.id = :userId"), //
-	@NamedQuery(name = "getNondeletedUsers", query = "SELECT u FROM User u WHERE u.deleted = false"),
-	@NamedQuery(name = "countNondeletedUsers", query = "SELECT COUNT(u) FROM User u WHERE u.deleted = false"),
-	@NamedQuery(name = "getUsersByGroupId", query = "SELECT u FROM User u WHERE u.deleted = false AND u.groupUsers.group.id = :groupId"),
-	@NamedQuery(name = "getExternalUser", query = "SELECT u FROM User u WHERE u.deleted = false AND u.externalId LIKE :externalId AND u.externalType LIKE :externalType"),
-	@NamedQuery(name = "getUserByLoginOrEmail", query = "SELECT u from User u WHERE u.deleted = false AND u.type = :type AND (u.login = :userOrEmail OR u.address.email = :userOrEmail)")
-})
+@NamedQuery(name = "getUserById", query = "SELECT u FROM User u WHERE u.id = :id")
+@NamedQuery(name = "getUsersByIds", query = "select c from User c where c.id IN :ids")
+@NamedQuery(name = "getUserByLogin", query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.login = :login AND ((:domainId = 0 AND u.domainId IS NULL) OR (:domainId > 0 AND u.domainId = :domainId))")
+@NamedQuery(name = "getUserByEmail", query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.address.email = :email AND ((:domainId = 0 AND u.domainId IS NULL) OR (:domainId > 0 AND u.domainId = :domainId))")
+@NamedQuery(name = "getUserByHash",  query = "SELECT u FROM User u WHERE u.deleted = false AND u.type = :type AND u.resethash = :resethash")
+@NamedQuery(name = "getUserByExpiredHash",  query = "SELECT u FROM User u WHERE u.resetDate < :date")
+@NamedQuery(name = "getContactByEmailAndUser", query = "SELECT u FROM User u WHERE u.deleted = false AND u.address.email = :email AND u.type = :type AND u.ownerId = :ownerId")
+@NamedQuery(name = "selectMaxFromUsersWithSearch", query = "select count(c.id) from User c "
+		+ "where c.deleted = false " + "AND ("
+		+ "lower(c.login) LIKE :search "
+		+ "OR lower(c.firstname) LIKE :search "
+		+ "OR lower(c.lastname) LIKE :search )")
+@NamedQuery(name = "getAllUsers", query = "SELECT u FROM User u ORDER BY u.id")
+@NamedQuery(name = "getPassword", query = "SELECT u.password FROM User u WHERE u.deleted = false AND u.id = :userId ")
+@NamedQuery(name = "updatePassword", query = "UPDATE User u SET u.password = :password WHERE u.id = :userId")
+@NamedQuery(name = "getNondeletedUsers", query = "SELECT u FROM User u WHERE u.deleted = false")
+@NamedQuery(name = "countNondeletedUsers", query = "SELECT COUNT(u) FROM User u WHERE u.deleted = false")
+@NamedQuery(name = "getUsersByGroupId", query = "SELECT u FROM User u WHERE u.deleted = false AND u.groupUsers.group.id = :groupId")
+@NamedQuery(name = "getExternalUser", query = "SELECT u FROM User u WHERE u.deleted = false AND u.externalId LIKE :externalId AND u.externalType LIKE :externalType")
+@NamedQuery(name = "getUserByLoginOrEmail", query = "SELECT u from User u WHERE u.deleted = false AND u.type = :type AND (u.login = :userOrEmail OR u.address.email = :userOrEmail)")
 @Table(name = "om_user")
 @Root(name = "user")
 public class User extends HistoricalEntity {
@@ -194,6 +195,10 @@ public class User extends HistoricalEntity {
 	@Element(data = true, required = false)
 	private String lastname;
 
+	@Column(name = "displayName")
+	@Element(data = true, required = false)
+	private String displayName;
+
 	@Column(name = "login")
 	@Element(data = true, required = false)
 	private String login;
@@ -215,7 +220,7 @@ public class User extends HistoricalEntity {
 
 	@Column(name = "pictureuri")
 	@Element(data = true, required = false)
-	private String pictureuri;
+	private String pictureUri;
 
 	@Column(name = "language_id")
 	@Element(name = "language_id", data = true, required = false)
@@ -272,10 +277,6 @@ public class User extends HistoricalEntity {
 	@Column(name = "forceTimeZoneCheck", nullable = false)
 	@Element(data = true, required = false)
 	private boolean forceTimeZoneCheck;
-
-	@Column(name = "sendSMS", nullable = false)
-	@Element(data = false, required = false)
-	private boolean sendSMS;
 
 	@Column(name = "user_offers")
 	@Element(data = true, required = false)
@@ -365,6 +366,17 @@ public class User extends HistoricalEntity {
 		return this;
 	}
 
+	public String getDisplayName() {
+		return Strings.isEmpty(displayName) ? generateDisplayName() : displayName;
+	}
+
+	public User setDisplayName(String displayName) {
+		if (!Strings.isEmpty(displayName)) {
+			this.displayName = escapeMarkup(displayName).toString();
+		}
+		return this;
+	}
+
 	public String getLogin() {
 		return login;
 	}
@@ -421,12 +433,12 @@ public class User extends HistoricalEntity {
 		this.salutation = salutation;
 	}
 
-	public String getPictureuri() {
-		return pictureuri;
+	public String getPictureUri() {
+		return pictureUri;
 	}
 
-	public void setPictureuri(String pictureuri) {
-		this.pictureuri = pictureuri;
+	public void setPictureUri(String pictureUri) {
+		this.pictureUri = pictureUri;
 	}
 
 	public long getLanguageId() {
@@ -518,14 +530,6 @@ public class User extends HistoricalEntity {
 		this.forceTimeZoneCheck = forceTimeZoneCheck;
 	}
 
-	public boolean getSendSMS() {
-		return sendSMS;
-	}
-
-	public void setSendSMS(boolean sendSMS) {
-		this.sendSMS = sendSMS;
-	}
-
 	public String getUserOffers() {
 		return userOffers;
 	}
@@ -556,10 +560,6 @@ public class User extends HistoricalEntity {
 
 	public void setShowContactDataToContacts(boolean showContactDataToContacts) {
 		this.showContactDataToContacts = showContactDataToContacts;
-	}
-
-	public String getPhoneForSMS() {
-		return getSendSMS() ? getAddress().getPhone() : "";
 	}
 
 	public Type getType() {
@@ -598,9 +598,31 @@ public class User extends HistoricalEntity {
 	public String toString() {
 		return "User [id=" + id + ", firstname=" + firstname
 				+ ", lastname=" + lastname + ", login=" + login
-				+ ", pictureuri=" + pictureuri + ", deleted=" + isDeleted()
+				+ ", pictureuri=" + pictureUri + ", deleted=" + isDeleted()
 				+ ", languageId=" + languageId + ", address=" + address
 				+ ", externalId=" + externalId + ", externalType=" + externalType
 				+ ", type=" + type + "]";
+	}
+
+	private String generateDisplayName() {
+		StringBuilder sb = new StringBuilder();
+		String delim = "";
+		OmLanguage l = LabelDao.getLanguage(languageId);
+		String first = l.isRtl() ? getLastname() : getFirstname();
+		String last = l.isRtl() ? getFirstname() : getLastname();
+		if (!Strings.isEmpty(first)) {
+			sb.append(first);
+			delim = " ";
+		}
+		if (!Strings.isEmpty(last)) {
+			sb.append(delim).append(last);
+		}
+		if (Strings.isEmpty(sb) && address != null && !Strings.isEmpty(address.getEmail())) {
+			sb.append(delim).append(address.getEmail());
+		}
+		if (Strings.isEmpty(sb)) {
+			sb.append("N/A");
+		}
+		return escapeMarkup(sb).toString();
 	}
 }

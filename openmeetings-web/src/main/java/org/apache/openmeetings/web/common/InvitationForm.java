@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.web.common;
 
+import static java.util.UUID.randomUUID;
 import static org.apache.openmeetings.util.CalendarHelper.getDate;
 import static org.apache.openmeetings.web.app.Application.getInvitationLink;
 import static org.apache.openmeetings.web.app.WebSession.AVAILABLE_TIMEZONES;
@@ -26,7 +27,6 @@ import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 
 import org.apache.openmeetings.db.dao.room.InvitationDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -54,6 +54,7 @@ import org.apache.wicket.markup.html.panel.IMarkupSourcingStrategy;
 import org.apache.wicket.markup.html.panel.PanelMarkupSourcingStrategy;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
@@ -93,7 +94,7 @@ public abstract class InvitationForm extends Form<Invitation> {
 	@Override
 	protected void onInitialize() {
 		add(subject, message);
-		recipients.setLabel(Model.of(getString("216"))).setRequired(true).add(new AjaxFormComponentUpdatingBehavior("change") {
+		recipients.setLabel(new ResourceModel("216")).setRequired(true).add(new AjaxFormComponentUpdatingBehavior("change") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -127,7 +128,7 @@ public abstract class InvitationForm extends Form<Invitation> {
 				, new Radio<>("endless", Model.of(Valid.Endless))));
 		add(passwd);
 		Invitation i = getModelObject();
-		passwd.setLabel(Model.of(getString("110"))).setOutputMarkupId(true).setEnabled(i.isPasswordProtected());
+		passwd.setLabel(new ResourceModel("110")).setOutputMarkupId(true).setEnabled(i.isPasswordProtected());
 		add(from.setOutputMarkupId(true), to.setOutputMarkupId(true), timeZoneId.setOutputMarkupId(true));
 		timeZoneId.add(new AjaxFormComponentUpdatingBehavior("change") {
 			private static final long serialVersionUID = 1L;
@@ -167,7 +168,7 @@ public abstract class InvitationForm extends Form<Invitation> {
 		i.setValidTo(getDate(to.getModelObject(), timeZoneId.getModelObject()));
 
 		i.setInvitee(u);
-		i.setHash(UUID.randomUUID().toString());
+		i.setHash(randomUUID().toString());
 		if (Type.contact == u.getType()) {
 			u.setLanguageId(lang.getModelObject());
 		}

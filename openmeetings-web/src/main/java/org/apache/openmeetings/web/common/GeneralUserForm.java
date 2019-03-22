@@ -19,6 +19,7 @@
 package org.apache.openmeetings.web.common;
 
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasGroupAdminLevel;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isDisplayNameEditable;
 import static org.apache.openmeetings.web.app.WebSession.AVAILABLE_TIMEZONES;
 import static org.apache.openmeetings.web.app.WebSession.getRights;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
@@ -41,7 +42,6 @@ import org.apache.openmeetings.web.util.RestrictiveChoiceProvider;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.validation.validator.RfcCompliantEmailAddressValidator;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -51,8 +51,8 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.IMarkupSourcingStrategy;
 import org.apache.wicket.markup.html.panel.PanelMarkupSourcingStrategy;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.wicketstuff.select2.Response;
@@ -82,7 +82,7 @@ public class GeneralUserForm extends Form<User> {
 	protected void onInitialize() {
 		super.onInitialize();
 		add(email);
-		email.setLabel(Model.of(getString("119")));
+		email.setLabel(new ResourceModel("119"));
 		email.add(RfcCompliantEmailAddressValidator.getInstance());
 		add(new DropDownChoice<>("salutation"
 				, Arrays.asList(Salutation.values())
@@ -101,10 +101,10 @@ public class GeneralUserForm extends Form<User> {
 				}));
 		add(new TextField<String>("firstname"));
 		add(new TextField<String>("lastname"));
+		add(new TextField<String>("displayName").setEnabled(isAdminForm || isDisplayNameEditable()));
 		add(new DropDownChoice<>("timeZoneId", AVAILABLE_TIMEZONES));
 		add(new LanguageDropDown("languageId"));
 		add(new TextField<String>("address.phone"));
-		add(new CheckBox("sendSMS"));
 		add(new AjaxDatePicker("age", new PropertyModel<LocalDate>(this, "age"), WebSession.get().getLocale()) {
 			private static final long serialVersionUID = 1L;
 
@@ -152,7 +152,7 @@ public class GeneralUserForm extends Form<User> {
 				int idx = grpUsers.indexOf(gu);
 				return idx < 0 ? gu : grpUsers.get(idx);
 			}
-		}).setLabel(Model.of(getString("161"))).setRequired(isAdminForm && hasGroupAdminLevel(getRights())).setEnabled(isAdminForm));
+		}).setLabel(new ResourceModel("161")).setRequired(isAdminForm && hasGroupAdminLevel(getRights())).setEnabled(isAdminForm));
 	}
 
 	public void updateModelObject(User u, boolean isAdminForm) {

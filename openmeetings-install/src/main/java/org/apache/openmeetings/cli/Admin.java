@@ -42,7 +42,6 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.openjpa.jdbc.conf.JDBCConfiguration;
 import org.apache.openjpa.jdbc.conf.JDBCConfigurationImpl;
 import org.apache.openjpa.jdbc.schema.SchemaTool;
@@ -67,15 +66,20 @@ import org.apache.openmeetings.util.ImportHelper;
 import org.apache.openmeetings.util.OmException;
 import org.apache.openmeetings.util.OmFileHelper;
 import org.apache.openmeetings.util.mail.MailUtil;
+import org.apache.wicket.util.string.Strings;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.Validatable;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.web.context.WebApplicationContext;
 
 public class Admin {
 	private static final Logger _log = LoggerFactory.getLogger(Admin.class);
+	private static final String OPTION_EMAIL = "email";
+	private static final String OPTION_GROUP = "group";
+	private static final String OPTION_PWD = "password";
+	private static final String OPTION_DEF_LNG = "default-language";
 	private static final String OPTION_DB_TYPE = "db-type";
 	private static final String OPTION_DB_HOST = "db-host";
 	private static final String OPTION_DB_PORT = "db-port";
@@ -91,7 +95,7 @@ public class Admin {
 	private static final String REP_DELETED = "\t\t\tdeleted: ";
 	private static final String REP_MISSING = "\t\t\tmissing count: ";
 
-	public static final String RED5_HOME = "red5_home";
+	public static final String OM_HOME = "om_home";
 
 	private boolean verbose = false;
 	private InstallationConfig cfg = null;
@@ -110,8 +114,10 @@ public class Admin {
 		}
 		String ctxName = System.getProperty("context", DEFAULT_CONTEXT_NAME);
 		setWicketApplicationName(ctxName);
-		home = new File(System.getProperty(RED5_HOME));
-		OmFileHelper.setOmHome(new File(new File(home, "webapps"), ctxName));
+		home = new File(System.getProperty(OM_HOME));
+		if (OmFileHelper.getOmHome() == null) {
+			OmFileHelper.setOmHome(new File(new File(home, "webapps"), ctxName));
+		}
 	}
 
 	private static void log(CharSequence msg) {
@@ -137,10 +143,10 @@ public class Admin {
 		options.addOption(new OmOption("b,r,i", "file", null, true, "file used for backup/restore/install", "b"));
 		//install
 		options.addOption(new OmOption("i", "user", null, true, "Login name of the default user, minimum " + USER_LOGIN_MINIMUM_LENGTH + " characters (mutually exclusive with 'file')"));
-		options.addOption(new OmOption("i", "email", null, true, "Email of the default user (mutually exclusive with 'file')"));
-		options.addOption(new OmOption("i", "group", null, true, "The name of the default user group (mutually exclusive with 'file')"));
+		options.addOption(new OmOption("i", OPTION_EMAIL, null, true, "Email of the default user (mutually exclusive with 'file')"));
+		options.addOption(new OmOption("i", OPTION_GROUP, null, true, "The name of the default user group (mutually exclusive with 'file')"));
 		options.addOption(new OmOption("i", "tz", null, true, "Default server time zone, and time zone for the selected user (mutually exclusive with 'file')"));
-		options.addOption(new OmOption("i", null, "password", true, "Password of the default user, minimum " + USER_PASSWORD_MINIMUM_LENGTH + " characters (will be prompted if not set)", true));
+		options.addOption(new OmOption("i", null, OPTION_PWD, true, "Password of the default user, minimum " + USER_PASSWORD_MINIMUM_LENGTH + " characters (will be prompted if not set)", true));
 		options.addOption(new OmOption("i", null, OPTION_MAIL_REFERRER, true, String.format("System e-mail address [default: %s]", cfg.getMailReferer()), true));
 		options.addOption(new OmOption("i", null, OPTION_MAIL_SERVER, true, String.format("SMTP server for outgoing e-mails [default: %s]", cfg.getSmtpServer()), true));
 		options.addOption(new OmOption("i", null, OPTION_MAIL_PORT, true, String.format("SMTP server for outgoing e-mails [default: %s]", cfg.getSmtpPort()), true));
@@ -149,7 +155,7 @@ public class Admin {
 		options.addOption(new OmOption("i", null, "email-use-tls", false, "Is secure e-mail connection [default: no]", true));
 		options.addOption(new OmOption("i", null, "skip-default-objects", false, "Do not create default rooms and OAuth servers [created by default]", true));
 		options.addOption(new OmOption("i", null, "disable-frontend-register", false, "Do not allow front end register [allowed by default]", true));
-		options.addOption(new OmOption("i", null, "default-language", true, "Default system language as int [1 by default]", true));
+		options.addOption(new OmOption("i", null, OPTION_DEF_LNG, true, "Default system language as int [1 by default]", true));
 
 		options.addOption(new OmOption("i", null, OPTION_DB_TYPE, true, "The type of the DB to be used", true));
 		options.addOption(new OmOption("i", null, OPTION_DB_HOST, true, "DNS name or IP address of database", true));
@@ -276,7 +282,7 @@ public class Admin {
 	}
 
 	private void processInstall(String file) throws Exception {
-		if (cmdl.hasOption("file") && (cmdl.hasOption("user") || cmdl.hasOption("email") || cmdl.hasOption("group"))) {
+		if (cmdl.hasOption("file") && (cmdl.hasOption("user") || cmdl.hasOption(OPTION_EMAIL) || cmdl.hasOption(OPTION_GROUP))) {
 			log("Please specify even 'file' option or 'admin user'.");
 			throw new ExitException();
 		}
@@ -305,8 +311,8 @@ public class Admin {
 		if (cmdl.hasOption("email-use-tls")) {
 			cfg.setMailUseTls(true);
 		}
-		if (cmdl.hasOption("default-language")) {
-			cfg.setDefaultLangId(Integer.parseInt(cmdl.getOptionValue("default-language")));
+		if (cmdl.hasOption(OPTION_DEF_LNG)) {
+			cfg.setDefaultLangId(Integer.parseInt(cmdl.getOptionValue(OPTION_DEF_LNG)));
 		}
 		ConnectionProperties connectionProperties;
 		File conf = OmFileHelper.getPersistence();
@@ -441,8 +447,8 @@ public class Admin {
 
 	private void checkAdminDetails() throws Exception {
 		cfg.setUsername(cmdl.getOptionValue("user"));
-		cfg.setEmail(cmdl.getOptionValue("email"));
-		cfg.setGroup(cmdl.getOptionValue("group"));
+		cfg.setEmail(cmdl.getOptionValue(OPTION_EMAIL));
+		cfg.setGroup(cmdl.getOptionValue(OPTION_GROUP));
 		if (cfg.getUsername() == null || cfg.getUsername().length() < USER_LOGIN_MINIMUM_LENGTH) {
 			log("User login was not provided, or too short, should be at least " + USER_LOGIN_MINIMUM_LENGTH + " character long.");
 			throw new ExitException();
@@ -456,8 +462,8 @@ public class Admin {
 			log(String.format("User group was not provided, or too short, should be at least 1 character long: %s", cfg.getGroup()));
 			throw new ExitException();
 		}
-		if (cmdl.hasOption("password")) {
-			cfg.setPassword(cmdl.getOptionValue("password"));
+		if (cmdl.hasOption(OPTION_PWD)) {
+			cfg.setPassword(cmdl.getOptionValue(OPTION_PWD));
 		}
 		IValidator<String> passValidator = new StrongPasswordValidator(false, new User());
 		Validatable<String> passVal;

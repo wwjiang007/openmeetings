@@ -18,8 +18,8 @@
  */
 package org.apache.openmeetings.web.user.chat;
 
-import static org.apache.openmeetings.core.util.WebSocketHelper.ID_ALL;
-import static org.apache.openmeetings.core.util.WebSocketHelper.ID_ROOM_PREFIX;
+import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ALL;
+import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ROOM_PREFIX;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DASHBOARD_SHOW_CHAT;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.openmeetings.web.room.RoomPanel.isModerator;
@@ -34,15 +34,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.openmeetings.core.util.ChatWebSocketHelper;
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.dao.basic.ChatDao;
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
-import org.apache.openmeetings.db.dao.room.RoomDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.basic.ChatMessage;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.user.User;
+import org.apache.openmeetings.util.OpenmeetingsVariables;
 import org.apache.openmeetings.web.app.ClientManager;
 import org.apache.openmeetings.web.common.MainPanel;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -81,7 +82,7 @@ public class Chat extends Panel {
 					if (m.isNeedModeration() && isModerator(cm, getUserId(), roomId)) {
 						m.setNeedModeration(false);
 						chatDao.update(m);
-						WebSocketHelper.sendRoom(m, getMessage(Arrays.asList(m)).put("mode",  "accept"));
+						ChatWebSocketHelper.sendRoom(m, getMessage(Arrays.asList(m)).put("mode",  "accept"));
 					} else {
 						log.error("It seems like we are being hacked!!!!");
 					}
@@ -109,8 +110,6 @@ public class Chat extends Panel {
 	private ChatDao chatDao;
 	@SpringBean
 	private UserDao userDao;
-	@SpringBean
-	private RoomDao roomDao;
 
 	public Chat(String id) {
 		super(id);
@@ -137,13 +136,16 @@ public class Chat extends Panel {
 	}
 
 	public static JSONObject getMessage(User curUser, List<ChatMessage> list) {
-		return WebSocketHelper.getMessage(curUser, list, (o, u) -> o.put("img", getUrl(RequestCycle.get(), u)));
+		return ChatWebSocketHelper.getMessage(curUser, list, (o, u) -> o.put("img", getUrl(RequestCycle.get(), u)));
 	}
 
 	public CharSequence getReinit() {
 		StringBuilder sb = new StringBuilder("Chat.reinit(")
-				.append('\'').append(getString("1494")).append('\'')
-				.append(',').append('\'').append(getString("406")).append('\'')
+				.append(new JSONObject()
+						.put("userId", getUserId())
+						.put("all", getString("1494"))
+						.put("room", getString("406"))
+						.put("sendOnEnter", OpenmeetingsVariables.getChatSenndOnEnter()).toString())
 				.append("); ");
 		return processGlobal(sb);
 	}
@@ -174,10 +176,6 @@ public class Chat extends Panel {
 		if (showDashboardChat) {
 			StringBuilder sb = new StringBuilder(getReinit());
 			List<ChatMessage> list = new ArrayList<>(chatDao.getGlobal(0, 30));
-			for(Long roomId : cm.listRoomIds(getUserId())) {
-				Room r = roomDao.get(roomId);
-				sb.append(addRoom(r));
-			}
 			list.addAll(chatDao.getUserRecent(getUserId(), Date.from(Instant.now().minus(Duration.ofHours(1L))), 0, 30));
 			if (!list.isEmpty()) {
 				sb.append("Chat.addMessage(").append(getMessage(list).toString()).append(");");
