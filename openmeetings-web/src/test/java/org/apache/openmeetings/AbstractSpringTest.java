@@ -18,23 +18,17 @@
  */
 package org.apache.openmeetings;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.util.OmFileHelper;
 import org.apache.tomcat.util.scan.Constants;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.BeforeAll;
+import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@TestExecutionListeners({})
-@ContextConfiguration(locations={"classpath:applicationContext.xml"}, inheritLocations = true)
-public abstract class AbstractSpringTest extends AbstractJUnit4SpringContextTests {
-	@BeforeClass
+@SpringJUnitWebConfig(locations={"classpath:applicationContext.xml"})
+public abstract class AbstractSpringTest {
+	@BeforeAll
 	public static void init() {
 		setOmHome();
 		System.setProperty(Constants.SKIP_JARS_PROPERTY, "*");

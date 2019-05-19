@@ -72,14 +72,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="98"><![CDATA[Moderator:]]></entry>
 	<entry key="99"><![CDATA[Rummet är fullt. Försök igen senare.]]></entry>
 	<entry key="108"><![CDATA[Login]]></entry>
-	<entry key="109"><![CDATA[Användare:]]></entry>
-	<entry key="110"><![CDATA[Lösen:]]></entry>
+	<entry key="109"><![CDATA[Användare]]></entry>
+	<entry key="110"><![CDATA[Lösen]]></entry>
 	<entry key="112"><![CDATA[Login]]></entry>
 	<entry key="113"><![CDATA[Registrera]]></entry>
-	<entry key="114"><![CDATA[Användare:]]></entry>
-	<entry key="116"><![CDATA[Lösen igen:]]></entry>
-	<entry key="117"><![CDATA[Förnamn:]]></entry>
-	<entry key="119"><![CDATA[E-post:]]></entry>
+	<entry key="114"><![CDATA[Användare]]></entry>
+	<entry key="116"><![CDATA[Lösen igen]]></entry>
+	<entry key="117"><![CDATA[Förnamn]]></entry>
+	<entry key="119"><![CDATA[E-post]]></entry>
 	<entry key="121"><![CDATA[Registrera]]></entry>
 	<entry key="123"><![CDATA[Registrera]]></entry>
 	<entry key="124"><![CDATA[Hem]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[Kom Ihåg Inloggning]]></entry>
 	<entry key="290"><![CDATA[Min Hemsida]]></entry>
 	<entry key="291"><![CDATA[Mina Schemalagda Möten]]></entry>
-	<entry key="304"><![CDATA[Välj en fil]]></entry>
 	<entry key="306"><![CDATA[Kam. & Mik. Inställn.]]></entry>
 	<entry key="308"><![CDATA[Avsluta]]></entry>
 	<entry key="309"><![CDATA[Lämna Rummet]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[Välj en fil]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.cli;
 
-import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.openmeetings.AbstractJUnitDefaults.adminUsername;
 import static org.apache.openmeetings.AbstractJUnitDefaults.email;
 import static org.apache.openmeetings.AbstractJUnitDefaults.group;
@@ -27,11 +26,14 @@ import static org.apache.openmeetings.AbstractSpringTest.setOmHome;
 import static org.apache.openmeetings.cli.Admin.OM_HOME;
 import static org.apache.openmeetings.db.util.ApplicationHelper.destroyApplication;
 import static org.apache.openmeetings.util.OmFileHelper.getOmHome;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CONTEXT_NAME;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getWicketApplicationName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setInitComplete;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplicationName;
 import static org.apache.openmeetings.web.pages.install.TestInstall.resetDerbyHome;
 import static org.apache.openmeetings.web.pages.install.TestInstall.setDerbyHome;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,33 +44,35 @@ import java.util.UUID;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.protocol.http.WebApplication;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class TestAdmin {
-	private File tempFolder;
+	@TempDir
+	File tempFolder;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws IOException {
 		setOmHome();
-		tempFolder = Files.createTempDirectory("omtempdb").toFile();
 		System.setProperty("user.dir", tempFolder.getCanonicalPath());
 		System.setProperty(OM_HOME, getOmHome().getCanonicalPath());
 		setDerbyHome(tempFolder);
+		System.setProperty("context", UUID.randomUUID().toString());
 	}
 
-	@After
-	public void tearDown() throws IOException {
+	@AfterEach
+	public void tearDown() {
 		resetDerbyHome();
 		System.getProperties().remove(OM_HOME);
-		deleteDirectory(tempFolder);
 		WebApplication app = (WebApplication)Application.get(getWicketApplicationName());
 		if (app != null) {
 			destroyApplication();
 			setInitComplete(false);
 		}
+		System.setProperty("context", DEFAULT_CONTEXT_NAME);
+		setWicketApplicationName(DEFAULT_CONTEXT_NAME);
 	}
 
 	private static void checkError(String... args) throws Exception {
@@ -76,7 +80,7 @@ public class TestAdmin {
 			new Admin().process(args);
 			fail();
 		} catch (ExitException ee) {
-			Assert.assertTrue(true);
+			assertTrue(true);
 		}
 	}
 
@@ -93,7 +97,7 @@ public class TestAdmin {
 	@Test
 	public void testUsage() throws Exception {
 		new Admin().process("-h");
-		Assert.assertTrue(true);
+		assertTrue(true);
 	}
 
 	@Test

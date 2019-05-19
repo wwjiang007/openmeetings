@@ -26,7 +26,7 @@
 	</parent>
 	<groupId>org.apache.openmeetings</groupId>
 	<artifactId>openmeetings-parent</artifactId>
-	<version>5.0.0-SNAPSHOT</version>
+	<version>5.0.0-M2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Openmeetings</name>
 	<description>Parent project for all OpenMeetings Maven modules. Required to hold general settings</description>
@@ -36,7 +36,7 @@
 		<wicket.configuration>DEPLOYMENT</wicket.configuration>
 		<om.quick.build>false</om.quick.build>
 		<db>derby</db>
-		<jdk.version>1.8</jdk.version>
+		<jdk.version>11</jdk.version>
 		<!-- plugin versions -->
 		<maven-javadoc-plugin.version>3.1.0</maven-javadoc-plugin.version>
 		<maven-surefire-plugin.version>3.0.0-M3</maven-surefire-plugin.version>
@@ -48,7 +48,7 @@
 		<checksum-maven-plugin.version>1.8</checksum-maven-plugin.version>
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
 		<license-maven-plugin.version>1.16</license-maven-plugin.version>
-		<reflow-maven-skin.version>2.0.0-beta2</reflow-maven-skin.version>
+		<reflow-maven-skin.version>2.0.0</reflow-maven-skin.version>
 		<reflow-theme>cerulean</reflow-theme>
 		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
@@ -68,18 +68,18 @@
 		<apache-rat-plugin.version>0.13</apache-rat-plugin.version>
 		<keytool-maven-plugin.version>1.5</keytool-maven-plugin.version>
 		<maven-jarsigner-plugin.version>3.0.0</maven-jarsigner-plugin.version>
-		<sonar-maven-plugin.version>3.5.0.1254</sonar-maven-plugin.version>
-		<jacoco-maven-plugin.versoin>0.8.2</jacoco-maven-plugin.versoin>
+		<sonar-maven-plugin.version>3.6.0.1398</sonar-maven-plugin.version>
+		<jacoco-maven-plugin.versoin>0.8.3</jacoco-maven-plugin.versoin>
 		<forbiddenapis.version>2.6</forbiddenapis.version>
 		<!-- dependency versions -->
-		<junit.version>4.12</junit.version>
-		<wicket.version>8.3.0</wicket.version>
-		<wicketju.version>8.3.0</wicketju.version>
-		<wickets.version>8.3.0</wickets.version>
-		<red5-client.version>1.0.10</red5-client.version>
-		<spring.version>5.1.5.RELEASE</spring.version>
-		<mina.version>2.1.0</mina.version>
-		<tomcat.version>9.0.17</tomcat.version>
+		<junit.version>5.4.2</junit.version>
+		<wicket.version>9.0.0-M1</wicket.version>
+		<wicketju.version>9.0.0-SNAPSHOT</wicketju.version>
+		<wickets.version>9.0.0-M1</wickets.version>
+		<red5-client.version>1.1.0</red5-client.version>
+		<spring.version>5.1.7.RELEASE</spring.version>
+		<mina.version>2.1.2</mina.version>
+		<tomcat.version>9.0.20</tomcat.version>
 		<ical4j.version>3.0.6</ical4j.version>
 		<cxf.version>3.3.1</cxf.version>
 		<selenium.version>3.141.59</selenium.version>
@@ -88,19 +88,19 @@
 		<site.basedir>${project.basedir}</site.basedir>
 		<src.pack.skip>false</src.pack.skip>
 		<derby.version>10.14.2.0</derby.version>
-		<commons-lang3.version>3.8.1</commons-lang3.version>
+		<commons-lang3.version>3.9</commons-lang3.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
-		<openjpa.version>3.0.1-SNAPSHOT</openjpa.version>
+		<openjpa.version>3.1.0</openjpa.version>
 		<asterisk-java.version>2.0.2</asterisk-java.version>
 		<commons-dbcp.version>2.6.0</commons-dbcp.version>
-		<commons-pool2.version>2.6.1</commons-pool2.version>
+		<commons-pool2.version>2.6.2</commons-pool2.version>
 		<postgresql.version>42.2.5</postgresql.version>
 		<commons-cli.version>1.4</commons-cli.version>
 		<dom4j.version>2.1.1</dom4j.version>
 		<commons-codec.version>1.12</commons-codec.version>
 		<commons-io.version>2.6</commons-io.version>
-		<mysql.version>8.0.11</mysql.version>
-		<mssql.version>7.2.1.jre8</mssql.version>
+		<mysql.version>8.0.16</mysql.version>
+		<mssql.version>7.2.2.jre11</mssql.version>
 		<commons-collections4.version>4.3</commons-collections4.version>
 		<xstream.version>1.4.11.1</xstream.version>
 		<api-all.version>2.0.0.AM2</api-all.version>
@@ -112,15 +112,15 @@
 		<jetty.version>9.4.15.v20190215</jetty.version>
 		<license.excludedScopes>test</license.excludedScopes>
 		<bcprov-jdk15on.version>1.61</bcprov-jdk15on.version>
-		<mockito.version>2.25.1</mockito.version>
-		<powermock.version>2.0.0</powermock.version>
-		<!--  URL of the ASF SonarQube server  -->
-		<sonar.host.url>https://builds.apache.org/analysis</sonar.host.url>
+		<mockito.version>2.27.0</mockito.version>
+		<powermock.version>2.0.2</powermock.version>
+		<quartz.version>2.3.1</quartz.version>
 		<!--  Exclude all generated code  -->
 		<sonar.exclusions>file:**/generated-sources/**, file:**/fabric.js, file:**/cssemoticons.js, file:**/kurento-utils.js, file:**/fileinput*.js, file:**/MathJax.js, file:**/network.js, file:**/jquery.dialogextend.js</sonar.exclusions>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/../target/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
 		<db_user></db_user>
 		<db_pass></db_pass>
 	</properties>
@@ -324,9 +324,9 @@
 			<post>mailto:user@openmeetings.apache.org</post>
 			<subscribe>mailto:user-subscribe@openmeetings.apache.org</subscribe>
 			<unsubscribe>mailto:user-unsubscribe@openmeetings.apache.org</unsubscribe>
-			<archive>http://mail-archives.apache.org/mod_mbox/openmeetings-user</archive>
+			<archive>https://mail-archives.apache.org/mod_mbox/openmeetings-user</archive>
 			<otherArchives>
-				<otherArchive>http://openmeetings.markmail.org</otherArchive>
+				<otherArchive>https://openmeetings.markmail.org</otherArchive>
 			</otherArchives>
 		</mailingList>
 		<mailingList>
@@ -334,9 +334,9 @@
 			<post>mailto:user-espanol@openmeetings.apache.org</post>
 			<subscribe>mailto:user-espanol-subscribe@openmeetings.apache.org</subscribe>
 			<unsubscribe>mailto:user-espanol-unsubscribe@openmeetings.apache.org</unsubscribe>
-			<archive>http://mail-archives.apache.org/mod_mbox/openmeetings-user-espanol</archive>
+			<archive>https://mail-archives.apache.org/mod_mbox/openmeetings-user-espanol</archive>
 			<otherArchives>
-				<otherArchive>http://openmeetings.markmail.org</otherArchive>
+				<otherArchive>https://openmeetings.markmail.org</otherArchive>
 			</otherArchives>
 		</mailingList>
 		<mailingList>
@@ -344,9 +344,9 @@
 			<post>mailto:user-russian@openmeetings.apache.org</post>
 			<subscribe>mailto:user-russian-subscribe@openmeetings.apache.org</subscribe>
 			<unsubscribe>mailto:user-russian-unsubscribe@openmeetings.apache.org</unsubscribe>
-			<archive>http://mail-archives.apache.org/mod_mbox/openmeetings-user-russian</archive>
+			<archive>https://mail-archives.apache.org/mod_mbox/openmeetings-user-russian</archive>
 			<otherArchives>
-				<otherArchive>http://openmeetings.markmail.org</otherArchive>
+				<otherArchive>https://openmeetings.markmail.org</otherArchive>
 			</otherArchives>
 		</mailingList>
 		<mailingList>
@@ -354,16 +354,16 @@
 			<post>mailto:dev@openmeetings.apache.org</post>
 			<subscribe>mailto:dev-subscribe@openmeetings.apache.org</subscribe>
 			<unsubscribe>mailto:dev-unsubscribe@openmeetings.apache.org</unsubscribe>
-			<archive>http://mail-archives.apache.org/mod_mbox/openmeetings-dev</archive>
+			<archive>https://mail-archives.apache.org/mod_mbox/openmeetings-dev</archive>
 			<otherArchives>
-				<otherArchive>http://openmeetings.markmail.org</otherArchive>
+				<otherArchive>https://openmeetings.markmail.org</otherArchive>
 			</otherArchives>
 		</mailingList>
 		<mailingList>
 			<name>Commits List</name>
 			<subscribe>mailto:commits-subscribe@openmeetings.apache.org</subscribe>
 			<unsubscribe>mailto:commits-unsubscribe@openmeetings.apache.org</unsubscribe>
-			<archive>http://mail-archives.apache.org/mod_mbox/openmeetings-commits/</archive>
+			<archive>https://mail-archives.apache.org/mod_mbox/openmeetings-commits/</archive>
 		</mailingList>
 		<mailingList>
 			<name>Security List</name>
@@ -657,6 +657,12 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-module-junit4</artifactId>
 				<version>${powermock.version}</version>
@@ -678,8 +684,14 @@
 	</dependencyManagement>
 	<dependencies>
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
 			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
@@ -875,14 +887,10 @@
 						<includes>
 							<include>**/Test*.java</include>
 						</includes>
+						<excludes>
+							<exclude/>
+						</excludes>
 					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>org.apache.maven.surefire</groupId>
-							<artifactId>surefire-junit47</artifactId>
-							<version>${maven-surefire-plugin.version}</version>
-						</dependency>
-					</dependencies>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -993,7 +1001,7 @@
 					<artifactId>jacoco-maven-plugin</artifactId>
 					<version>${jacoco-maven-plugin.versoin}</version>
 					<configuration>
-						<destFile>${sonar.jacoco.reportPath}</destFile>
+						<destFile>${sonar.coverage.jacoco.xmlReportPaths}</destFile>
 						<append>true</append>
 					</configuration>
 				</plugin>
@@ -1540,7 +1548,7 @@
 									<goal>report</goal>
 								</goals>
 								<configuration>
-									<dataFile>${sonar.jacoco.reportPath}</dataFile>
+									<dataFile>${sonar.coverage.jacoco.xmlReportPaths}</dataFile>
 								</configuration>
 							</execution>
 						</executions>

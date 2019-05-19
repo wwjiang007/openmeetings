@@ -33,7 +33,6 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplic
 import static org.apache.openmeetings.web.pages.HashPage.INVITATION_HASH;
 import static org.apache.openmeetings.web.user.rooms.RoomEnterBehavior.getRoomUrlFragment;
 import static org.apache.openmeetings.web.util.OmUrlFragment.PROFILE_MESSAGES;
-import static org.apache.wicket.resource.JQueryResourceReference.getV3;
 import static org.wicketstuff.dashboard.DashboardContextInitializer.DASHBOARD_CONTEXT_KEY;
 
 import java.io.File;
@@ -107,7 +106,8 @@ import org.apache.wicket.core.request.handler.BookmarkableListenerRequestHandler
 import org.apache.wicket.core.request.handler.ListenerRequestHandler;
 import org.apache.wicket.core.request.mapper.MountedMapper;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.pageStore.IDataStore;
+import org.apache.wicket.pageStore.IPageStore;
+import org.apache.wicket.pageStore.SerializingPageStore;
 import org.apache.wicket.protocol.ws.WebSocketAwareCsrfPreventionRequestCycleListener;
 import org.apache.wicket.protocol.ws.api.WebSocketResponse;
 import org.apache.wicket.request.IRequestHandler;
@@ -184,12 +184,12 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		hazelcast.getCluster().getLocalMember().setStringAttribute(NAME_ATTR_KEY, hazelcast.getName());
 		hazelWsTopic = hazelcast.getTopic("default");
 		hazelWsTopic.addMessageListener(msg -> {
-				String serverId = msg.getPublishingMember().getStringAttribute(NAME_ATTR_KEY);
-				if (serverId.equals(hazelcast.getName())) {
-					return;
-				}
-				WbWebSocketHelper.send(msg.getMessageObject());
-			});
+			String serverId = msg.getPublishingMember().getStringAttribute(NAME_ATTR_KEY);
+			if (serverId.equals(hazelcast.getName())) {
+				return;
+			}
+			WbWebSocketHelper.send(msg.getMessageObject());
+		});
 		hazelcast.getCluster().addMembershipListener(new MembershipListener() {
 			@Override
 			public void memberRemoved(MembershipEvent evt) {
@@ -225,15 +225,16 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		});
 		setPageManagerProvider(new DefaultPageManagerProvider(this) {
 			@Override
-			protected IDataStore newDataStore() {
-				return new HazelcastDataStore(hazelcast);
+			protected IPageStore newAsynchronousStore(IPageStore pageStore) {
+				return new SerializingPageStore(
+						new HazelcastDataStore(getName(), hazelcast)
+						, getFrameworkSettings().getSerializer());
 			}
 		});
 		//Add custom resource loader at the beginning, so it will be checked first in the
 		//chain of Resource Loaders, if not found it will search in Wicket's internal
 		//Resource Loader for a the property key
 		getResourceSettings().getStringResourceLoaders().add(0, new LabelResourceLoader());
-		getJavaScriptLibrarySettings().setJQueryReference(getV3());
 		getRequestCycleListeners().add(new WebSocketAwareCsrfPreventionRequestCycleListener() {
 			@Override
 			public void onEndRequest(RequestCycle cycle) {
@@ -374,7 +375,10 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 	}
 
 	public static void kickUser(Client client) {
-		WebSocketHelper.sendRoom(new TextRoomMessage(client.getRoom().getId(), client, RoomMessage.Type.kick, client.getUid()));
+		if (client != null) {
+			WebSocketHelper.sendRoom(new TextRoomMessage(client.getRoom().getId(), client, RoomMessage.Type.kick, client.getUid()));
+			get().cm.exitRoom(client);
+		}
 	}
 
 	public static boolean isInvaldSession(String sessionId) {

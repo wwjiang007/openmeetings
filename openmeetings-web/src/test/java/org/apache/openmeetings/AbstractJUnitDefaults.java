@@ -24,7 +24,7 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CONTEXT
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getCryptClassName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getWicketApplicationName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplicationName;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Date;
 import java.util.Random;
@@ -40,7 +40,7 @@ import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.installation.ImportInitvalues;
 import org.apache.openmeetings.installation.InstallationConfig;
 import org.apache.openmeetings.web.app.Application;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +71,7 @@ public abstract class AbstractJUnitDefaults extends AbstractSpringTest {
 	@Autowired
 	protected Application app;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		if (app.getName() == null) {
 			app.setName(DEFAULT_CONTEXT_NAME);
@@ -90,9 +90,7 @@ public abstract class AbstractJUnitDefaults extends AbstractSpringTest {
 		} else {
 			log.info("Default scheme already created");
 		}
-		if (getCryptClassName() == null) {
-			assertNotNull("Crypt class name should not be null", getCryptClassName());
-		}
+		assertNotNull(getCryptClassName(), "Crypt class name should not be null");
 	}
 
 	public Appointment getAppointment() {
@@ -145,10 +143,10 @@ public abstract class AbstractJUnitDefaults extends AbstractSpringTest {
 	}
 
 	public static Appointment createAppointment(AppointmentDao appointmentDao, Appointment ap) {
-		assertNotNull("Can't access to appointment dao implimentation", appointmentDao);
+		assertNotNull(appointmentDao, "Can't access to appointment dao implimentation");
 		// add new appointment
 		ap = appointmentDao.update(ap, null, false);
-		assertNotNull("Can't add appointment", ap.getId());
+		assertNotNull(ap.getId(), "Can't add appointment");
 		return ap;
 	}
 
@@ -197,7 +195,7 @@ public abstract class AbstractJUnitDefaults extends AbstractSpringTest {
 
 	public static User createUser(UserDao userDao, User u) {
 		u = userDao.update(u, null);
-		assertNotNull("Can't add user", u);
+		assertNotNull(u, "Can't add user");
 		return u;
 	}
 
@@ -237,7 +235,7 @@ public abstract class AbstractJUnitDefaults extends AbstractSpringTest {
 
 	public User createUserContact(User user, Long ownerId) {
 		user = userDao.update(user, ownerId);
-		assertNotNull("Cann't add user", user);
+		assertNotNull(user, "Cann't add user");
 		return user;
 	}
 }

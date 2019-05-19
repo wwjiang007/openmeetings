@@ -21,6 +21,9 @@ package org.apache.openmeetings.web.common;
 import static org.apache.openmeetings.core.remote.KurentoHandler.KURENTO_TYPE;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.openmeetings.core.remote.KurentoHandler;
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.entity.basic.Client;
@@ -51,6 +54,7 @@ public abstract class OmWebSocketPanel extends Panel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(OmWebSocketPanel.class);
 	public static final String CONNECTED_MSG = "socketConnected";
+	private final AtomicBoolean connected = new AtomicBoolean();
 	private final AbstractAjaxTimerBehavior pingTimer = new AbstractAjaxTimerBehavior(Duration.seconds(30)) {
 		private static final long serialVersionUID = 1L;
 
@@ -80,9 +84,11 @@ public abstract class OmWebSocketPanel extends Panel {
 		@Override
 		protected void onMessage(WebSocketRequestHandler handler, TextMessage msg) {
 			if (CONNECTED_MSG.equals(msg.getText())) {
-				OmWebSocketPanel.this.onConnect(handler);
-				log.debug("WebSocketBehavior:: pingTimer is attached");
-				pingTimer.restart(handler);
+				if (connected.compareAndSet(false, true)) {
+					OmWebSocketPanel.this.onConnect(handler);
+					log.debug("WebSocketBehavior:: pingTimer is attached");
+					pingTimer.restart(handler);
+				}
 			} else {
 				final JSONObject m;
 				try {
@@ -136,6 +142,11 @@ public abstract class OmWebSocketPanel extends Panel {
 
 	public OmWebSocketPanel(String id) {
 		super(id);
+	}
+
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
 		add(pingTimer, wsBehavior);
 		pingTimer.stop(null);
 	}
@@ -168,8 +179,10 @@ public abstract class OmWebSocketPanel extends Panel {
 	 *
 	 * @param handler - handler to perform some updates
 	 * @param m - incoming message as {@link JSONObject}
+	 *
+	 * @throws IOException in case some IO operation fails
 	 */
-	protected void onMessage(WebSocketRequestHandler handler, JSONObject m) {
+	protected void onMessage(WebSocketRequestHandler handler, JSONObject m) throws IOException {
 	}
 
 	@Override

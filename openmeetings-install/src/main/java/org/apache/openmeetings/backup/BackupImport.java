@@ -63,8 +63,8 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EMAIL_VE
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EXT_PROCESS_TTL;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_IGNORE_BAD_SSL;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_ARRANGE;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_MUTE_OTHERS;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_MUTE;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_KEYCODE_MUTE_OTHERS;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_LOGIN_MIN_LENGTH;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MAX_UPLOAD_SIZE;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MIC_ECHO;
@@ -801,6 +801,23 @@ public class BackupImport {
 		}
 	}
 
+	private boolean isInvalidFile(BaseFileItem file) {
+		if (file.getRoomId() != null) {
+			Long newRoomId = roomMap.get(file.getRoomId());
+			if (newRoomId == null) {
+				return true; // room was deleted
+			}
+			file.setRoomId(newRoomId);
+		}
+		if (file.getOwnerId() != null) {
+			Long newOwnerId = userMap.get(file.getOwnerId());
+			if (newOwnerId == null) {
+				return true; // owner was deleted
+			}
+			file.setOwnerId(newOwnerId);
+		}
+		return false;
+	}
 	/*
 	 * ##################### Import Recordings
 	 */
@@ -819,11 +836,8 @@ public class BackupImport {
 		for (Recording r : list) {
 			Long recId = r.getId();
 			r.setId(null);
-			if (r.getRoomId() != null) {
-				r.setRoomId(roomMap.get(r.getRoomId()));
-			}
-			if (r.getOwnerId() != null) {
-				r.setOwnerId(userMap.get(r.getOwnerId()));
+			if (isInvalidFile(r)) {
+				continue;
 			}
 			if (r.getChunks() != null) {
 				for (RecordingChunk chunk : r.getChunks()) {
@@ -956,10 +970,8 @@ public class BackupImport {
 			Long fId = file.getId();
 			// We need to reset this as openJPA reject to store them otherwise
 			file.setId(null);
-			Long roomId = file.getRoomId();
-			file.setRoomId(roomMap.containsKey(roomId) ? roomMap.get(roomId) : null);
-			if (file.getOwnerId() != null) {
-				file.setOwnerId(userMap.get(file.getOwnerId()));
+			if (isInvalidFile(file)) {
+				continue;
 			}
 			if (file.getParentId() != null && file.getParentId().longValue() <= 0L) {
 				file.setParentId(null);

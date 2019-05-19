@@ -72,16 +72,16 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="98"><![CDATA[Συντονιστής:]]></entry>
 	<entry key="99"><![CDATA[Αυτό το Δωμάτιο είναι πλήρες. Παρακαλούμε δοκιμάστε ξανά αργότερα.]]></entry>
 	<entry key="108"><![CDATA[Login]]></entry>
-	<entry key="109"><![CDATA[Χρήστης ή Email:]]></entry>
-	<entry key="110"><![CDATA[Κωδικός:]]></entry>
+	<entry key="109"><![CDATA[Χρήστης ή Email]]></entry>
+	<entry key="110"><![CDATA[Κωδικός]]></entry>
 	<entry key="112"><![CDATA[Σύνδεση]]></entry>
 	<entry key="113"><![CDATA[Εγγραφή]]></entry>
-	<entry key="114"><![CDATA[Χρήστης:]]></entry>
-	<entry key="116"><![CDATA[Επαν. Κωδικού:]]></entry>
-	<entry key="117"><![CDATA[Όνομα:]]></entry>
-	<entry key="119"><![CDATA[Email:]]></entry>
+	<entry key="114"><![CDATA[Χρήστης]]></entry>
+	<entry key="116"><![CDATA[Επαν. Κωδικού]]></entry>
+	<entry key="117"><![CDATA[Όνομα]]></entry>
+	<entry key="119"><![CDATA[Email]]></entry>
 	<entry key="121"><![CDATA[Καταχώρηση]]></entry>
-	<entry key="123"><![CDATA[Δεν είστε Μέλος;]]></entry>
+	<entry key="123"><![CDATA[Δεν είστε Μέλος]]></entry>
 	<entry key="124"><![CDATA[Αρχική Σελίδα]]></entry>
 	<entry key="125"><![CDATA[Χρήστες]]></entry>
 	<entry key="126"><![CDATA[Ομάδες]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[Υπενθύμιση Login]]></entry>
 	<entry key="290"><![CDATA[Η Αρχική Μου Σελίδα]]></entry>
 	<entry key="291"><![CDATA[Προγραμματισμένες Συναντήσεις]]></entry>
-	<entry key="304"><![CDATA[Επιλογή Αρχείου]]></entry>
 	<entry key="306"><![CDATA[Κάμερα & Μικρόφωνο]]></entry>
 	<entry key="308"><![CDATA[Έξοδος]]></entry>
 	<entry key="309"><![CDATA[Πίσω στα Δωμάτια]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[Επιλογή Αρχείου]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

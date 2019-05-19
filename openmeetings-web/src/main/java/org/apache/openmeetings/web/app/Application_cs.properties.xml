@@ -72,14 +72,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="98"><![CDATA[Moderator:]]></entry>
 	<entry key="99"><![CDATA[Místnost je plná. Omlováme se příjďte jindy.]]></entry>
 	<entry key="108"><![CDATA[Přihlášení]]></entry>
-	<entry key="109"><![CDATA[Uživatel:]]></entry>
-	<entry key="110"><![CDATA[Heslo:]]></entry>
+	<entry key="109"><![CDATA[Uživatel]]></entry>
+	<entry key="110"><![CDATA[Heslo]]></entry>
 	<entry key="112"><![CDATA[Přihlásit]]></entry>
-	<entry key="113"><![CDATA[Registrace:]]></entry>
-	<entry key="114"><![CDATA[Uživatel:]]></entry>
-	<entry key="116"><![CDATA[Znovu:]]></entry>
-	<entry key="117"><![CDATA[Jméno:]]></entry>
-	<entry key="119"><![CDATA[Mail:]]></entry>
+	<entry key="113"><![CDATA[Registrace]]></entry>
+	<entry key="114"><![CDATA[Uživatel]]></entry>
+	<entry key="116"><![CDATA[Znovu]]></entry>
+	<entry key="117"><![CDATA[Jméno]]></entry>
+	<entry key="119"><![CDATA[Mail]]></entry>
 	<entry key="121"><![CDATA[Registrace]]></entry>
 	<entry key="123"><![CDATA[Nejsi členem?]]></entry>
 	<entry key="124"><![CDATA[Domů]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[Zapamatuj si přihlášení]]></entry>
 	<entry key="290"><![CDATA[Má domovská stránka]]></entry>
 	<entry key="291"><![CDATA[Mé plánované schůzky]]></entry>
-	<entry key="304"><![CDATA[Vyber soubor]]></entry>
 	<entry key="306"><![CDATA[Nastavení kamery a mikrofonu]]></entry>
 	<entry key="308"><![CDATA[Odchod]]></entry>
 	<entry key="309"><![CDATA[Zpět do výběru místností]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[Vyber soubor]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

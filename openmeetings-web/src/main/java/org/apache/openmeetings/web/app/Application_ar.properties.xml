@@ -73,13 +73,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="99"><![CDATA[هذه الغرفة بالكامل. عفوا يرجى اعادة المحاوله لاحقا.]]></entry>
 	<entry key="108"><![CDATA[تسجيل الدخول]]></entry>
 	<entry key="109"><![CDATA[مستخدم :]]></entry>
-	<entry key="110"><![CDATA[المرور :]]></entry>
+	<entry key="110"><![CDATA[المرور]]></entry>
 	<entry key="112"><![CDATA[تسجيل الدخول]]></entry>
 	<entry key="113"><![CDATA[اشترك]]></entry>
-	<entry key="114"><![CDATA[مستخدم :]]></entry>
-	<entry key="116"><![CDATA[قلت :]]></entry>
-	<entry key="117"><![CDATA[Firstname :]]></entry>
-	<entry key="119"><![CDATA[البريد :]]></entry>
+	<entry key="114"><![CDATA[مستخدم]]></entry>
+	<entry key="116"><![CDATA[قلت]]></entry>
+	<entry key="117"><![CDATA[Firstname]]></entry>
+	<entry key="119"><![CDATA[البريد]]></entry>
 	<entry key="121"><![CDATA[سجل]]></entry>
 	<entry key="123"><![CDATA[سجل]]></entry>
 	<entry key="124"><![CDATA[البيت]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[نتذكر تسجيل الدخول]]></entry>
 	<entry key="290"><![CDATA[صفحتي الرئيسية]]></entry>
 	<entry key="291"><![CDATA[بلدي الجلسات المقررة]]></entry>
-	<entry key="304"><![CDATA[اختر ملف]]></entry>
 	<entry key="306"><![CDATA[كأم التابعة لهيئة التصنيع العسكرى والاعدادات]]></entry>
 	<entry key="308"><![CDATA[خروج]]></entry>
 	<entry key="309"><![CDATA[عودة الى غرف]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[اختر ملف]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

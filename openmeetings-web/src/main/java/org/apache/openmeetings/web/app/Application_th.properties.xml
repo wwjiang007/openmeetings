@@ -72,14 +72,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="98"><![CDATA[ผู้ดำเนินรายการ:]]></entry>
 	<entry key="99"><![CDATA[ห้องนี้เต็มแล้ว ขออภัย โปรดลองใหม่ภายหลัง]]></entry>
 	<entry key="108"><![CDATA[ล็อคอิน]]></entry>
-	<entry key="109"><![CDATA[ผู้ใช้:]]></entry>
-	<entry key="110"><![CDATA[รหัสผ่าน:]]></entry>
+	<entry key="109"><![CDATA[ผู้ใช้]]></entry>
+	<entry key="110"><![CDATA[รหัสผ่าน]]></entry>
 	<entry key="112"><![CDATA[ลงชื่อเข้าใช้]]></entry>
 	<entry key="113"><![CDATA[ลงทะเบียน]]></entry>
-	<entry key="114"><![CDATA[ผู้ใช้:]]></entry>
-	<entry key="116"><![CDATA[พิมพ์ซ้ำ:]]></entry>
-	<entry key="117"><![CDATA[ชื่อ:]]></entry>
-	<entry key="119"><![CDATA[อีเมล์:]]></entry>
+	<entry key="114"><![CDATA[ผู้ใช้]]></entry>
+	<entry key="116"><![CDATA[พิมพ์ซ้ำ]]></entry>
+	<entry key="117"><![CDATA[ชื่อ]]></entry>
+	<entry key="119"><![CDATA[อีเมล์]]></entry>
 	<entry key="121"><![CDATA[ลงทะเบียน]]></entry>
 	<entry key="123"><![CDATA[ไม่ได้เป็นสมาชิก?]]></entry>
 	<entry key="124"><![CDATA[หน้าแรก]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[จำชื่อล็อคอิน]]></entry>
 	<entry key="290"><![CDATA[หน้าหลักของฉัน]]></entry>
 	<entry key="291"><![CDATA[การประชุมที่นัดหมายไว้ของฉัน]]></entry>
-	<entry key="304"><![CDATA[เลือกไฟล์]]></entry>
 	<entry key="306"><![CDATA[การตั้งค่ากล้องและไมโครโฟน]]></entry>
 	<entry key="308"><![CDATA[ออก]]></entry>
 	<entry key="309"><![CDATA[กลับไปยังห้อง]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[เลือกไฟล์]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

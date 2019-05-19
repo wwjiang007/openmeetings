@@ -72,14 +72,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="98"><![CDATA[Moderador:]]></entry>
 	<entry key="99"><![CDATA[Ho sentim, però aquesta sala està plena. Intenti'l més tard]]></entry>
 	<entry key="108"><![CDATA[Entrar]]></entry>
-	<entry key="109"><![CDATA[Usuari:]]></entry>
-	<entry key="110"><![CDATA[Contrasenya:]]></entry>
+	<entry key="109"><![CDATA[Usuari]]></entry>
+	<entry key="110"><![CDATA[Contrasenya]]></entry>
 	<entry key="112"><![CDATA[Entrar]]></entry>
 	<entry key="113"><![CDATA[Registrar-se]]></entry>
-	<entry key="114"><![CDATA[Usuari:]]></entry>
-	<entry key="116"><![CDATA[Contrasenya (un altre vegada):]]></entry>
-	<entry key="117"><![CDATA[Nom:]]></entry>
-	<entry key="119"><![CDATA[Correu electronic:]]></entry>
+	<entry key="114"><![CDATA[Usuari]]></entry>
+	<entry key="116"><![CDATA[Contrasenya (un altre vegada)]]></entry>
+	<entry key="117"><![CDATA[Nom]]></entry>
+	<entry key="119"><![CDATA[Correu electronic]]></entry>
 	<entry key="121"><![CDATA[Registrar-se]]></entry>
 	<entry key="123"><![CDATA[Registrar]]></entry>
 	<entry key="124"><![CDATA[Inici]]></entry>
@@ -148,7 +148,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="288"><![CDATA[Recordar]]></entry>
 	<entry key="290"><![CDATA[La meva pàgina d'inici]]></entry>
 	<entry key="291"><![CDATA[Reunions programades]]></entry>
-	<entry key="304"><![CDATA[Seleccioni un fitxer]]></entry>
 	<entry key="306"><![CDATA[Càmera i micròfon]]></entry>
 	<entry key="308"><![CDATA[Sortir]]></entry>
 	<entry key="309"><![CDATA[Regressar a les sales]]></entry>
@@ -995,4 +994,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="video.permission.title"><![CDATA[Permission is required]]></entry>
 	<entry key="video.permission.text"><![CDATA[Extra permission is required to play video.<br/>Press OK to allow playing.]]></entry>
 	<entry key="video.muteothers"><![CDATA[Mute microphone of others]]></entry>
+	<entry key="upload.dlg.choose.title"><![CDATA[Seleccioni un fitxer]]></entry>
+	<entry key="upload.dlg.convert.title"><![CDATA[Converting...]]></entry>
+	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 </properties>

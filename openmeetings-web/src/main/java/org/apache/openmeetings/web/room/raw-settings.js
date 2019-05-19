@@ -16,11 +16,11 @@ $.widget('openmeetings.iconselectmenu', $.ui.selectmenu, {
 var MicLevel = (function() {
 	let ctx, mic, analyser, vol = .0;
 
-	function _meterPeer(rtcPeer, cnvs, _micActivity, _error) {
-		if (!rtcPeer || 'function' !== typeof(rtcPeer.getLocalStream)) {
+	function _meterPeer(rtcPeer, cnvs, _micActivity, _error, connectAudio) {
+		if (!rtcPeer || ('function' !== typeof(rtcPeer.getLocalStream) && 'function' !== typeof(rtcPeer.getRemoteStream))) {
 			return;
 		}
-		const stream = rtcPeer.getLocalStream();
+		const stream = rtcPeer.getLocalStream() || rtcPeer.getRemoteStream();
 		if (!stream || stream.getAudioTracks().length < 1) {
 			return;
 		}
@@ -34,7 +34,9 @@ var MicLevel = (function() {
 			analyser = ctx.createAnalyser();
 			mic = ctx.createMediaStreamSource(stream);
 			mic.connect(analyser);
-			analyser.connect(ctx.destination);
+			if (connectAudio) {
+				analyser.connect(ctx.destination);
+			}
 			_meter(analyser, cnvs, _micActivity, _error);
 		} catch (err) {
 			_error(err);
@@ -126,12 +128,15 @@ var VideoSettings = (function() {
 		}
 	}
 	function _clear(_ms) {
-		const ms = _ms || (vid.length === 1 ? vid[0].srcObject : null);
+		const ms = _ms || (vid && vid.length === 1 ? vid[0].srcObject : null);
 		VideoUtil.cleanStream(ms);
-		if (vid.length === 1) {
+		if (vid && vid.length === 1) {
 			vid[0].srcObject = null;
 		}
 		VideoUtil.cleanPeer(rtcPeer);
+		if (!!lm) {
+			lm.hide();
+		}
 		if (!!level) {
 			level.dispose();
 			level = null;
@@ -334,7 +339,7 @@ var VideoSettings = (function() {
 						if (cnts.audio) {
 							lm.show();
 							level = MicLevel();
-							level.meterPeer(rtcPeer, lm, function(){}, OmUtil.error);
+							level.meterPeer(rtcPeer, lm, function(){}, OmUtil.error, false);
 						} else {
 							lm.hide();
 						}
@@ -519,6 +524,16 @@ var VideoSettings = (function() {
 					}
 				break;
 			case 'playResponse':
+				OmUtil.log('Play SDP answer received from server. Processing ...');
+				rtcPeer.processAnswer(m.sdpAnswer, function(error) {
+					if (error) {
+						return OmUtil.error(error);
+					}
+					lm.show();
+					level = MicLevel();
+					level.meterPeer(rtcPeer, lm, function(){}, OmUtil.error, true);
+				});
+				break;
 			case 'startResponse':
 				OmUtil.log('SDP answer received from server. Processing ...');
 				rtcPeer.processAnswer(m.sdpAnswer, function(error) {
@@ -576,7 +591,7 @@ var VideoSettings = (function() {
 		, open: _open
 		, close: function() {
 			_close();
-			vs.dialog('close');
+			vs && vs.dialog('close');
 		}
 		, load: _load
 		, save: _save

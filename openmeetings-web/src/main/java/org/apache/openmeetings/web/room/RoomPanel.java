@@ -68,6 +68,7 @@ import org.apache.openmeetings.web.room.menu.RoomMenuPanel;
 import org.apache.openmeetings.web.room.sidebar.RoomSidebar;
 import org.apache.openmeetings.web.room.wb.AbstractWbPanel;
 import org.apache.openmeetings.web.room.wb.InterviewWbPanel;
+import org.apache.openmeetings.web.room.wb.WbAction;
 import org.apache.openmeetings.web.room.wb.WbPanel;
 import org.apache.openmeetings.web.util.ExtendedClientProperties;
 import org.apache.wicket.AttributeModifier;
@@ -109,6 +110,7 @@ import com.googlecode.wicket.jquery.ui.widget.dialog.MessageDialog;
 public class RoomPanel extends BasePanel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(RoomPanel.class);
+	public static final String PARAM_ACTION = "action";
 	private static final String ACCESS_DENIED_ID = "access-denied";
 	private static final String EVENT_DETAILS_ID = "event-details";
 	public enum Action {
@@ -144,8 +146,7 @@ public class RoomPanel extends BasePanel {
 			if (!Strings.isEmpty(r.getRedirectURL()) && (ws.getSoapLogin() != null || ws.getInvitation() != null)) {
 				options.put("reloadUrl", r.getRedirectURL());
 			}
-			StringBuilder sb = new StringBuilder()
-					.append("Room.init(").append(options.toString(new NullStringer())).append(");")
+			StringBuilder sb = new StringBuilder("Room.init(").append(options.toString(new NullStringer())).append(");")
 					.append(wb.getInitScript())
 					.append("Room.setSize();")
 					.append(getQuickPollJs());
@@ -174,9 +175,9 @@ public class RoomPanel extends BasePanel {
 				for (StreamDesc sd : c.getStreams()) {
 					streams.put(sd.toJson());
 				}
-				if (streams.length() > 0) {
-					sb.append("VideoManager.play(").append(streams).append(", ").append(kHandler.getTurnServers()).append(");");
-				}
+			}
+			if (streams.length() > 0) {
+				sb.append("VideoManager.play(").append(streams).append(", ").append(kHandler.getTurnServers()).append(");");
 			}
 			if (interview && streamProcessor.recordingAllowed(getClient())) {
 				sb.append("WbArea.setRecEnabled(true);");
@@ -250,9 +251,9 @@ public class RoomPanel extends BasePanel {
 		this.wb = interview ? new InterviewWbPanel("whiteboard", this) : new WbPanel("whiteboard", this);
 	}
 
-	public void startDownload(AjaxRequestTarget target, byte[] bb) {
+	public void startDownload(IPartialPageRequestHandler handler, byte[] bb) {
 		pdfWb = bb;
-		download.initiate(target);
+		download.initiate(handler);
 	}
 
 	@Override
@@ -268,7 +269,7 @@ public class RoomPanel extends BasePanel {
 		if (interview) {
 			room.add(new WebMarkupContainer("wb-area").add(wb));
 		} else {
-			Droppable<BaseFileItem> wbArea = new Droppable<BaseFileItem>("wb-area") {
+			Droppable<BaseFileItem> wbArea = new Droppable<>("wb-area") {
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -730,11 +731,12 @@ public class RoomPanel extends BasePanel {
 	}
 
 	@Override
-	protected void process(IPartialPageRequestHandler handler, JSONObject o) {
+	protected void process(IPartialPageRequestHandler handler, JSONObject o) throws IOException {
 		if (room.isVisible() && "room".equals(o.optString("area"))) {
 			final String type = o.optString("type");
-			if ("room".equals(type)) {
-				//TODO actions
+			if ("wb".equals(type)) {
+				WbAction a = WbAction.valueOf(o.getString(PARAM_ACTION));
+				wb.processWbAction(a, o.optJSONObject("data"), handler);
 			}
 		}
 	}

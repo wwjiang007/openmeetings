@@ -31,6 +31,7 @@ import static org.apache.openmeetings.web.util.OmUrlFragment.PROFILE_MESSAGES;
 import static org.apache.openmeetings.web.util.OmUrlFragment.getPanel;
 import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -124,6 +125,10 @@ public class MainPanel extends Panel {
 		setAuto(true);
 		setOutputMarkupId(true);
 		setOutputMarkupPlaceholderTag(true);
+	}
+
+	@Override
+	protected void onInitialize() {
 		add(new OmWebSocketPanel("ws-panel") {
 			private static final long serialVersionUID = 1L;
 
@@ -161,7 +166,7 @@ public class MainPanel extends Panel {
 			}
 
 			@Override
-			protected void onMessage(WebSocketRequestHandler handler, JSONObject m) {
+			protected void onMessage(WebSocketRequestHandler handler, JSONObject m) throws IOException {
 				BasePanel p = getCurrentPanel();
 				if (p != null) {
 					p.process(handler, m);
@@ -182,10 +187,6 @@ public class MainPanel extends Panel {
 				return getClient();
 			}
 		});
-	}
-
-	@Override
-	protected void onInitialize() {
 		menu = new MenuPanel("menu", getMainMenu());
 		add(topControls.setOutputMarkupPlaceholderTag(true).setMarkupId("topControls"));
 		add(contents.add(getClient() == null || panel == null ? EMPTY : panel).setOutputMarkupId(true).setMarkupId("contents"));
