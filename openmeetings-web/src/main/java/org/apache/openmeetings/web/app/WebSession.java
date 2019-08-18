@@ -49,6 +49,7 @@ import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.dao.room.InvitationDao;
 import org.apache.openmeetings.db.dao.server.SOAPLoginDao;
 import org.apache.openmeetings.db.dao.server.SessiondataDao;
+import org.apache.openmeetings.db.dao.user.GroupDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.room.Invitation;
 import org.apache.openmeetings.db.entity.server.RemoteSessionObject;
@@ -92,8 +93,8 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(WebSession.class);
 	public static final int MILLIS_IN_MINUTE = 60000;
-	public static final List<String> AVAILABLE_TIMEZONES = Arrays.asList(TimeZone.getAvailableIDs());
-	public static final Set<String> AVAILABLE_TIMEZONE_SET = new LinkedHashSet<>(AVAILABLE_TIMEZONES);
+	public static final List<String> AVAILABLE_TIMEZONES = Collections.unmodifiableList(Arrays.asList(TimeZone.getAvailableIDs()));
+	public static final Set<String> AVAILABLE_TIMEZONE_SET = Collections.unmodifiableSet(new LinkedHashSet<>(AVAILABLE_TIMEZONES));
 	public static final String WICKET_ROOM_ID = "wicketroomid";
 	private Long userId = null;
 	private Set<Right> rights = new HashSet<>();
@@ -108,7 +109,6 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private SOAPLogin soap = null;
 	private Long roomId = null;
 	private Long recordingId = null;
-	private String externalType;
 	private boolean kickedByAdmin = false;
 	private ExtendedClientProperties extProps = new ExtendedClientProperties();
 	@SpringBean
@@ -119,6 +119,8 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private SOAPLoginDao soapDao;
 	@SpringBean
 	private SessiondataDao sessionDao;
+	@SpringBean
+	private GroupDao groupDao;
 	@SpringBean
 	private UserDao userDao;
 	@SpringBean
@@ -144,7 +146,6 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		soap = null;
 		roomId = null;
 		recordingId = null;
-		externalType = null;
 		tz = null;
 		browserTz = null;
 		extProps = new ExtendedClientProperties();
@@ -241,7 +242,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 						user.setLogin(remoteUser.getUsername());
 						user.setType(Type.external);
 						user.setExternalId(remoteUser.getExternalUserId());
-						user.setExternalType(remoteUser.getExternalUserType());
+						user.addGroup(groupDao.getExternal(remoteUser.getExternalUserType()));
 						user.getRights().clear();
 						user.getRights().add(Right.Room);
 						user.getAddress().setEmail(remoteUser.getEmail());
@@ -289,7 +290,6 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 			this.rights = Collections.unmodifiableSet(rights);
 		}
 		languageId = u.getLanguageId();
-		externalType = u.getExternalType();
 		tz = getTimeZone(u);
 		ISO8601FORMAT = FastDateFormat.getInstance(ISO8601_FULL_FORMAT_STRING, tz);
 		setLocale(LocaleHelper.getLocale(u));
@@ -369,10 +369,6 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 
 	public SOAPLogin getSoapLogin() {
 		return soap;
-	}
-
-	public static String getExternalType() {
-		return get().externalType;
 	}
 
 	public static TimeZone getUserTimeZone() {

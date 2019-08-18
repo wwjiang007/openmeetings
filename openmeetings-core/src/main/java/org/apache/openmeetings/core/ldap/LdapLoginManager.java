@@ -145,8 +145,7 @@ public class LdapLoginManager {
 		if (Strings.isEmpty(alias)) {
 			alias = defaultAlias;
 		}
-		Attribute a = Strings.isEmpty(alias) ? null : entry.get(alias);
-		return a == null ? null : a;
+		return Strings.isEmpty(alias) ? null : entry.get(alias);
 	}
 
 	private static String getStringAttr(Properties config, Entry entry, String aliasCode, String defaultAlias) throws LdapInvalidAttributeValueException {
@@ -346,7 +345,7 @@ public class LdapLoginManager {
 				u.setDomainId(domainId);
 				Group g = groupDao.get(getDefaultGroup());
 				if (g != null) {
-					u.getGroupUsers().add(new GroupUser(g, u));
+					u.addGroup(g);
 				}
 				String login = getLogin(config, entry);
 				if (ldapCfg.getAddDomainToUserName()) {
@@ -410,8 +409,8 @@ public class LdapLoginManager {
 						}
 					}
 					if (!found) {
-						u.getGroupUsers().add(new GroupUser(o, u));
-						log.debug("Going to add user to group:: " + name);
+						u.addGroup(o);
+						log.debug("Going to add user to group:: {}", name);
 					}
 				}
 			}

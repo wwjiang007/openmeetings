@@ -32,6 +32,7 @@ import java.net.URI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -78,7 +79,6 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
-import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.LocalEntityManagerFactoryBean;
@@ -273,9 +273,6 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 						case oracle:
 							sql = "SELECT 1 FROM DUAL";
 							break;
-						case derby:
-							sql = "SELECT 1 FROM SYSIBM.SYSDUMMY1";
-							break;
 						default:
 							sql = "SELECT 1";
 							break;
@@ -331,7 +328,7 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 					return props; // initial select
 				}
 				props = ConnectionPropertiesPatcher.getConnectionProperties(conf);
-				if (DbType.derby != props.getDbType()) {
+				if (DbType.h2 != props.getDbType()) {
 					// resetting default login/password
 					props.setLogin(null);
 					props.setPassword(null);
@@ -345,10 +342,10 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 		private void initForm(boolean getProps, AjaxRequestTarget target) {
 			ConnectionProperties props = getProps ? getProps(form.getModelObject().getDbType()) : form.getModelObject();
 			form.setModelObject(props);
-			host.setVisible(props.getDbType() != DbType.derby);
-			port.setVisible(props.getDbType() != DbType.derby);
-			user.setVisible(props.getDbType() != DbType.derby);
-			pass.setVisible(props.getDbType() != DbType.derby);
+			host.setVisible(props.getDbType() != DbType.h2);
+			port.setVisible(props.getDbType() != DbType.h2);
+			user.setVisible(props.getDbType() != DbType.h2);
+			pass.setVisible(props.getDbType() != DbType.h2);
 			try {
 				switch (props.getDbType()) {
 					case mssql: {
@@ -367,12 +364,11 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 						dbname.setModelObject(parts[5]);
 						}
 						break;
-					case derby: {
+					case h2: {
 						host.setModelObject("");
 						port.setModelObject(0);
 						String[] parts = props.getURL().split(";");
-						String[] hp = parts[0].split(":");
-						dbname.setModelObject(hp[2]);
+						dbname.setModelObject(parts[0].substring("jdbc:h2:".length()));
 						}
 						break;
 					default:
@@ -393,7 +389,7 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 		@Override
 		protected void onInitialize() {
 			super.onInitialize();
-			add(new OmLabel("note", "install.wizard.db.step.note", getModelObject().getAppName(), getString("install.wizard.db.step.instructions.derby")
+			add(new OmLabel("note", "install.wizard.db.step.note", getModelObject().getAppName(), getString("install.wizard.db.step.instructions.h2")
 					, getString("install.wizard.db.step.instructions.mysql"), getString("install.wizard.db.step.instructions.postgresql")
 					, getString("install.wizard.db.step.instructions.db2"), getString("install.wizard.db.step.instructions.mssql")
 					, getString("install.wizard.db.step.instructions.oracle")).setEscapeModelStrings(false));
@@ -668,7 +664,7 @@ public class InstallWizard extends AbstractWizard<InstallationConfig> {
 			super(paramsStep4);
 
 			// Timer //
-			container.add(timer = new AbstractAjaxTimerBehavior(Duration.ONE_SECOND) {
+			container.add(timer = new AbstractAjaxTimerBehavior(Duration.ofSeconds(1)) {
 				private static final long serialVersionUID = 1L;
 
 				@Override

@@ -64,15 +64,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.openjson.JSONObject;
-import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.JQueryUIBehavior;
 import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
 
 public class RoomSidebar extends Panel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(RoomSidebar.class);
-	public static final String FUNC_TOGGLE_RIGHT = "toggleRight";
-	public static final String FUNC_ACTION = "roomAction";
 	public static final String FUNC_SETTINGS = "avSettings";
 	public static final String PARAM_ACTION = "action";
 	public static final String PARAM_RIGHT = "right";
@@ -111,90 +108,6 @@ public class RoomSidebar extends Panel {
 		@Override
 		protected void populateItem(ListItem<Client> item) {
 			item.add(new RoomClientPanel("user", item, room));
-		}
-	};
-	private final AbstractDefaultAjaxBehavior roomAction = new AbstractDefaultAjaxBehavior() {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		protected void respond(AjaxRequestTarget target) {
-			try {
-				String uid = getRequest().getRequestParameters().getParameterValue(PARAM_UID).toString();
-				if (Strings.isEmpty(uid)) {
-					return;
-				}
-				Client cl = room.getClient();
-				Action a = Action.valueOf(getRequest().getRequestParameters().getParameterValue(PARAM_ACTION).toString());
-				switch (a) {
-					case kick:
-						if (cl.hasRight(Right.moderator)) {
-							kickedClient = cm.get(uid);
-							if (kickedClient == null) {
-								return;
-							}
-							if (!kickedClient.hasRight(Right.superModerator) && !cl.getUid().equals(kickedClient.getUid())) {
-								confirmKick.getDialog().open(target);
-							}
-						}
-						break;
-					case muteOthers:
-						if (room.getClient().hasRight(Right.muteOthers)) {
-							WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), cl, RoomMessage.Type.muteOthers, uid));
-						}
-						break;
-					case mute:
-					{
-						JSONObject obj = uid.isEmpty() ? new JSONObject() : new JSONObject(uid);
-						Client _c = cm.get(obj.getString("uid"));
-						if (_c == null || !_c.hasActivity(Client.Activity.AUDIO)) {
-							return;
-						}
-						if (cl.hasRight(Right.moderator) || cl.getUid().equals(_c.getUid())) {
-							// basic checks, will throw in case of missing options
-							obj.getBoolean("mute");
-							obj.put("sid", cl.getSid());
-							WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), cl, RoomMessage.Type.mute, obj.toString()));
-						}
-					}
-						break;
-					default:
-				}
-			} catch (Exception e) {
-				log.error("Unexpected exception while toggle 'roomAction'", e);
-			}
-		}
-	};
-	private final AbstractDefaultAjaxBehavior toggleRight = new AbstractDefaultAjaxBehavior() {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		protected void respond(AjaxRequestTarget target) {
-			try {
-				String uid = getRequest().getRequestParameters().getParameterValue(PARAM_UID).toString();
-				if (Strings.isEmpty(uid)) {
-					return;
-				}
-				Right right = Right.valueOf(getRequest().getRequestParameters().getParameterValue(PARAM_RIGHT).toString());
-				if (room.getClient().hasRight(Right.moderator)) {
-					Client client = cm.get(uid);
-					if (client == null) {
-						return;
-					}
-					if (client.hasRight(right)) {
-						room.denyRight(client, right);
-					} else {
-						if (Right.video == right) {
-							room.allowRight(client, Right.audio, right);
-						} else {
-							room.allowRight(client, right);
-						}
-					}
-				} else {
-					room.requestRight(right, target);
-				}
-			} catch (Exception e) {
-				log.error("Unexpected exception while toggle 'right'", e);
-			}
 		}
 	};
 	private final AbstractDefaultAjaxBehavior avSettings = new AbstractDefaultAjaxBehavior() {
@@ -249,7 +162,7 @@ public class RoomSidebar extends Panel {
 				, fileTab.setVisible(!room.isInterview()), roomFiles.setVisible(!room.isInterview()));
 
 		add(addFolder, settings, userCount.setOutputMarkupId(true));
-		add(toggleRight, roomAction, avSettings);
+		add(avSettings);
 		add(confirmKick = new ConfirmableAjaxBorder("confirm-kick", getString("603"), getString("605")) {
 			private static final long serialVersionUID = 1L;
 
@@ -260,15 +173,13 @@ public class RoomSidebar extends Panel {
 		});
 		add(form.add(confirmTrash), upload = new UploadDialog("upload", room, roomFiles));
 		updateShowFiles(null);
-		add(new JQueryUIBehavior("#room-sidebar-tabs", "tabs", new Options("activate", "function(event, ui) {Room.setSize();}")));
+		add(new JQueryUIBehavior("#room-sidebar-tabs", "tabs"));
 		add(activities = new ActivitiesPanel("activities", room));
 	}
 
 	@Override
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
-		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_TOGGLE_RIGHT, toggleRight, explicit(PARAM_RIGHT), explicit(PARAM_UID))));
-		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_ACTION, roomAction, explicit(PARAM_ACTION), explicit(PARAM_UID))));
 		response.render(new PriorityHeaderItem(getNamedFunction(FUNC_SETTINGS, avSettings, explicit(PARAM_SETTINGS))));
 	}
 
@@ -314,5 +225,80 @@ public class RoomSidebar extends Panel {
 
 	public void removeActivity(String uid, IPartialPageRequestHandler handler) {
 		activities.remove(handler, uid);
+	}
+
+	public void roomAction(IPartialPageRequestHandler handler, JSONObject o) {
+		try {
+			final String uid = o.getString(PARAM_UID);
+			if (Strings.isEmpty(uid)) {
+				return;
+			}
+			Client self = room.getClient();
+			Action a = Action.valueOf(o.getString(PARAM_ACTION));
+			switch (a) {
+				case kick:
+					if (self.hasRight(Right.moderator)) {
+						kickedClient = cm.get(uid);
+						if (kickedClient == null) {
+							return;
+						}
+						if (!kickedClient.hasRight(Right.superModerator) && !self.getUid().equals(kickedClient.getUid())) {
+							confirmKick.getDialog().open(handler);
+						}
+					}
+					break;
+				case muteOthers:
+					if (room.getClient().hasRight(Right.muteOthers)) {
+						WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), self, RoomMessage.Type.muteOthers, uid));
+					}
+					break;
+				case mute:
+				{
+					Client c = cm.get(uid);
+					if (c == null || !c.hasActivity(Client.Activity.AUDIO)) {
+						return;
+					}
+					if (self.hasRight(Right.moderator) || self.getUid().equals(c.getUid())) {
+						WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), self, RoomMessage.Type.mute
+								, new JSONObject()
+										.put("sid", self.getSid())
+										.put(PARAM_UID, uid)
+										.put("mute", o.getBoolean("mute")).toString()));
+					}
+				}
+					break;
+				case toggleRight:
+					toggleRight(handler, self, uid, o);
+					break;
+				default:
+			}
+		} catch (Exception e) {
+			log.error("Unexpected exception while toggle 'roomAction'", e);
+		}
+	}
+
+	private void toggleRight(IPartialPageRequestHandler handler, Client self, String uid, JSONObject o) {
+		try {
+			Right right = Right.valueOf(o.getString(PARAM_RIGHT));
+			if (self.hasRight(Right.moderator)) {
+				Client client = cm.get(uid);
+				if (client == null) {
+					return;
+				}
+				if (client.hasRight(right)) {
+					room.denyRight(client, right);
+				} else {
+					if (Right.video == right) {
+						room.allowRight(client, Right.audio, right);
+					} else {
+						room.allowRight(client, right);
+					}
+				}
+			} else {
+				room.requestRight(right, handler);
+			}
+		} catch (Exception e) {
+			log.error("Unexpected exception while toggle 'right'", e);
+		}
 	}
 }

@@ -17,6 +17,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
+<!DOCTYPE html>
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
 	<div id="busy-indicator"></div>
@@ -32,23 +33,20 @@
 					<span class="label"><wicket:message key="245"/></span>
 				</a>
 			</li>
-			<div class="btn-dock" wicket:message="data-ttl-dock:label.dock.panel,data-ttl-undock:label.undock.panel"></div>
+			<li class="btn-dock" wicket:message="data-ttl-dock:label.dock.panel,data-ttl-undock:label.undock.panel"></li>
 		</ul>
 		<div id="room-sidebar-tab-users">
-			<div wicket:id="icons" class="user header"></div>
-			<div class="user list clear">
-				<div wicket:id="user-list">
+			<div wicket:id="icons" class="header"></div>
+			<div class="user-list clear"> <!-- auto-scrollable -->
+				<div wicket:id="user-list"> <!-- content -->
 					<div wicket:id="user" class="user entry ui-corner-all ui-widget-content">
 						<div wicket:id="user"></div>
 					</div>
 				</div>
 			</div>
-			<script type="text/javascript">Room.setSize();</script>
 		</div>
 		<div id="room-sidebar-tab-files" wicket:enclosure="tree">
-			<div class="file list">
-				<div wicket:id="tree"></div>
-			</div>
+			<div class="file-list full-height" wicket:id="tree"></div>
 		</div>
 	</div>
 	<div wicket:id="activities"></div>

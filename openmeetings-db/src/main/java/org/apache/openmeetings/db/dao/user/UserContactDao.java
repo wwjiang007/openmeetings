@@ -82,13 +82,13 @@ public class UserContactDao {
 				.setParameter(PARAM_USER_ID, userId)
 				.setParameter(PARAM_OWNERID, ownerId)
 				.getResultList();
-		log.info("number of contacts:: " + (ll == null ? null : ll.size()));
+		log.info("number of contacts:: {}", (ll == null ? null : ll.size()));
 		return ll != null && ll.size() == 1 ? ll.get(0) : null;
 	}
 
 	public boolean isContact(Long userId, Long ownerId) {
 		UserContact c = get(userId, ownerId);
-		return c == null ? false : !c.isPending();
+		return c != null && !c.isPending();
 	}
 
 	public List<UserContact> get(long ownerId, long first, long count) {

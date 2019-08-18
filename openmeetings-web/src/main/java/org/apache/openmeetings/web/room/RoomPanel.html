@@ -17,13 +17,14 @@
   specific language governing permissions and limitations
   under the License.
 -->
+<!DOCTYPE html>
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-	<div class="room holder">
-		<div class="room box" wicket:id="roomContainer">
-			<div class="room menu" wicket:id="menu"></div>
-			<div class="room sidebar" wicket:id="sidebar"></div>
-			<div wicket:id="wb-area" class="room wb area">
+	<div class="room-block">
+		<div class="container" wicket:id="roomContainer">
+			<div class="menu" wicket:id="menu"></div>
+			<div class="sidebar" wicket:id="sidebar"></div>
+			<div wicket:id="wb-area" class="wb-block">
 				<div class="wb-drop-area"></div>
 				<div class="wb-area" wicket:id="whiteboard"></div>
 			</div>
@@ -98,8 +99,6 @@
 					<select name="type" class="type">
 						<option value="screen">Screen</option>
 						<option value="window">Window</option>
-						<option value="application">Application</option>
-						<option value="tab">Tab</option>
 					</select>
 				</div>
 				<div>
@@ -131,5 +130,6 @@
 			<wicket:message key="video.permission.text"/>
 		</div>
 	</div>
+	<link rel="stylesheet" type="text/css" wicket:id="groupstyle"/>
 </wicket:panel>
 </html>

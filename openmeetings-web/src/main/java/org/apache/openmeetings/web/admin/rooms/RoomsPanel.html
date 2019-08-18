@@ -18,6 +18,7 @@
   under the License.
 
 -->
+<!DOCTYPE html>
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
 	<div class="adminPanelColumnTable rooms">
@@ -136,7 +137,7 @@
 				<!-- Room files -->
 				<fieldset class="ui-widget-content">
 					<legend class="ui-widget-header"><wicket:message key="245" /></legend>
-					<form wicket:id="filesForm">
+					<div wicket:id="filesForm">
 						<div class="formelement">
 							<label wicket:for="files2add"><wicket:message key="245" /></label>
 							<div class="om-select2"><select class="input" wicket:id="files2add"></select></div>
@@ -146,7 +147,7 @@
 							<input type="number" class="input" wicket:id="wbidx"/>
 						</div>
 						<button type="button" wicket:id="addFiles"><wicket:message key="1261"/></button>
-					</form>
+					</div>
 					<table class="list-table small">
 						<thead>
 							<tr class="ui-widget-header">
@@ -196,6 +197,7 @@
 
 				<!-- Default moderators -->
 				<fieldset class="ui-widget-content">
+					<legend class="ui-widget-header"><wicket:message key="816" /></legend>
 					<div class="formelement">
 						<div class="info-text"><wicket:message key="823" /></div>
 						<label wicket:for="moderated"><wicket:message key="640" /></label><input type="checkbox" class="formcheckbox" wicket:id="moderated" />

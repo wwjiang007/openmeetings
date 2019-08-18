@@ -156,7 +156,7 @@ public class AppointmentDao {
 	}
 
 	public List<Appointment> getInRange(Long userId, Date start, Date end) {
-		log.debug("Start " + start + " End " + end);
+		log.debug("Start {} End {}", start, end);
 
 		TypedQuery<Appointment> query = em.createNamedQuery("appointmentsInRange", Appointment.class);
 		query.setParameter(PARAM_START, start);
@@ -259,9 +259,6 @@ public class AppointmentDao {
 	 * @return Returns <code>-1</code> if the there was an error executing the query,
 	 * otherwise returns the number of updated rows.
 	 * as described here {@link Query#executeUpdate()}
-	 *
-	 * @param calId - id of the calendar
-	 * @return - number of deleted items
 	 */
 	public int deletebyCalendar(Long calId) {
 		return em.createNamedQuery("deleteAppointmentsbyCalendar", Appointment.class)

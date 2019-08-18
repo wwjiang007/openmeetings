@@ -123,14 +123,16 @@ var VideoManager = (function() {
 	function _init() {
 		Wicket.Event.subscribe('/websocket/message', _onWsMessage);
 		VideoSettings.init(Room.getOptions());
-		share = $('.room.box').find('.icon.shared.ui-button');
+		share = $('.room-block .container').find('.icon.shared.ui-button');
 		inited = true;
 	}
 	function _update(c) {
 		if (!inited) {
 			return;
 		}
+		const streamMap = {};
 		c.streams.forEach(function(sd) {
+			streamMap[sd.uid] = sd.uid;
 			sd.self = c.self;
 			if (VideoUtil.isSharing(sd) || VideoUtil.isRecording(sd)) {
 				return;
@@ -153,13 +155,13 @@ var VideoManager = (function() {
 				w.data().setRights(c.rights);
 			}
 		}
-		if (c.streams.length === 0) {
-			// check for non inited video window
-			const v = $('#' + VideoUtil.getVid(c.uid));
-			if (v.length === 1) {
-				_closeV(v);
+		$('[data-client-uid="' + c.cuid + '"]').each(function() {
+			const sd = $(this).data().stream();
+			if (!streamMap[sd.uid]) {
+				//not-inited/invalid video window
+				_closeV($(this));
 			}
-		}
+		});
 	}
 	function _closeV(v) {
 		if (v.dialog('instance') !== undefined) {
@@ -240,7 +242,7 @@ var VideoManager = (function() {
 						, click: function() {
 							s.video.confirmMuteOthers = !$('#muteothers-confirm-dont-show').prop('checked');
 							VideoSettings.save();
-							roomAction('muteOthers', uid);
+							OmUtil.roomAction({action: 'muteOthers', uid: uid});
 							$(this).dialog('close');
 						}
 					}

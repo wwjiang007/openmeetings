@@ -21,9 +21,12 @@ package org.apache.openmeetings.web.room.sidebar;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getMaxUploadSize;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.DoubleConsumer;
 
 import org.apache.openmeetings.core.data.file.FileProcessor;
 import org.apache.openmeetings.db.dao.file.FileItemLogDao;
@@ -53,11 +56,11 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Bytes;
 import org.apache.wicket.util.string.Strings;
-import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +74,19 @@ public class UploadDialog extends AbstractFormDialog<String> {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(UploadDialog.class);
 	private final KendoFeedbackPanel feedback = new KendoFeedbackPanel("feedback", new Options("button", true));
-	private final Form<String> form = new Form<>("form");
+	private final Form<String> form = new Form<>("form") {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected boolean handleMultiPart() {
+			try {
+				return super.handleMultiPart();
+			} catch (Exception e) {
+				log.warn("Multipart processing failed {}", e.getMessage());
+			}
+			return true;
+		}
+	};
 	private DialogButton upload;
 	private DialogButton cancel;
 	private final FileUploadField uploadField = new FileUploadField("file", new IModel<List<FileUpload>>() {
@@ -106,7 +121,7 @@ public class UploadDialog extends AbstractFormDialog<String> {
 	@SpringBean
 	private FileItemLogDao fileLogDao;
 
-	private final AbstractAjaxTimerBehavior timer = new AbstractAjaxTimerBehavior(Duration.ONE_SECOND) {
+	private final AbstractAjaxTimerBehavior timer = new AbstractAjaxTimerBehavior(Duration.ofSeconds(1)) {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -244,13 +259,15 @@ public class UploadDialog extends AbstractFormDialog<String> {
 			progress = 0;
 			timer.restart(target);
 			setTitle(target, getString("upload.dlg.convert.title"));
-			target.add(progressBar.setVisible(true), form.setVisible(false));
+			target.add(progressBar.setModelObject(progress).setVisible(true), form.setVisible(false));
 
 			final Application app = Application.get();
 			final WebSession session = WebSession.get();
+			final RequestCycle rc = RequestCycle.get();
 			new Thread(() -> {
 				ThreadContext.setApplication(app);
 				ThreadContext.setSession(session);
+				ThreadContext.setRequestCycle(rc);
 				convertAll();
 				ThreadContext.detach();
 			}).start();
@@ -275,7 +292,6 @@ public class UploadDialog extends AbstractFormDialog<String> {
 				FileItem f = new FileItem();
 				f.setSize(size);
 				f.setName(fu.getClientFileName());
-				f.setExternalType(room.getRoom().getExternalType());
 				if (parent == null || !(parent instanceof FileItem)) {
 					f.setOwnerId(getUserId());
 				} else {
@@ -288,7 +304,8 @@ public class UploadDialog extends AbstractFormDialog<String> {
 				}
 				f.setInsertedBy(getUserId());
 
-				ProcessResultList logs = processor.processFile(f, fu.getInputStream());
+				ProcessResultList logs = processor.processFile(f, fu.getInputStream()
+						, Optional.<DoubleConsumer>of(part -> progress += (int)(100 * part * size / totalSize)));
 				for (ProcessResult res : logs.getJobs()) {
 					fileLogDao.add(res.getProcess(), f, res);
 				}

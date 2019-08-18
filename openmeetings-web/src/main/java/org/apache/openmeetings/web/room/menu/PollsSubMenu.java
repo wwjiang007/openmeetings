@@ -52,6 +52,7 @@ public class PollsSubMenu implements Serializable {
 	private static final String FUNC_QPOLL_ACTION = "quickPollAction";
 	private static final String PARAM_VOTE = "vote";
 	private static final String ACTION_CLOSE = "close";
+	private static final String ACTION_OPEN = "open";
 	private final RoomPanel room;
 	private final RoomMenuPanel mp;
 	private final CreatePollDialog createPoll;
@@ -73,7 +74,9 @@ public class PollsSubMenu implements Serializable {
 				}
 				String action = mp.getRequest().getRequestParameters().getParameterValue(PARAM_ACTION).toString();
 				Client c = room.getClient();
-				if (ACTION_CLOSE.equals(action)) {
+				if (ACTION_OPEN.equals(action)) {
+					qpollManager.start(room.getClient());
+				} else if (ACTION_CLOSE.equals(action)) {
 					qpollManager.close(c);
 				} else if (PARAM_VOTE.equals(action)) {
 					final boolean curVote = mp.getRequest().getRequestParameters().getParameterValue(PARAM_VOTE).toBoolean();
@@ -160,7 +163,7 @@ public class PollsSubMenu implements Serializable {
 		pollsMenu.setEnabled(moder || r.isAllowUserQuestions());
 		pollQuickMenuItem.setEnabled(room.getClient().hasRight(Room.Right.presenter) && !qpollManager.isStarted(r.getId()));
 		pollCreateMenuItem.setEnabled(moder);
-		pollVoteMenuItem.setEnabled(pollExists && notExternalUser && !pollDao.hasVoted(r.getId(), getUserId()));
+		pollVoteMenuItem.setEnabled(pollExists && notExternalUser && pollDao.notVoted(r.getId(), getUserId()));
 		pollResultMenuItem.setEnabled(pollExists || !pollDao.getArchived(r.getId()).isEmpty());
 	}
 

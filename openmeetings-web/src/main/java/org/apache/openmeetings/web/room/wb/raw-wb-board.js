@@ -1,10 +1,10 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
 var Wb = function() {
 	const ACTIVE = 'active', BUMPER = 100, wb = {id: -1, name: ''}, canvases = []
-		, area = $('.room.wb.area .wb-area .tabs.ui-tabs'), bar = area.find('.wb-tabbar')
+		, area = $('.room-block .wb-block .wb-area .tabs.ui-tabs'), bar = area.find('.wb-tabbar')
 		, extraProps = ['uid', 'fileId', 'fileType', 'count', 'slide', 'omType', '_src', 'formula'];
 	let a, t, z, s, f, mode, slide = 0, width = 0, height = 0
-			, zoom = 1., zoomMode = 'pageWidth', role = null;
+			, zoom = 1., zoomMode = 'pageWidth', role = null, scrollTimeout = null;
 
 	function _getBtn(m) {
 		return !!t ? t.find('.om-icon.' + (m || mode) + ':not(.stub)') : null;
@@ -127,6 +127,10 @@ var Wb = function() {
 		}
 	}
 	function _setSlide(_sld) {
+		const sld = 1 * _sld;
+		if (sld < 0 || sld > canvases.length - 1) {
+			return;
+		}
 		slide = _sld;
 		OmUtil.wbAction({action: 'setSlide', data: {
 			wbId: wb.id
@@ -523,11 +527,9 @@ var Wb = function() {
 		const r = o.toJSON(extraProps);
 		switch (o.omType) {
 			case 'Video':
-				r.type = 'video';
 				delete r.objects;
 				break;
 			case 'Math':
-				r.type = 'math';
 				delete r.objects;
 				break;
 			default:
@@ -537,11 +539,11 @@ var Wb = function() {
 	}
 	//events
 	function objCreatedHandler(o) {
-		if (role === NONE && o.type !== 'pointer') {
+		if (role === NONE && o.omType !== 'pointer') {
 			return;
 		}
 		let json;
-		switch(o.type) {
+		switch(o.omType) {
 			case 'pointer':
 				json = o;
 				break;
@@ -557,13 +559,13 @@ var Wb = function() {
 	};
 	function objAddedHandler(e) {
 		const o = e.target;
-		if (!!o.loaded) {
+		if (o.loaded === true) {
 			return;
 		}
-		switch(o.type) {
+		switch(o.omType) {
 			case 'textbox':
 			case 'i-text':
-				o.uid = UUID.v4();
+				o.uid = uuidv4();
 				o.slide = this.slide;
 				objCreatedHandler(o);
 				break;
@@ -574,7 +576,7 @@ var Wb = function() {
 	};
 	function objModifiedHandler(e) {
 		const o = e.target, items = [];
-		if (role === NONE && o.type !== 'pointer') {
+		if (role === NONE && o.omType !== 'pointer') {
 			return;
 		}
 		o.includeDefaultValues = false;
@@ -607,7 +609,7 @@ var Wb = function() {
 		if (!o || '' !== o.text) {
 			return;
 		}
-		if ('textbox' === o.type || 'i-text' === o.type) {
+		if ('textbox' === o.omType || 'i-text' === o.omType) {
 			OmUtil.wbAction({action: 'deleteObj', data: {
 				wbId: wb.id
 				, obj: [{
@@ -618,19 +620,31 @@ var Wb = function() {
 		}
 	}
 	function pathCreatedHandler(o) {
-		o.path.uid = UUID.v4();
+		o.path.uid = uuidv4();
 		o.path.slide = this.slide;
 		objCreatedHandler(o.path);
 	};
 	function scrollHandler() {
-		$(this).find('.canvas-container').each(function(idx) {
-			const h = $(this).height(), pos = $(this).position();
-			if (slide !== idx && pos.top > BUMPER - h && pos.top < BUMPER) {
-				//TODO might be done without iterating
-				_setSlide(idx);
+		if (scrollTimeout !== null) {
+			clearTimeout(scrollTimeout);
+		}
+		scrollTimeout = setTimeout(function() {
+			const sc = a.find('.scroll-container')
+				, canvases = sc.find('.canvas-container');
+			if (Math.round(sc.height() + sc[0].scrollTop) === sc[0].scrollHeight) {
+				if (slide !== canvases.length - 1) {
+					_setSlide(canvases.length - 1);
+				}
 				return false;
 			}
-		});
+			canvases.each(function(idx) {
+				const h = $(this).height(), pos = $(this).position();
+				if (slide !== idx && pos.top > BUMPER - h && pos.top < BUMPER) {
+					_setSlide(idx);
+					return false;
+				}
+			});
+		}, 100);
 	}
 	function showCurrentSlide() {
 		a.find('.scroll-container .canvas-container').each(function(idx) {
@@ -851,14 +865,14 @@ var Wb = function() {
 				del.push(o);
 				continue;
 			}
-			switch(o.type) {
+			switch(o.omType) {
 				case 'pointer':
 					APointer(wb).create(canvases[o.slide], o);
 					break;
-				case 'video':
+				case 'Video':
 					Player.create(canvases[o.slide], o, wb);
 					break;
-				case 'math':
+				case 'Math':
 					StaticTMath.create(o, canvases[o.slide]);
 					break;
 				default:
@@ -884,11 +898,11 @@ var Wb = function() {
 		const arr = [], _arr = Array.isArray(obj) ? obj : [obj];
 		for (let i = 0; i < _arr.length; ++i) {
 			const o = _arr[i];
-			switch(o.type) {
+			switch(o.omType) {
 				case 'pointer':
 					_modifyHandler(APointer(wb).create(canvases[o.slide], o))
 					break;
-				case 'video':
+				case 'Video':
 				{
 					const g = _findObject(o);
 					if (!!g) {
@@ -896,7 +910,7 @@ var Wb = function() {
 					}
 				}
 					break;
-				case 'math':
+				case 'Math':
 				{
 					_removeHandler(o);
 					StaticTMath.create(o, canvases[o.slide]);
@@ -922,7 +936,7 @@ var Wb = function() {
 			cc.remove();
 			canvases[i].dispose();
 		}
-		$('.room.wb.area .wb-video').remove();
+		$('.room-block .wb-block .wb-video').remove();
 		canvases.splice(1);
 		canvases[0].clear();
 		_updateZoomPanel();
@@ -936,7 +950,7 @@ var Wb = function() {
 				canvas.remove(arr[arr.length - 1]);
 				arr = canvas.getObjects();
 			}
-			$('.room.wb.area .wb-video.slide-' + _sl).remove();
+			$('.room-block .wb-block .wb-video.slide-' + _sl).remove();
 			canvas.renderOnAddRemove = true;
 			canvas.requestRenderAll();
 		}

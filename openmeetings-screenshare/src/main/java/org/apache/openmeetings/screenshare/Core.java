@@ -108,7 +108,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 		try {
 			System.setProperty("org.terracotta.quartz.skipUpdateCheck", "true");
 			for (String arg : args) {
-				log.debug("arg: " + arg);
+				log.debug("arg: {}", arg);
 			}
 			String[] textArray = null;
 			if (args.length > 8) {
@@ -127,10 +127,12 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 				if (labelTexts.length() > 0) {
 					textArray = labelTexts.split(";");
 
-					log.debug("labelTexts :: " + labelTexts);
-					log.debug("textArray Length " + textArray.length);
-					for (int i = 0; i < textArray.length; i++) {
-						log.debug(i + " :: " + textArray[i]);
+					if (log.isDebugEnabled()) {
+						log.debug("labelTexts :: {}", labelTexts);
+						log.debug("textArray Length {}", textArray.length);
+						for (int i = 0; i < textArray.length; i++) {
+							log.debug("{} :: {}", i, textArray[i]);
+						}
 					}
 				}
 			} else {
@@ -174,8 +176,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 				break;
 			case rtmps:
 				if (nativeSsl) {
-					RTMPSScreenShare client = new RTMPSScreenShare(this);
-					instance = client;
+					instance = new RTMPSScreenShare(this);
 				} else {
 					instance = new RTMPTSScreenShare(this);
 				}
@@ -440,20 +441,20 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			getCapture().release();
 			_capture = null;
 		} catch (Exception e) {
-			log.error("ScreenShare stopStream exception " + e);
+			log.error("ScreenShare stopStream exception ", e);
 		}
 	}
 
 	@Override
 	public void onStreamEvent(Notify notify) {
-		log.debug( "onStreamEvent " + notify );
+		log.debug("onStreamEvent {}", notify);
 
 		@SuppressWarnings("rawtypes")
 		ObjectMap map = (ObjectMap) notify.getCall().getArguments()[0];
 		String code = (String) map.get("code");
 
 		if (StatusCodes.NS_PUBLISH_START.equals(code)) {
-			log.debug( "onStreamEvent Publish start" );
+			log.debug("onStreamEvent Publish start");
 			getCapture().setStartPublish(true);
 			setReadyToRecord(true);
 		}
@@ -468,7 +469,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			return;
 		}
 		log.trace("#### sendRemoteCursorEvent ");
-		log.trace("Result Map Type "+ obj);
+		log.trace("Result Map Type {}", obj);
 
 		if (obj != null) {
 			remoteEvents.offer(obj);
@@ -479,7 +480,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 	@Override
 	public void resultReceived(IPendingServiceCall call) {
 		try {
-			log.trace("service call result: " + call);
+			log.trace("service call result: {}", call);
 			if (call == null) {
 				return;
 			}
@@ -487,12 +488,12 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			String method = call.getServiceMethodName();
 			Object o = call.getResult();
 			if (log.isTraceEnabled()) {
-				log.trace("Result Map Type " + (o == null ? null : o.getClass().getName()));
-				log.trace("" + o);
+				log.trace("Result Map Type {}", (o == null ? null : o.getClass().getName()));
+				log.trace("{}", o);
 			}
 			@SuppressWarnings("unchecked")
 			Map<String, Object> returnMap = (o != null && o instanceof Map) ? (Map<String, Object>) o : new HashMap<>();
-			log.trace("call ### get Method Name " + method);
+			log.trace("call ### get Method Name {}", method);
 			if ("connect".equals(method)) {
 				Object code = returnMap.get("code");
 				if (CONNECT_FAILED.equals(code) && !fallbackUsed) {
@@ -570,7 +571,7 @@ public class Core implements IPendingServiceCallback, INetStreamEventHandler {
 			} else if ("setNewCursorPosition".equals(method)) {
 				// Do not do anything
 			} else {
-				log.debug("Unknown method " + method);
+				log.debug("Unknown method {}", method);
 			}
 
 		} catch (Exception err) {

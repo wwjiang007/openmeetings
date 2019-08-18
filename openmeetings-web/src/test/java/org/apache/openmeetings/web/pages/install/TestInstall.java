@@ -19,7 +19,7 @@
 package org.apache.openmeetings.web.pages.install;
 
 import static com.googlecode.wicket.jquery.ui.widget.dialog.AbstractDialog.SUBMIT;
-import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.openmeetings.AbstractJUnitDefaults.adminUsername;
 import static org.apache.openmeetings.AbstractJUnitDefaults.email;
 import static org.apache.openmeetings.AbstractJUnitDefaults.group;
@@ -28,6 +28,7 @@ import static org.apache.openmeetings.AbstractWicketTester.checkErrors;
 import static org.apache.openmeetings.AbstractWicketTester.countErrors;
 import static org.apache.openmeetings.AbstractWicketTester.getButtonBehavior;
 import static org.apache.openmeetings.AbstractWicketTester.getWicketTester;
+import static org.apache.openmeetings.cli.ConnectionPropertiesPatcher.DEFAULT_DB_NAME;
 import static org.apache.openmeetings.db.util.ApplicationHelper.ensureApplication;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_APP_NAME;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplicationName;
@@ -36,16 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
 
 import org.apache.openmeetings.AbstractSpringTest;
 import org.apache.openmeetings.AbstractWicketTester;
+import org.apache.openmeetings.cli.ConnectionPropertiesPatcher;
 import org.apache.openmeetings.util.crypt.SCryptImplementation;
 import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.app.WebSession;
@@ -62,41 +61,36 @@ import com.googlecode.wicket.jquery.ui.widget.dialog.ButtonAjaxBehavior;
 
 public class TestInstall {
 	private static final Logger log = LoggerFactory.getLogger(TestInstall.class);
-	private static final String DERBY_HOME = "derby.system.home";
 	private static final String WIZARD_PATH = "wizard";
 	private File tempFolder;
 	protected WicketTester tester;
 	protected Random rnd = new Random();
 
-	public static void setDerbyHome(File f) throws IOException {
-		System.setProperty(DERBY_HOME, f.getCanonicalPath());
-		try {
-			Class.forName("org.apache.derby.jdbc.EmbeddedDriver").newInstance();
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			log.error("Fail to re-init Derby", e);
+	private static String getH2Home(File dir) throws Exception {
+		File f = new File(dir.getCanonicalFile(), DEFAULT_DB_NAME);
+		String path = f.toURI().toString();
+		if (System.getProperty("os.name").startsWith("Win")) {
+			path = "file:" + path.substring(6);
 		}
+		log.warn("Gonna create DB at {}", path);
+		return path;
 	}
 
-	public static void resetDerbyHome() {
-		try {
-			DriverManager.getConnection("jdbc:derby:;shutdown=true");
-		} catch (SQLException e) {
-			if ("XJ015".equals(e.getSQLState()) && 50000 == e.getErrorCode()) {
-				log.info("Derby shutdown successfully");
-			} else {
-				log.error("Fail to shutdown Derby", e);
-			}
-		}
-		System.getProperties().remove(DERBY_HOME);
+	public static void setH2Home(File f) throws Exception {
+		ConnectionPropertiesPatcher.patch("h2", null, null, getH2Home(f), null, null);
+	}
+
+	public static void resetH2Home() throws Exception {
+		ConnectionPropertiesPatcher.patch("h2", null, null, null, null, null);
 	}
 
 	@BeforeEach
-	public void setUp() throws IOException {
+	public void setUp() throws Exception {
 		log.info("Going to perform setup for TestInstall");
 		AbstractSpringTest.setOmHome();
 		setWicketApplicationName(DEFAULT_APP_NAME);
 		tempFolder = Files.createTempDirectory("omtempdb").toFile();
-		setDerbyHome(tempFolder);
+		setH2Home(tempFolder);
 		tester = getWicketTester((Application)ensureApplication(-1L));
 		assertNotNull(WebSession.get(), "Web session should not be null");
 		Locale[] locales = Locale.getAvailableLocales();
@@ -105,12 +99,12 @@ public class TestInstall {
 	}
 
 	@AfterEach
-	public void tearDown() throws IOException {
+	public void tearDown() throws Exception {
 		log.info("Going to perform clean-up for TestInstall");
 		AbstractWicketTester.destroy(tester);
 		log.info("WicketTester is destroyed");
-		resetDerbyHome();
-		deleteDirectory(tempFolder);
+		resetH2Home();
+		deleteQuietly(tempFolder);
 		log.info("Clean-up complete");
 	}
 

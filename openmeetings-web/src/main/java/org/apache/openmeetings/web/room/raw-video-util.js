@@ -1,6 +1,6 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
-const WB_AREA_SEL = '.room.wb.area';
-const WBA_WB_SEL = '.room.wb.area .ui-tabs-panel.ui-corner-bottom.ui-widget-content:visible';
+const WB_AREA_SEL = '.room-block .wb-block';
+const WBA_WB_SEL = '.room-block .wb-block .ui-tabs-panel.ui-corner-bottom.ui-widget-content:visible';
 const VID_SEL = '.video.user-video';
 const CAM_ACTIVITY = 'VIDEO';
 const MIC_ACTIVITY = 'AUDIO';
@@ -132,10 +132,6 @@ var VideoUtil = (function() {
 		const b = _b || kurentoUtils.WebRtcPeer.browser;
 		return b.name === 'Chrome' || b.name === 'Chromium';
 	}
-	function _isChrome72(_b) {
-		const b = _b || kurentoUtils.WebRtcPeer.browser;
-		return _isChrome(b) && b.major > 71;
-	}
 	function _isEdge(_b) {
 		const b = _b || kurentoUtils.WebRtcPeer.browser;
 		return b.name === 'Edge';
@@ -147,7 +143,7 @@ var VideoUtil = (function() {
 		const perm = $('#ask-permission');
 		if (undefined === perm.dialog('instance')) {
 			perm.data('callbacks', []).dialog({
-				appendTo: '.room.holder .room.box'
+				appendTo: '.room-block .container'
 				, autoOpen: true
 				, buttons: [
 					{
@@ -210,7 +206,6 @@ var VideoUtil = (function() {
 	};
 	self.isEdge = _isEdge;
 	self.isChrome = _isChrome;
-	self.isChrome72 = _isChrome72;
 	self.setPos = _setPos;
 	self.askPermission = _askPermission;
 	self.disconnect = _disconnect;

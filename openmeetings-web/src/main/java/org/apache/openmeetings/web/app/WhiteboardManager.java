@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.web.app;
 
+import static org.apache.openmeetings.db.util.ApplicationHelper.ensureApplication;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getDefaultLang;
 
 import java.util.ArrayList;
@@ -32,13 +33,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.dto.room.Whiteboard;
 import org.apache.openmeetings.db.dto.room.Whiteboards;
 import org.apache.openmeetings.db.entity.file.BaseFileItem;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.room.RoomFile;
+import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.manager.IWhiteboardManager;
+import org.apache.openmeetings.db.util.ws.RoomMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +53,7 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryRemovedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
+import com.hazelcast.util.function.Consumer;
 
 /**
  * Hazelcast based Whiteboard manager
@@ -87,7 +92,7 @@ public class WhiteboardManager implements IWhiteboardManager {
 	}
 
 	@Override
-	public void remove(Long roomId) {
+	public void clean(Long roomId, Long userId) {
 		if (roomId == null) {
 			return;
 		}
@@ -100,6 +105,12 @@ public class WhiteboardManager implements IWhiteboardManager {
 					map().unlock(roomId);
 				}
 			}
+			new Thread(() -> {
+				ensureApplication();
+				User u = new User();
+				u.setId(userId);
+				WebSocketHelper.sendRoom(new RoomMessage(roomId, u, RoomMessage.Type.wbReload));
+			}).start();
 		} catch (InterruptedException e) {
 			log.warn("Unexpected exception while map clean-up", e);
 		}
@@ -110,13 +121,16 @@ public class WhiteboardManager implements IWhiteboardManager {
 		return get(roomId, null);
 	}
 
-	private Whiteboards getOrCreate(Long roomId) {
+	private Whiteboards getOrCreate(Long roomId, Consumer<Whiteboards> consumer) {
 		if (roomId == null) {
 			return null;
 		}
 		Whiteboards wbs = onlineWbs.get(roomId);
 		if (wbs == null) {
 			wbs = new Whiteboards(roomId);
+			if (consumer != null) {
+				consumer.accept(wbs);
+			}
 		}
 		return wbs;
 	}
@@ -135,7 +149,7 @@ public class WhiteboardManager implements IWhiteboardManager {
 						}
 						bfl.add(rf.getFile());
 					}
-					Whiteboards wbs = getOrCreate(r.getId());
+					Whiteboards wbs = getOrCreate(r.getId(), null);
 					for (Map.Entry<Long, List<BaseFileItem>> e : files.entrySet()) {
 						Whiteboard wb = add(wbs, langId);
 						wbs.setActiveWb(wb.getId());
@@ -151,14 +165,15 @@ public class WhiteboardManager implements IWhiteboardManager {
 	}
 
 	public Whiteboards get(Long roomId, Long langId) {
-		Whiteboards wbs = getOrCreate(roomId);
+		Whiteboards wbs = getOrCreate(roomId, inWbs -> {
+			if (inWbs.getWhiteboards().isEmpty()) {
+				Whiteboard wb = add(inWbs, langId);
+				inWbs.setActiveWb(wb.getId());
+				update(inWbs);
+			}
+		});
 		if (wbs == null) {
 			return null;
-		}
-		if (wbs.getWhiteboards().isEmpty()) {
-			Whiteboard wb = add(wbs, langId);
-			wbs.setActiveWb(wb.getId());
-			update(wbs);
 		}
 		return wbs;
 	}

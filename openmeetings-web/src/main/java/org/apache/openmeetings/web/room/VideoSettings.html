@@ -17,6 +17,7 @@
   specific language governing permissions and limitations
   under the License.
 -->
+<!DOCTYPE html>
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
 	<div id="video-settings" wicket:message="title:51, data-btn-save:144, data-btn-cancel:lbl.cancel" style="display:none;">
@@ -93,6 +94,7 @@
 			<option id="settings-option-loading" value="-2" data-class="ui-icon-refresh"><wicket:message key="230"/></option>
 			<option id="settings-option-disabled" value="-1" data-class="ui-icon-closethick"><wicket:message key="159"/></option>
 		</select>
+		<div id="settings-https-required"><wicket:message key="video.settings.https.required"/></div>
 	</div>
 </wicket:panel>
 </html>

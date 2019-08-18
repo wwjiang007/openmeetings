@@ -130,7 +130,7 @@ public class RoomMenuPanel extends Panel {
 
 	@Override
 	protected void onInitialize() {
-		exitMenuItem = new RoomMenuItem(getString("308"), getString("309"), "room menu exit") {
+		exitMenuItem = new RoomMenuItem(getString("308"), getString("309"), "exit") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -206,7 +206,7 @@ public class RoomMenuPanel extends Panel {
 		exitMenuItem.setEnabled(notExternalUser);
 		filesMenu.setEnabled(!isInterview && room.getSidebar().isShowFiles());
 		boolean moder = room.getClient().hasRight(Room.Right.moderator);
-		actionsSubMenu.update(moder, notExternalUser, r);
+		actionsSubMenu.update(moder, notExternalUser);
 		pollsSubMenu.update(moder, notExternalUser, r);
 		menuPanel.update(handler);
 		StringBuilder roomClass = new StringBuilder("room name");

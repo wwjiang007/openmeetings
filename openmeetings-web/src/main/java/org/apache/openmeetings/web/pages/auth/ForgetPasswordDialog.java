@@ -229,14 +229,13 @@ public class ForgetPasswordDialog extends AbstractFormDialog<String> {
 	 * reset a username by a given mail oder login by sending a mail to the
 	 * registered EMail-Address
 	 *
-	 * @param email
-	 * @param username
-	 * @param appLink
+	 * @param email - email of the user
+	 * @param username - username of the user
 	 * @return <code>true</code> in case reset was successful, <code>false</code> otherwise
 	 */
 	private boolean resetUser(String email, String username) {
 		try {
-			log.debug("resetUser " + email);
+			log.debug("resetUser {}", email);
 
 			// check if Mail given
 			if (!Strings.isEmpty(email)) {
@@ -259,7 +258,7 @@ public class ForgetPasswordDialog extends AbstractFormDialog<String> {
 	}
 
 	private void sendHashByUser(User us) {
-		log.debug("User: " + us.getLogin());
+		log.debug("User: {}", us.getLogin());
 		us.setResethash(randomUUID().toString());
 		us.setResetDate(new Date());
 		userDao.update(us, null);

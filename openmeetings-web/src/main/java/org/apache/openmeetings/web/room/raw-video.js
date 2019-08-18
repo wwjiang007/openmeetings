@@ -6,32 +6,12 @@ var Video = (function() {
 		, lastVolume = 50, muted = false, aCtx, aSrc, aDest, gainNode, analyser
 		, lm, level, userSpeaks = false, muteOthers;
 
-	function _getExtra() {
-		return t.height() + 2 + (f.is(':visible') ? f.height() : 0);
-	}
 	function _resizeDlgArea(_w, _h) {
-		v.dialog('option', 'width', _w).dialog('option', 'height', _h);
-		const h = _h - _getExtra();
-		_resize(_w, h);
 		if (Room.getOptions().interview) {
 			VideoUtil.setPos(v, VideoUtil.getPos());
+		} else if (v.dialog('instance')) {
+			v.dialog('option', 'width', _w).dialog('option', 'height', _h);
 		}
-	}
-	function _resizePod() {
-		const p = v.parents('.pod,.pod-big')
-			, pw = p.width(), ph = p.height();
-		_resizeDlgArea(pw, ph);
-	}
-	function _resizeLm(h) {
-		if (!!lm) {
-			lm.attr('height', h).height(h);
-		}
-		return lm;
-	}
-	function _resize(w, h) {
-		vc.width(w).height(h);
-		_resizeLm(h - 10);
-		video.width(w).height(h);
 	}
 	function _micActivity(level) {
 		const speaks = level > 5;
@@ -59,16 +39,11 @@ var Video = (function() {
 			cnts = Sharer.baseConstraints(sd);
 			cnts.video.mediaSource = sd.shareType;
 			promise = navigator.mediaDevices.getUserMedia(cnts);
-		} else if (VideoUtil.isChrome72(b)) {
+		} else if (VideoUtil.isChrome(b)) {
 			cnts = {
 				video: true
 			};
 			promise = navigator.mediaDevices.getDisplayMedia(cnts);
-		} else if (VideoUtil.isChrome(b)) {
-			promise = Sharer.getChromeConstraints(sd).then((_cnts) => {
-				cnts = _cnts;
-				return navigator.mediaDevices.getUserMedia(_cnts);
-			});
 		} else {
 			promise = new Promise(() => {
 				Sharer.close();
@@ -100,7 +75,6 @@ var Video = (function() {
 					if (stream.getAudioTracks().length !== 0) {
 						vol.show();
 						lm = vc.find('.level-meter');
-						_resizeLm(vc.height() - 10).show();
 						aCtx = new AudioCtx();
 						gainNode = aCtx.createGain();
 						analyser = aCtx.createAnalyser();
@@ -120,7 +94,7 @@ var Video = (function() {
 						}
 						_handleVolume(lastVolume);
 					}
-					callback(msg, cnts, _stream);
+					video && callback(msg, cnts, _stream);
 				})
 				.catch(function(err) {
 					VideoManager.sendMessage({
@@ -264,12 +238,12 @@ var Video = (function() {
 		let contSel;
 		if (opts.interview) {
 			const area = $('.pod-area');
-			const contId = UUID.v4();
+			const contId = uuidv4();
 			contSel = '#' + contId;
 			area.append($('<div class="pod"></div>').attr('id', contId));
 			WbArea.updateAreaClass();
 		} else {
-			contSel = '.room.box';
+			contSel = '.room-block .container';
 		}
 		$(contSel).append(OmUtil.tmpl('#user-video', _id)
 				.attr('title', name)
@@ -291,11 +265,6 @@ var Video = (function() {
 		} else {
 			v.dialog('option', 'draggable', true);
 			v.dialog('option', 'resizable', true);
-			v.on('dialogresizestop', function(event, ui) {
-				const w = ui.size.width - 2
-					, h = ui.size.height - t.height() - 4 - (f.is(':visible') ? f.height() : 0);
-				_resize(w, h);
-			});
 			if (VideoUtil.isSharing(sd)) {
 				v.on('dialogclose', function() {
 					VideoManager.close(sd.uid, true);
@@ -324,7 +293,7 @@ var Video = (function() {
 			})
 			.click(function(e) {
 				e.stopImmediatePropagation();
-				roomAction('mute', JSON.stringify({uid: sd.uid, mute: !muted}));
+				OmUtil.roomAction({action: 'mute', uid: sd.uid, mute: !muted});
 				_mute(!muted);
 				volume.hide();
 				return false;
@@ -427,6 +396,8 @@ var Video = (function() {
 		_cleanup();
 		const _id = VideoUtil.getVid(sd.uid);
 		const hasVideo = VideoUtil.hasVideo(sd) || VideoUtil.isSharing(sd) || VideoUtil.isRecording(sd);
+		_resizeDlgArea(hasVideo ? size.width : 120
+			, hasVideo ? size.height : 90);
 		video = $(hasVideo ? '<video>' : '<audio>').attr('id', 'vid' + _id)
 			.width(vc.width()).height(vc.height())
 			.prop('autoplay', true).prop('controls', false);
@@ -533,7 +504,6 @@ var Video = (function() {
 			, luid: sd.self ? sd.uid : opts.uid
 		});
 	};
-	self.resizePod = _resizePod;
 	self.reattachStream = _reattachStream;
 	return self;
 });

@@ -43,6 +43,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.NamedQuery;
@@ -67,7 +68,9 @@ import org.simpleframework.xml.Element;
 		+ " ORDER BY f.name")
 @NamedQuery(name = "getFileItemsByIds", query = "SELECT f FROM BaseFileItem f"
 		+ " WHERE f.deleted = false AND f.id IN :ids")
-@Table(name = "om_file")
+@Table(name = "om_file", indexes = {
+		@Index(name = "file_hash_idx", columnList = "hash", unique = true)
+})
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class BaseFileItem extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
@@ -129,6 +132,10 @@ public abstract class BaseFileItem extends HistoricalEntity {
 	@Column(name = "page_count", nullable = false)
 	@Element(data = true, required = false)
 	private int count = 1;
+
+	@Column(name = "external_type")
+	@Element(data = true, required = false)
+	private String externalType;
 
 	// Not Mapped
 	@Transient
@@ -257,6 +264,14 @@ public abstract class BaseFileItem extends HistoricalEntity {
 
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
+	}
+
+	public String getExternalType() {
+		return externalType;
+	}
+
+	public void setExternalType(String externalType) {
+		this.externalType = externalType;
 	}
 
 	public final File getFile(String ext) {

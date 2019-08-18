@@ -21,7 +21,6 @@ package org.apache.openmeetings.web.app;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EXT_PROCESS_TTL;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getApplicationName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getBaseUrl;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.getChromeExtensionUrl;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getContentSecurityPolicy;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getExtProcessTtl;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getWicketApplicationName;
@@ -79,6 +78,7 @@ import org.apache.openmeetings.web.pages.PrivacyPage;
 import org.apache.openmeetings.web.pages.ResetPage;
 import org.apache.openmeetings.web.pages.auth.SignInPage;
 import org.apache.openmeetings.web.pages.install.InstallWizardPage;
+import org.apache.openmeetings.web.room.GroupCustomCssResourceReference;
 import org.apache.openmeetings.web.room.RoomPreviewResourceReference;
 import org.apache.openmeetings.web.room.RoomResourceReference;
 import org.apache.openmeetings.web.room.wb.WbWebSocketHelper;
@@ -246,9 +246,9 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 					wresp.setHeader("X-Content-Type-Options", "nosniff");
 					Url reqUrl = cycle.getRequest().getUrl();
 					wresp.setHeader("Content-Security-Policy"
-							, String.format("%s; connect-src 'self' %s; frame-src %s %s;"
+							, String.format("%s; connect-src 'self' %s; frame-src %s;"
 									, getContentSecurityPolicy(), getWsUrl(reqUrl)
-									, getxFrameOptions(), getChromeExtensionUrl()
+									, getxFrameOptions()
 							));
 				}
 			}
@@ -288,6 +288,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		mountResource("/room/preview/${id}", new RoomPreviewResourceReference());
 		mountResource("/profile/${id}", new ProfileImageResourceReference());
 		mountResource("/group/${id}", new GroupLogoResourceReference());
+		mountResource("/group/customcss/${id}", new GroupCustomCssResourceReference());
 
 		log.debug("Application::init");
 		try {
@@ -382,7 +383,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 	}
 
 	public static boolean isInvaldSession(String sessionId) {
-		return sessionId == null ? false : get().getInvalidSessions().containsKey(sessionId);
+		return sessionId != null && get().getInvalidSessions().containsKey(sessionId);
 	}
 
 	public static void removeInvalidSession(String sessionId) {
@@ -450,8 +451,8 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 	}
 
 	@Override
-	public String getOmInvitationLink(Invitation i) {
-		return getInvitationLink(i, null);
+	public String getOmInvitationLink(Invitation i, String baseUrl) {
+		return getInvitationLink(i, baseUrl);
 	}
 
 	@Override
@@ -537,12 +538,14 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		}
 	}
 
-	public static String urlForPage(Class<? extends Page> clazz, PageParameters pp, String _baseUrl) {
+	public static boolean isUrlValid(String url) {
+		return new UrlValidator(new String[] {"http", "https"}).isValid(url);
+	}
+
+	public static String urlForPage(Class<? extends Page> clazz, PageParameters pp, String inBaseUrl) {
 		RequestCycle rc = RequestCycle.get();
-		String baseUrl = getBaseUrl();
-		if (!new UrlValidator(new String[] {"http", "https"}).isValid(baseUrl) && !Strings.isEmpty(_baseUrl)) {
-			baseUrl = _baseUrl;
-		}
+		String baseUrl = isUrlValid(inBaseUrl) ? inBaseUrl
+				: (isUrlValid(getBaseUrl()) ? getBaseUrl() : "");
 		return rc.getUrlRenderer().renderFullUrl(Url.parse(baseUrl + rc.mapUrlFor(clazz, pp)));
 	}
 

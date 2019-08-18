@@ -22,10 +22,13 @@ import static java.lang.Boolean.TRUE;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
@@ -47,15 +50,18 @@ import org.simpleframework.xml.Root;
 @NamedQuery(name = "getConfigurationById", query = "SELECT c FROM Configuration c "
 		+ "LEFT JOIN FETCH c.user WHERE c.id = :id and c.deleted = false")
 @NamedQuery(name = "countConfigurations", query = "SELECT COUNT(c) FROM Configuration c WHERE c.deleted = false")
-@Table(name = "configuration")
+@Table(name = "configuration", indexes = {
+		@Index(name = "key_idx", columnList = "om_key", unique = true)
+})
 @Root(name = "config")
 public class Configuration extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
 
 	public enum Type {
-		string
-		, number
-		, bool
+		STRING
+		, NUMBER
+		, BOOL
+		, HOTKEY
 	}
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,7 +71,8 @@ public class Configuration extends HistoricalEntity {
 
 	@Column(name = "type")
 	@Element(name = "type", data = true, required = false)
-	private Type type = Type.string;
+	@Enumerated(EnumType.STRING)
+	private Type type = Type.STRING;
 
 	@Column(name = "om_key", unique = true)
 	@Element(name = "key", data = true, required = false)
@@ -158,7 +165,7 @@ public class Configuration extends HistoricalEntity {
 	}
 
 	public boolean getValueB() {
-		return value == null ? false : TRUE.equals(Boolean.valueOf(value));
+		return value != null && TRUE.equals(Boolean.valueOf(value));
 	}
 
 	public void setValueB(boolean value) {

@@ -18,13 +18,11 @@
  */
 package org.apache.openmeetings.web.room;
 
-import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.getChromeExtensionUrl;
+import static java.time.Duration.ZERO;
 import static org.apache.openmeetings.web.app.WebSession.getDateFormat;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.openmeetings.web.room.wb.InterviewWbPanel.INTERVIEWWB_JS_REFERENCE;
 import static org.apache.openmeetings.web.room.wb.WbPanel.WB_JS_REFERENCE;
-import static org.apache.wicket.util.time.Duration.NONE;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -84,8 +82,11 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.protocol.ws.api.BaseWebSocketBehavior;
 import org.apache.wicket.protocol.ws.api.event.WebSocketPushPayload;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceStreamResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -117,6 +118,7 @@ public class RoomPanel extends BasePanel {
 		kick
 		, muteOthers
 		, mute
+		, toggleRight
 	}
 	private final Room r;
 	private final boolean interview;
@@ -141,14 +143,12 @@ public class RoomPanel extends BasePanel {
 					.put("interview", interview)
 					.put("audioOnly", r.isAudioOnly())
 					.put("questions", r.isAllowUserQuestions())
-					.put("showMicStatus", !r.getHiddenElements().contains(RoomElement.MicrophoneStatus))
-					.put("chromeExtUrl", getChromeExtensionUrl());
+					.put("showMicStatus", !r.getHiddenElements().contains(RoomElement.MicrophoneStatus));
 			if (!Strings.isEmpty(r.getRedirectURL()) && (ws.getSoapLogin() != null || ws.getInvitation() != null)) {
 				options.put("reloadUrl", r.getRedirectURL());
 			}
 			StringBuilder sb = new StringBuilder("Room.init(").append(options.toString(new NullStringer())).append(");")
 					.append(wb.getInitScript())
-					.append("Room.setSize();")
 					.append(getQuickPollJs());
 			target.appendJavaScript(sb);
 			WebSocketHelper.sendRoom(new RoomMessage(r.getId(), _c, RoomMessage.Type.roomEnter));
@@ -171,7 +171,7 @@ public class RoomPanel extends BasePanel {
 		private void initVideos(AjaxRequestTarget target) {
 			StringBuilder sb = new StringBuilder();
 			JSONArray streams = new JSONArray();
-			for (Client c: cm.listByRoom(getRoom().getId())) {
+			for (Client c : cm.listByRoom(getRoom().getId())) {
 				for (StreamDesc sd : c.getStreams()) {
 					streams.put(sd.toJson());
 				}
@@ -198,7 +198,7 @@ public class RoomPanel extends BasePanel {
 		private static final long serialVersionUID = 1L;
 
 		{
-			setCacheDuration(NONE);
+			setCacheDuration(ZERO);
 			setFileName("whiteboard.pdf");
 		}
 
@@ -263,7 +263,6 @@ public class RoomPanel extends BasePanel {
 		cm.update(getClient().updateUser(userDao));
 		Component accessDenied = new WebMarkupContainer(ACCESS_DENIED_ID).setVisible(false);
 
-		room.add(AttributeModifier.append(ATTR_CLASS, r.getType().name()));
 		room.add(menu = new RoomMenuPanel("menu", this));
 		room.add(AttributeModifier.append("data-room-id", r.getId()));
 		if (interview) {
@@ -335,7 +334,7 @@ public class RoomPanel extends BasePanel {
 				}
 			} else {
 				allowed = r.getIspublic() || (r.getOwnerId() != null && r.getOwnerId().equals(getUserId()));
-				log.debug("public ? " + r.getIspublic() + ", ownedId ? " + r.getOwnerId() + " " + allowed);
+				log.debug("public ? {}, ownedId ? {} {}", r.getIspublic(), r.getOwnerId(), allowed);
 				if (!allowed) {
 					User u = getClient().getUser();
 					for (RoomGroup ro : r.getGroups()) {
@@ -395,10 +394,19 @@ public class RoomPanel extends BasePanel {
 		} else {
 			add(new WebMarkupContainer("wait-for-recording").setVisible(false));
 		}
+		RepeatingView groupstyles = new RepeatingView("groupstyle");
+		add(groupstyles.setVisible(room.isVisible() && !r.getGroups().isEmpty()));
 		if (room.isVisible()) {
 			add(new NicknameDialog("nickname", this));
 			add(download);
 			add(new BaseWebSocketBehavior("media"));
+			for (RoomGroup rg : r.getGroups()) {
+				WebMarkupContainer groupstyle = new WebMarkupContainer(groupstyles.newChildId());
+				groupstyle.add(AttributeModifier.append("href"
+						, (String)RequestCycle.get().urlFor(new GroupCustomCssResourceReference(), new PageParameters().add("id", rg.getGroup().getId()))
+						));
+				groupstyles.add(groupstyle);
+			}
 		} else {
 			add(new WebMarkupContainer("nickname").setVisible(false));
 		}
@@ -539,6 +547,11 @@ public class RoomPanel extends BasePanel {
 						break;
 					case kurentoStatus:
 						menu.update(handler);
+						break;
+					case wbReload:
+						if (Room.Type.interview != r.getType()) {
+							wb.reloadWb(handler);
+						}
 						break;
 				}
 			}
@@ -737,6 +750,8 @@ public class RoomPanel extends BasePanel {
 			if ("wb".equals(type)) {
 				WbAction a = WbAction.valueOf(o.getString(PARAM_ACTION));
 				wb.processWbAction(a, o.optJSONObject("data"), handler);
+			} else if ("room".equals(type)) {
+				sidebar.roomAction(handler, o);
 			}
 		}
 	}
@@ -771,5 +786,23 @@ public class RoomPanel extends BasePanel {
 
 	public boolean isInterview() {
 		return interview;
+	}
+
+	@Override
+	protected String getCssClass() {
+		String clazz = "room " + r.getType().name();
+		if (r.isHidden(RoomElement.TopBar)) {
+			clazz += " no-menu";
+		}
+		if (r.isHidden(RoomElement.Activities)) {
+			clazz += " no-activities";
+		}
+		if (r.isHidden(RoomElement.Chat)) {
+			clazz += " no-chat";
+		}
+		if (!r.isHidden(RoomElement.MicrophoneStatus)) {
+			clazz += " mic-status";
+		}
+		return clazz;
 	}
 }

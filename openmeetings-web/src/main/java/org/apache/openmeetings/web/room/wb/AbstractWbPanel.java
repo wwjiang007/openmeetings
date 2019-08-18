@@ -48,9 +48,18 @@ public abstract class AbstractWbPanel extends Panel {
 
 	public AbstractWbPanel update(IPartialPageRequestHandler handler) {
 		if (inited && handler != null) {
-			handler.appendJavaScript(String.format("Room.setSize();WbArea.setRole('%s');", getRole()));
+			handler.appendJavaScript(String.format("WbArea.setRole('%s');", getRole()));
 		}
 		return this;
+	}
+
+	/**
+	 * This method have to be overridden to handle reload WB
+	 *
+	 * @param handler {@link IPartialPageRequestHandler} to perform necessary actions
+	 */
+	public void reloadWb(IPartialPageRequestHandler handler) {
+		//designed to be empty
 	}
 
 	protected abstract String getRole();

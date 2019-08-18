@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.cli;
 
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.openmeetings.AbstractJUnitDefaults.adminUsername;
 import static org.apache.openmeetings.AbstractJUnitDefaults.email;
 import static org.apache.openmeetings.AbstractJUnitDefaults.group;
@@ -30,14 +31,14 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_CONTEXT
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getWicketApplicationName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setInitComplete;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplicationName;
-import static org.apache.openmeetings.web.pages.install.TestInstall.resetDerbyHome;
-import static org.apache.openmeetings.web.pages.install.TestInstall.setDerbyHome;
+import static org.apache.openmeetings.web.pages.install.TestInstall.resetH2Home;
+import static org.apache.openmeetings.web.pages.install.TestInstall.setH2Home;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -47,24 +48,23 @@ import org.apache.wicket.protocol.http.WebApplication;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 public class TestAdmin {
-	@TempDir
-	File tempFolder;
+	private File tempFolder;
 
 	@BeforeEach
-	public void setUp() throws IOException {
+	public void setUp() throws Exception {
 		setOmHome();
+		tempFolder = Files.createTempDirectory("omtempdb").toFile();
 		System.setProperty("user.dir", tempFolder.getCanonicalPath());
 		System.setProperty(OM_HOME, getOmHome().getCanonicalPath());
-		setDerbyHome(tempFolder);
+		setH2Home(tempFolder);
 		System.setProperty("context", UUID.randomUUID().toString());
 	}
 
 	@AfterEach
-	public void tearDown() {
-		resetDerbyHome();
+	public void tearDown() throws Exception {
+		resetH2Home();
 		System.getProperties().remove(OM_HOME);
 		WebApplication app = (WebApplication)Application.get(getWicketApplicationName());
 		if (app != null) {
@@ -73,6 +73,7 @@ public class TestAdmin {
 		}
 		System.setProperty("context", DEFAULT_CONTEXT_NAME);
 		setWicketApplicationName(DEFAULT_CONTEXT_NAME);
+		deleteQuietly(tempFolder);
 	}
 
 	private static void checkError(String... args) throws Exception {
@@ -108,13 +109,12 @@ public class TestAdmin {
 	}
 
 	private static void performInstall(Admin admin, String... args) throws Exception {
-		List<String> params = Arrays.asList("-i"
+		List<String> params = new ArrayList<>(Arrays.asList("-i"
 				, "-tz", "Europe/Berlin"
 				, "-email", email
 				, "-group", group
 				, "-user", adminUsername
-				, "--password", userpass
-				, "--db-name", UUID.randomUUID().toString().replaceAll("-", ""));
+				, "--password", userpass));
 		for (String a : args) {
 			params.add(a);
 		}
@@ -123,8 +123,9 @@ public class TestAdmin {
 
 	@Test
 	public void testInstallBackup() throws Exception {
+		String tempDB = Files.createTempFile("omtempdb", null).toFile().getCanonicalPath();
 		Admin a = new Admin();
-		performInstall(a);
+		performInstall(a, "--db-name", tempDB);
 		//backup
 		a.process("-b");
 		//backup to file

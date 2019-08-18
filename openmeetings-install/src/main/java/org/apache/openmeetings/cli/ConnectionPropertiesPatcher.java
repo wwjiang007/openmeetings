@@ -20,6 +20,7 @@ package org.apache.openmeetings.cli;
 
 import java.io.File;
 
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
@@ -65,9 +66,9 @@ public abstract class ConnectionPropertiesPatcher {
 			case postgresql:
 				patcher = new PostgresPatcher();
 				break;
-			case derby:
+			case h2:
 			default:
-				patcher = new DerbyPatcher();
+				patcher = new H2Patcher();
 				break;
 		}
 		patcher.props = props;
@@ -86,6 +87,12 @@ public abstract class ConnectionPropertiesPatcher {
 
 	private static Document getDocument(File xml) throws Exception {
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+		dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+		dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+		dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+		dbFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		dbFactory.setXIncludeAware(false);
+		dbFactory.setExpandEntityReferences(false);
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 		return dBuilder.parse(xml);
 	}
@@ -106,8 +113,10 @@ public abstract class ConnectionPropertiesPatcher {
 		patcher.patchAttribute(tokens);
 		attr.setValue(StringUtils.join(tokens, ","));
 
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		Transformer transformer = transformerFactory.newTransformer();
+		TransformerFactory factory = TransformerFactory.newInstance();
+		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+		Transformer transformer = factory.newTransformer();
 		DOMSource source = new DOMSource(doc);
 		transformer.transform(source, new StreamResult(OmFileHelper.getPersistence().getCanonicalPath())); //this constructor is used to avoid transforming path to URI
 	}
@@ -129,7 +138,7 @@ public abstract class ConnectionPropertiesPatcher {
 
 	protected void patchAttribute(String[] tokens) {
 		for (int i = 0; i < tokens.length; ++i) {
-			patchProp(tokens, i, USER_PREFIX, props.getLogin());
+			patchProp(tokens, i, USER_PREFIX, props.getLogin() == null ? "" : props.getLogin());
 			patchProp(tokens, i, PASS_PREFIX, props.getPassword() == null ? "" : props.getPassword());
 			patchProp(tokens, i, URL_PREFIX, props.getURL());
 		}

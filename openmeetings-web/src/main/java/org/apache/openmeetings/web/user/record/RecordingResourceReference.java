@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.web.user.record;
 
-import static org.apache.openmeetings.web.app.WebSession.getExternalType;
 import static org.apache.openmeetings.web.app.WebSession.getRecordingId;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 
@@ -32,7 +31,6 @@ import org.apache.openmeetings.db.dto.room.Whiteboards;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.file.BaseFileItem.Type;
 import org.apache.openmeetings.db.entity.record.Recording;
-import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.web.app.ClientManager;
 import org.apache.openmeetings.web.app.WebSession;
 import org.apache.openmeetings.web.app.WhiteboardManager;
@@ -121,14 +119,6 @@ public abstract class RecordingResourceReference extends FileItemResourceReferen
 		}
 		if (r.getGroupId() != null && groupUserDao.isUserInGroup(r.getGroupId(), getUserId())) {
 			return r;
-		}
-		//external group check was added for plugin recording download
-		String extType = getExternalType();
-		if (extType != null) {
-			User creator = userDao.get(r.getInsertedBy());
-			if (extType.equals(creator.getExternalType())) {
-				return r;
-			}
 		}
 		return null;
 	}

@@ -101,15 +101,15 @@ public class PollDao {
 	}
 
 	public boolean hasPoll(Long roomId) {
-		log.debug(" :: hasPoll :: " + roomId);
+		log.debug(" :: hasPoll :: {}", roomId);
 		return em.createNamedQuery("hasPoll", Long.class)
 				.setParameter(PARAM_ROOMID, roomId)
 				.setParameter("archived", false)
 				.getSingleResult() > 0;
 	}
 
-	public boolean hasVoted(Long roomId, Long userId) {
-		return !em.createNamedQuery("hasVoted", RoomPollAnswer.class)
+	public boolean notVoted(Long roomId, Long userId) {
+		return em.createNamedQuery("notVoted", RoomPollAnswer.class)
 				.setParameter(PARAM_ROOMID, roomId)
 				.setParameter(PARAM_USER_ID, userId)
 				.getResultList().isEmpty();

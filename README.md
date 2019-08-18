@@ -32,14 +32,13 @@ Building and running
 To build from source code:
 
   - Requirements:
-    Sources compilation require [Oracle Java SE 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
-    The project is built with [Apache Maven 3.3.9 or later](https://maven.apache.org/). 
+    Sources compilation require `Java SE 11`, [Apache Maven 3.5.0 or later](https://maven.apache.org/).
   - To build the OpenMeetings project run mvn in the root directory:
-     `mvn clean install -P allModules`
+     `mvn clean install -PallModules`
   - To run the OpenMeetings project:
     - go to `openmeetings-server/target` directory
     - extract `apache-openmeetings-x.x.x.tar.gz` (or `apache-openmeetings-x.x.x.zip` for windows) to **new** directory
-    - enter to this new directory and execute `red5.sh` (`red5.bat` for windows)
+    - enter to this new directory and execute `./bin/startup.sh` (`./bin/startup.bat` for Windows)
 
 For a detailed documentation on how to build from source and options see:
     https://openmeetings.apache.org/BuildInstructions.html
@@ -49,9 +48,55 @@ Release Notes
 
 see [CHANGELOG.md](/CHANGELOG.md) file for detailed log
 
+5.0.0-M2
+-----
+[Release 5.0.0-M2](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0-M2), provides following improvements:
+
+This release provides WebRTC audio/video/screen-sharing in the Room
+IMPORTANT: Java 11 is required
+Flash plugin is no more required in the browser
+
+Backup/Restore:
+* OAuth configs were not properly backup
+
+White board:
+* Math formula is improved
+* Room files are improved
+* Clean WB REST method perform real-time clean
+
+Room:
+* Rooms can be customized on group basis
+* "Ghost" users are not displayed in the room
+* External user name is displayed as expected
+
+Please NOTE: this version might be not production ready
+
+Some other fixes and improvements, 18 issues were addressed
+
+
+4.0.9
+-----
+[Release 4.0.9](https://www.apache.org/dyn/closer.lua/openmeetings/4.0.9), provides following improvements:
+
+Backup/Restore:
+* Recordings of deleted users were restored as public
+* OAuth configs were not properly backup
+
+White board:
+* Math formula is improved
+* Room files are improved
+* Clean WB REST method perform real-time clean
+
+Room User list:
+* "Ghost" users are not displayed in the room
+* External user name is displayed as expected
+
+Other fixes and improvements, 19 issues were addressed
+
+
 5.0.0-M1
 -----
-[Release 5.0.0-M1](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0-M1), provides following improvements:
+[Release 5.0.0-M1](https://archive.apache.org/dist/openmeetings/5.0.0-M1), provides following improvements:
 
 This release provides WebRTC audio/video/screen-sharing in the Room
 Flash plugin is no more required in the browser
@@ -164,7 +209,7 @@ Other fixes and improvements, 13 issues were fixed
 
 4.0.2
 -----
-[Release 4.0.2](https://archive.apache.org/dist/openmeetings/4.0.2/), provides following improvements:
+[Release 4.0.2](https://archive.apache.org/dist/openmeetings/4.0.2), provides following improvements:
 
 Security fixes in Chat and Admin
 
@@ -188,7 +233,7 @@ Other fixes and improvements, 32 issues were fixed
 
 4.0.1
 -----
-[Release 4.0.1](https://archive.apache.org/dist/openmeetings/4.0.1/), provides following improvements:
+[Release 4.0.1](https://archive.apache.org/dist/openmeetings/4.0.1), provides following improvements:
 
 * Openlaszlo code is removed
 * Login via OAuth is improved
@@ -202,7 +247,7 @@ Other fixes and improvements, 43 issues were fixed
 
 4.0.0
 -----
-[Release 4.0.0](https://archive.apache.org/dist/openmeetings/4.0.0/), provides following improvements:
+[Release 4.0.0](https://archive.apache.org/dist/openmeetings/4.0.0), provides following improvements:
 
 * Room White board is rewritten to use HTML5 instead of Flash
 * All Audio/Video components were rewritten using Apache Flex
@@ -222,7 +267,7 @@ Other fixes and improvements, 515 issues were fixed
 
 3.3.2
 -----
-[Release 3.3.2](https://archive.apache.org/dist/openmeetings/3.3.2/), provides following improvements:
+[Release 3.3.2](https://archive.apache.org/dist/openmeetings/3.3.2), provides following improvements:
 
 * Audio/Video in conference room is fixed
 * Strong password is enforced during self registration
@@ -234,7 +279,7 @@ Other fixes and improvements, 8 issues were fixed
 
 3.3.1
 -----
-[Release 3.3.1](https://archive.apache.org/dist/openmeetings/3.3.1/), provides following improvements:
+[Release 3.3.1](https://archive.apache.org/dist/openmeetings/3.3.1), provides following improvements:
 
 * Clustering works as expected
 * SIP works as expected
@@ -247,7 +292,7 @@ Other fixes and improvements, 19 issues were fixed
 
 3.3.0
 -----
-[Release 3.3.0](https://archive.apache.org/dist/openmeetings/3.3.0/), provides following improvements:
+[Release 3.3.0](https://archive.apache.org/dist/openmeetings/3.3.0), provides following improvements:
 
 Security fixes in:
 * Chat
@@ -268,7 +313,7 @@ Other fixes and improvements, 21 issues were fixed
 
 3.2.1
 -----
-[Service release 1 for 3.2.0](https://archive.apache.org/dist/openmeetings/3.2.1/), provides following improvements:
+[Service release 1 for 3.2.0](https://archive.apache.org/dist/openmeetings/3.2.1), provides following improvements:
 
 Room
 * Video is more stable

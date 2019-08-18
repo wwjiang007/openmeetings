@@ -1,15 +1,15 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
 var Room = (function() {
 	const self = {}, sbSide = Settings.isRtl ? 'right' : 'left';
-	let options, menuHeight, chat, sb, dock, activities;
+	let options, menuHeight, sb, dock, activities;
 
 	function _init(_options) {
 		options = _options;
 		window.WbArea = options.interview ? InterviewWbArea() : DrawWbArea();
-		const menu = $('.room.box .room.menu');
-		chat = $('#chatPanel');
+		const menu = $('.room-block .container .menu');
 		activities = $('#activities');
-		sb = $('.room.sidebar').css(sbSide, '0px');
+		sb = $('.room-block .sidebar');
+		_sbAddResizable();
 		dock = sb.find('.btn-dock').button({
 			icon: "ui-icon icon-undock"
 			, showLabel: false
@@ -43,7 +43,8 @@ var Room = (function() {
 		if (typeof(Activities) !== 'undefined') {
 			Activities.init();
 		}
-		Sharer.init(options.chromeExtUrl);
+		Sharer.init();
+		_setSize();
 	}
 	function _getSelfAudioClient() {
 		const vw = $('#video' + Room.getOptions().uid);
@@ -66,31 +67,28 @@ var Room = (function() {
 			return false;
 		}
 	}
+	function __keyPressed(hotkey, e) {
+		const code = OmUtil.getKeyCode(e);
+		return hotkey.alt === e.altKey
+			&& hotkey.ctrl === e.ctrlKey
+			&& hotkey.shift === e.shiftKey
+			&& hotkey.code.toUpperCase() === (code ? code.toUpperCase() : '');
+	}
 	function _keyHandler(e) {
-		if (e.shiftKey) {
-			switch (e.which) {
-				case options.keycode.arrange: // Shift+F8 by default
-					VideoUtil.arrange();
-					break;
-				case options.keycode.muteothers: // Shift+F12 by default
-				{
-					const v = _getSelfAudioClient();
-					if (v !== null) {
-						VideoManager.clickMuteOthers(Room.getOptions().uid);
-					}
-				}
-					break;
-				case options.keycode.mute: // Shift+F7 by default
-				{
-					const v = _getSelfAudioClient();
-					if (v !== null) {
-						v.mute(!v.isMuted());
-					}
-				}
-					break;
-				default:
-					// no-op
+		if (__keyPressed(options.keycode.arrange, e)) {
+			VideoUtil.arrange();
+		} else if (__keyPressed(options.keycode.muteothers, e)) {
+			const v = _getSelfAudioClient();
+			if (v !== null) {
+				VideoManager.clickMuteOthers(Room.getOptions().uid);
 			}
+		} else if (__keyPressed(options.keycode.mute, e)) {
+			const v = _getSelfAudioClient();
+			if (v !== null) {
+				v.mute(!v.isMuted());
+			}
+		} else if (__keyPressed(options.keycode.quickpoll, e)) {
+			quickPollAction('open');
 		}
 		if (e.which === 27) {
 			$('#wb-rename-menu').hide();
@@ -103,35 +101,18 @@ var Room = (function() {
 	}
 	function _sbWidth() {
 		if (sb === undefined) {
-			sb = $('.room.sidebar');
+			sb = $('.room-block .sidebar');
 		}
 		return sb === undefined ? 0 : sb.width() + parseInt(sb.css(sbSide));
 	}
 	function _setSize() {
-		const tw = window.innerWidth
-			, th = window.innerHeight
-			, sbW = _sbWidth()
-			, w = tw - sbW - 8
-			, ah = !!activities && activities.is(':visible') ? activities.height() : 0
-			, h = th - menuHeight - 3
-			, hh = h - 5
-			, p = sb.find('.tabs')
-			, ulh = $("ul", p).height()
-			, holder = $('.room.holder')
-			, fl = $('.file.list', p);
-		sb.height(h - ah);
-		p.height(hh - ah);
-		$('.user.list', p).height(hh - ulh - ah - $('.user.header', p).height() - 5);
-		$('.trees', fl).height(hh - ulh - ah - $('.trash-toolbar', fl).height() - $('.footer', fl).height() - 5);
-		if (sbW > 255) {
+		const sbW = _sbWidth()
+			, holder = $('.room-block');
+		($('.main.room')[0]).style.setProperty('--room-sidebar-width', sbW + 'px');
+		if (sbW > 285) {
 			holder.addClass('big').removeClass('small');
 		} else {
 			holder.removeClass('big').addClass('small');
-		}
-		Chat.setHeight(h);
-		if (typeof(WbArea) !== 'undefined') {
-			const chW = chat.width();
-			WbArea.resize(sbW + 5, chW + 5, w - chW, h);
 		}
 	}
 	function _reload() {
@@ -143,7 +124,7 @@ var Room = (function() {
 	}
 	function _close() {
 		_unload();
-		$(".room.holder").remove();
+		$(".room-block").remove();
 		$("#chatPanel").remove();
 		const dlg = $('#disconnected-dlg');
 		dlg.dialog({
@@ -169,14 +150,7 @@ var Room = (function() {
 		});
 	}
 	function _load() {
-		if (sb !== undefined) {
-			sb.ready(function() {
-				_setSize();
-			});
-			_sbAddResizable();
-		}
 		$('body').addClass('no-header');
-		$(window).on('resize.openmeetings', _setSize);
 		Wicket.Event.subscribe("/websocket/closed", _close);
 		Wicket.Event.subscribe("/websocket/error", _close);
 		$(window).on('keydown.openmeetings', _preventKeydown);
@@ -185,7 +159,6 @@ var Room = (function() {
 	}
 	function _unload() {
 		$('body').removeClass('no-header');
-		$(window).off('resize.openmeetings');
 		Wicket.Event.unsubscribe("/websocket/closed", _close);
 		Wicket.Event.unsubscribe("/websocket/error", _close);
 		if (typeof(WbArea) === 'object') {
@@ -274,7 +247,7 @@ var Room = (function() {
 		if (obj.started) {
 			let qv = $('#quick-vote');
 			if (qv.length === 0) {
-				const wbArea = $('.room.wb.area');
+				const wbArea = $('.room-block .wb-block');
 				qv = OmUtil.tmpl('#quick-vote-template', 'quick-vote');
 				wbArea.append(qv);
 			}
@@ -313,12 +286,14 @@ var Room = (function() {
 	self.setActivities = function(_a) {
 		options.activities = _a;
 	};
-	self.setSize = _setSize;
 	self.load = _load;
 	self.unload = _unload;
 	self.showClipboard = _showClipboard;
 	self.quickPoll = _quickPoll;
 	self.hasRight = _hasRight;
+	self.setCssVar = function(key, val) {
+		($('.main.room')[0]).style.setProperty(key, val);
+	};
 	return self;
 })();
 function startPrivateChat(el) {

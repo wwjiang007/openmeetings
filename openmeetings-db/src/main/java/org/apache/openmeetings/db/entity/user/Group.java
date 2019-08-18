@@ -23,6 +23,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
@@ -31,14 +32,17 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 @Entity
-@NamedQuery(name="getGroupById", query="SELECT g FROM Group AS g WHERE g.id = :id AND g.deleted = false")
-@NamedQuery(name="getGroupByName", query="SELECT g FROM Group AS g WHERE g.name = :name AND g.deleted = false")
-@NamedQuery(name="getAnyGroupById", query="SELECT g FROM Group AS g WHERE g.id = :groupId")
-@NamedQuery(name="getGroupsByIds", query="SELECT g FROM Group AS g WHERE g.id IN :ids")
-@NamedQuery(name="getNondeletedGroups", query="SELECT g FROM Group g WHERE g.deleted = false ORDER BY g.id")
-@NamedQuery(name="countGroups", query="SELECT COUNT(g) FROM Group AS g WHERE g.deleted = false")
-@NamedQuery(name="getLimitedGroups", query="SELECT g FROM Group AS g WHERE g.deleted = false AND g.limited = true")
-@Table(name = "om_group")
+@NamedQuery(name = "getGroupById", query = "SELECT g FROM Group AS g WHERE g.id = :id AND g.deleted = false")
+@NamedQuery(name = "getGroupByName", query = "SELECT g FROM Group AS g WHERE g.name = :name AND g.deleted = false")
+@NamedQuery(name = "getExtGroupByName", query = "SELECT g FROM Group AS g WHERE g.name = :name AND g.deleted = false AND g.external = true")
+@NamedQuery(name = "getAnyGroupById", query = "SELECT g FROM Group AS g WHERE g.id = :groupId")
+@NamedQuery(name = "getGroupsByIds", query = "SELECT g FROM Group AS g WHERE g.id IN :ids")
+@NamedQuery(name = "getNondeletedGroups", query = "SELECT g FROM Group g WHERE g.deleted = false ORDER BY g.id")
+@NamedQuery(name = "countGroups", query = "SELECT COUNT(g) FROM Group AS g WHERE g.deleted = false")
+@NamedQuery(name = "getLimitedGroups", query = "SELECT g FROM Group AS g WHERE g.deleted = false AND g.limited = true")
+@Table(name = "om_group", indexes = {
+		@Index(name = "group_name_idx", columnList = "name")
+})
 @Root(name = "organisation")
 public class Group extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
@@ -91,6 +95,10 @@ public class Group extends HistoricalEntity {
 	@Element(data = true, required = false)
 	private int reminderDays;
 
+	@Column(name = "external", nullable = false)
+	@Element(data = true, required = false)
+	private boolean external;
+
 	public Long getInsertedby() {
 		return insertedby;
 	}
@@ -103,8 +111,9 @@ public class Group extends HistoricalEntity {
 		return name;
 	}
 
-	public void setName(String name) {
+	public Group setName(String name) {
 		this.name = name;
+		return this;
 	}
 
 	@Override
@@ -187,6 +196,15 @@ public class Group extends HistoricalEntity {
 
 	public void setReminderDays(int reminderDays) {
 		this.reminderDays = reminderDays;
+	}
+
+	public boolean isExternal() {
+		return external;
+	}
+
+	public Group setExternal(boolean external) {
+		this.external = external;
+		return this;
 	}
 
 	@Override

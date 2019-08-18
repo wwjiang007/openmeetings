@@ -39,7 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.openmeetings.db.dto.room.Whiteboard;
 import org.apache.openmeetings.db.entity.file.BaseFileItem;
 import org.apache.openmeetings.db.entity.file.FileItem;
@@ -315,6 +315,7 @@ public class WbConverter {
 		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
 		xstream.allowTypeHierarchy(List.class);
 		xstream.allowTypeHierarchy(String.class);
+		xstream.ignoreUnknownElements();
 		try (InputStream is = new FileInputStream(file); BufferedReader reader = new BufferedReader(new InputStreamReader(is, UTF_8))) {
 			return (List<?>) xstream.fromXML(reader);
 		} catch (Exception err) {

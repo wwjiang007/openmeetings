@@ -18,10 +18,10 @@
  */
 package org.apache.openmeetings.web.user.record;
 
+import static java.time.Duration.ZERO;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_MP4;
 import static org.apache.openmeetings.util.OmFileHelper.getRecordingChunk;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
-import static org.apache.wicket.util.time.Duration.NONE;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -68,7 +68,7 @@ public class VideoInfo extends Panel {
 		@Override
 		protected String getIcon() {
 			return JQueryIcon.REFRESH;
-		};
+		}
 
 		@Override
 		protected void onSubmit(AjaxRequestTarget target) {
@@ -93,7 +93,7 @@ public class VideoInfo extends Panel {
 				@Override
 				protected ResourceResponse createResourceResponse(Attributes attr, Path path) {
 					ResourceResponse response = super.createResourceResponse(attr, path);
-					response.setCacheDuration(NONE);
+					response.setCacheDuration(ZERO);
 					return response;
 				}
 			}.respond(attributes);

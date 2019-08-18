@@ -52,8 +52,8 @@ public class OmFileHelper {
 	private static final String LANGUAGES_DIR = "languages";
 	private static final String CONF_DIR = "conf";
 	private static final String IMAGES_DIR = "images";
-	private static final String WML_DIR = "stored";
 
+	public static final String WML_DIR = "stored";
 	public static final String GROUP_LOGO_DIR = "grouplogo";
 	public static final String FILE_NAME_FMT = "%s.%s";
 	public static final String BACKUP_DIR = "backup";
@@ -68,6 +68,7 @@ public class OmFileHelper {
 	public static final String DB_PERSISTENCE_NAME = "classes/META-INF/%s_persistence.xml";
 	public static final String PROFILES_PREFIX = "profile_";
 	public static final String GROUP_LOGO_PREFIX = "logo";
+	public static final String GROUP_CSS_PREFIX = "customcss";
 	public static final String LANG_FILE_NAME = "languages.xml";
 	public static final String LIBRARY_FILE_NAME = "library.xml";
 	public static final String PROFILE_IMG_NAME = "profile.png";
@@ -83,6 +84,7 @@ public class OmFileHelper {
 	public static final String EXTENSION_JPG = "jpg";
 	public static final String EXTENSION_PNG = "png";
 	public static final String EXTENSION_PDF = "pdf";
+	public static final String EXTENSION_CSS = "css";
 	public static final String WB_VIDEO_FILE_PREFIX = "UPLOADFLV_";
 	public static final String MP4_MIME_TYPE = "video/" + EXTENSION_MP4;
 	public static final String JPG_MIME_TYPE = "image/jpeg";
@@ -108,11 +110,6 @@ public class OmFileHelper {
 
 	public static void setOmHome(String home) {
 		setOmHome(new File(home));
-	}
-
-	public static File getRootDir() {
-		// hack !!!!
-		return getOmHome().getParentFile().getParentFile();
 	}
 
 	public static File getOmHome() {
@@ -157,6 +154,12 @@ public class OmFileHelper {
 			logo = new File(getImagesDir(), "blank.png");
 		}
 		return logo;
+	}
+
+	public static File getGroupCss(Long groupId, boolean check) {
+		File css = new File(getGroupLogoDir(), String.format("%s%s.css", GROUP_CSS_PREFIX, groupId));
+		return groupId == null || (check && !css.exists())
+				? null : css;
 	}
 
 	public static File getDefaultProfilePicture() {

@@ -25,25 +25,29 @@ import static org.apache.openmeetings.db.entity.user.PrivateMessage.TRASH_FOLDER
 import static org.apache.openmeetings.util.OmFileHelper.BCKP_RECORD_FILES;
 import static org.apache.openmeetings.util.OmFileHelper.BCKP_ROOM_FILES;
 import static org.apache.openmeetings.util.OmFileHelper.CSS_DIR;
+import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_CSS;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_JPG;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_MP4;
 import static org.apache.openmeetings.util.OmFileHelper.EXTENSION_PNG;
 import static org.apache.openmeetings.util.OmFileHelper.FILES_DIR;
 import static org.apache.openmeetings.util.OmFileHelper.FILE_NAME_FMT;
+import static org.apache.openmeetings.util.OmFileHelper.GROUP_CSS_PREFIX;
 import static org.apache.openmeetings.util.OmFileHelper.GROUP_LOGO_DIR;
 import static org.apache.openmeetings.util.OmFileHelper.GROUP_LOGO_PREFIX;
 import static org.apache.openmeetings.util.OmFileHelper.PROFILES_DIR;
 import static org.apache.openmeetings.util.OmFileHelper.PROFILES_PREFIX;
 import static org.apache.openmeetings.util.OmFileHelper.RECORDING_FILE_NAME;
-import static org.apache.openmeetings.util.OmFileHelper.THUMB_IMG_PREFIX;
+import static org.apache.openmeetings.util.OmFileHelper.WML_DIR;
 import static org.apache.openmeetings.util.OmFileHelper.getCssDir;
 import static org.apache.openmeetings.util.OmFileHelper.getFileExt;
 import static org.apache.openmeetings.util.OmFileHelper.getFileName;
+import static org.apache.openmeetings.util.OmFileHelper.getGroupCss;
+import static org.apache.openmeetings.util.OmFileHelper.getGroupLogo;
+import static org.apache.openmeetings.util.OmFileHelper.getName;
 import static org.apache.openmeetings.util.OmFileHelper.getStreamsHibernateDir;
-import static org.apache.openmeetings.util.OmFileHelper.getUploadDir;
 import static org.apache.openmeetings.util.OmFileHelper.getUploadFilesDir;
 import static org.apache.openmeetings.util.OmFileHelper.getUploadProfilesUserDir;
-import static org.apache.openmeetings.util.OmFileHelper.getUploadRoomDir;
+import static org.apache.openmeetings.util.OmFileHelper.getUploadWmlDir;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_APPOINTMENT_REMINDER_MINUTES;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CALENDAR_ROOM_CAPACITY;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_CAM_FPS;
@@ -99,12 +103,14 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_SMTP_USE
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getDefaultTimezone;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getMinLoginLength;
 
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -116,10 +122,12 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.text.WordUtils;
 import org.apache.openmeetings.backup.converter.AppointmentConverter;
 import org.apache.openmeetings.backup.converter.AppointmentReminderTypeConverter;
 import org.apache.openmeetings.backup.converter.BaseFileItemConverter;
 import org.apache.openmeetings.backup.converter.DateConverter;
+import org.apache.openmeetings.backup.converter.EnumIcaseConverter;
 import org.apache.openmeetings.backup.converter.GroupConverter;
 import org.apache.openmeetings.backup.converter.OmCalendarConverter;
 import org.apache.openmeetings.backup.converter.PollTypeConverter;
@@ -195,7 +203,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class BackupImport {
 	private static final Logger log = LoggerFactory.getLogger(BackupImport.class);
-	private static final String LDAP_EXT_TYPE = "LDAP";
 	private static final Map<String, String> outdatedConfigKeys = new HashMap<>();
 	private static final Map<String, Configuration.Type> configTypes = new HashMap<>();
 	static {
@@ -227,44 +234,44 @@ public class BackupImport {
 		outdatedConfigKeys.put("swftools_zoom", CONFIG_DOCUMENT_DPI);
 		outdatedConfigKeys.put("swftools_jpegquality", CONFIG_DOCUMENT_QUALITY);
 		outdatedConfigKeys.put("sms.subject", CONFIG_REMINDER_MESSAGE);
-		configTypes.put(CONFIG_REGISTER_FRONTEND, Configuration.Type.bool);
-		configTypes.put(CONFIG_REGISTER_SOAP, Configuration.Type.bool);
-		configTypes.put(CONFIG_REGISTER_OAUTH, Configuration.Type.bool);
-		configTypes.put(CONFIG_SMTP_TLS, Configuration.Type.bool);
-		configTypes.put(CONFIG_EMAIL_AT_REGISTER, Configuration.Type.bool);
-		configTypes.put(CONFIG_EMAIL_VERIFICATION, Configuration.Type.bool);
-		configTypes.put(CONFIG_SIP_ENABLED, Configuration.Type.bool);
-		configTypes.put(CONFIG_SCREENSHARING_FPS_SHOW, Configuration.Type.bool);
-		configTypes.put(CONFIG_SCREENSHARING_ALLOW_REMOTE, Configuration.Type.bool);
-		configTypes.put(CONFIG_DASHBOARD_SHOW_MYROOMS, Configuration.Type.bool);
-		configTypes.put(CONFIG_DASHBOARD_SHOW_CHAT, Configuration.Type.bool);
-		configTypes.put(CONFIG_DASHBOARD_SHOW_RSS, Configuration.Type.bool);
-		configTypes.put(CONFIG_REPLY_TO_ORGANIZER, Configuration.Type.bool);
-		configTypes.put(CONFIG_IGNORE_BAD_SSL, Configuration.Type.bool);
-		configTypes.put(CONFIG_MYROOMS_ENABLED, Configuration.Type.bool);
-		configTypes.put(CONFIG_DEFAULT_GROUP_ID, Configuration.Type.number);
-		configTypes.put(CONFIG_SMTP_PORT, Configuration.Type.number);
-		configTypes.put(CONFIG_SMTP_TIMEOUT_CON, Configuration.Type.number);
-		configTypes.put(CONFIG_SMTP_TIMEOUT, Configuration.Type.number);
-		configTypes.put(CONFIG_DEFAULT_LANG, Configuration.Type.number);
-		configTypes.put(CONFIG_DOCUMENT_DPI, Configuration.Type.number);
-		configTypes.put(CONFIG_DOCUMENT_QUALITY, Configuration.Type.number);
-		configTypes.put(CONFIG_SCREENSHARING_QUALITY, Configuration.Type.number);
-		configTypes.put(CONFIG_SCREENSHARING_FPS, Configuration.Type.number);
-		configTypes.put(CONFIG_MAX_UPLOAD_SIZE, Configuration.Type.number);
-		configTypes.put(CONFIG_APPOINTMENT_REMINDER_MINUTES, Configuration.Type.number);
-		configTypes.put(CONFIG_LOGIN_MIN_LENGTH, Configuration.Type.number);
-		configTypes.put(CONFIG_PASS_MIN_LENGTH, Configuration.Type.number);
-		configTypes.put(CONFIG_CALENDAR_ROOM_CAPACITY, Configuration.Type.number);
-		configTypes.put(CONFIG_KEYCODE_ARRANGE, Configuration.Type.number);
-		configTypes.put(CONFIG_KEYCODE_MUTE_OTHERS, Configuration.Type.number);
-		configTypes.put(CONFIG_KEYCODE_MUTE, Configuration.Type.number);
-		configTypes.put(CONFIG_DEFAULT_LDAP_ID, Configuration.Type.number);
-		configTypes.put(CONFIG_CAM_FPS, Configuration.Type.number);
-		configTypes.put(CONFIG_MIC_RATE, Configuration.Type.number);
-		configTypes.put(CONFIG_MIC_ECHO, Configuration.Type.bool);
-		configTypes.put(CONFIG_MIC_NOISE, Configuration.Type.bool);
-		configTypes.put(CONFIG_EXT_PROCESS_TTL, Configuration.Type.number);
+		configTypes.put(CONFIG_REGISTER_FRONTEND, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_REGISTER_SOAP, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_REGISTER_OAUTH, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_SMTP_TLS, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_EMAIL_AT_REGISTER, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_EMAIL_VERIFICATION, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_SIP_ENABLED, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_SCREENSHARING_FPS_SHOW, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_SCREENSHARING_ALLOW_REMOTE, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_DASHBOARD_SHOW_MYROOMS, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_DASHBOARD_SHOW_CHAT, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_DASHBOARD_SHOW_RSS, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_REPLY_TO_ORGANIZER, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_IGNORE_BAD_SSL, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_MYROOMS_ENABLED, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_DEFAULT_GROUP_ID, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_SMTP_PORT, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_SMTP_TIMEOUT_CON, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_SMTP_TIMEOUT, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_DEFAULT_LANG, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_DOCUMENT_DPI, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_DOCUMENT_QUALITY, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_SCREENSHARING_QUALITY, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_SCREENSHARING_FPS, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_MAX_UPLOAD_SIZE, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_APPOINTMENT_REMINDER_MINUTES, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_LOGIN_MIN_LENGTH, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_PASS_MIN_LENGTH, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_CALENDAR_ROOM_CAPACITY, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_KEYCODE_ARRANGE, Configuration.Type.HOTKEY);
+		configTypes.put(CONFIG_KEYCODE_MUTE_OTHERS, Configuration.Type.HOTKEY);
+		configTypes.put(CONFIG_KEYCODE_MUTE, Configuration.Type.HOTKEY);
+		configTypes.put(CONFIG_DEFAULT_LDAP_ID, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_CAM_FPS, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_MIC_RATE, Configuration.Type.NUMBER);
+		configTypes.put(CONFIG_MIC_ECHO, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_MIC_NOISE, Configuration.Type.BOOL);
+		configTypes.put(CONFIG_EXT_PROCESS_TTL, Configuration.Type.NUMBER);
 	}
 
 	@Autowired
@@ -311,6 +318,7 @@ public class BackupImport {
 	private final Map<Long, Long> messageFolderMap = new HashMap<>();
 	private final Map<Long, Long> userContactMap = new HashMap<>();
 	private final Map<String, String> fileMap = new HashMap<>();
+	private final Map<String, String> hashMap = new HashMap<>();
 
 	private static File validate(String ename, File intended) throws IOException {
 		final String intendedPath = intended.getCanonicalPath();
@@ -358,6 +366,7 @@ public class BackupImport {
 		messageFolderMap.clear();
 		userContactMap.clear();
 		fileMap.clear();
+		hashMap.clear();
 		messageFolderMap.put(INBOX_FOLDER_ID, INBOX_FOLDER_ID);
 		messageFolderMap.put(SENT_FOLDER_ID, SENT_FOLDER_ID);
 		messageFolderMap.put(TRASH_FOLDER_ID, TRASH_FOLDER_ID);
@@ -374,9 +383,9 @@ public class BackupImport {
 		BackupVersion ver = getVersion(simpleSerializer, f);
 		importConfigs(f);
 		importGroups(f, simpleSerializer);
-		Long defaultLdapId = importLdap(f, simpleSerializer);
+		importLdap(f, simpleSerializer);
 		importOauth(f, simpleSerializer);
-		importUsers(f, defaultLdapId);
+		importUsers(f);
 		importRooms(f);
 		importRoomGroups(f);
 		importChat(f);
@@ -438,6 +447,18 @@ public class BackupImport {
 		matcher.bind(Long.class, LongTransform.class);
 		registry.bind(Date.class, DateConverter.class);
 		registry.bind(User.class, new UserConverter(userDao, userMap));
+		registry.bind(Configuration.Type.class, new EnumIcaseConverter(Configuration.Type.values()));
+
+		final Map<Integer, String> keyMap = new HashMap<>();
+		Arrays.stream(KeyEvent.class.getDeclaredFields())
+				.filter(fld -> fld.getName().startsWith("VK_"))
+				.forEach(fld -> {
+					try {
+						keyMap.put(fld.getInt(null), "Shift+" + WordUtils.capitalizeFully(fld.getName().substring(3)));
+					} catch (IllegalArgumentException|IllegalAccessException e) {
+						log.error("Unexpected exception while building KEY map {}", fld);
+					}
+				});
 
 		List<Configuration> list = readList(serializer, f, "configs.xml", "configs", Configuration.class);
 		for (Configuration c : list) {
@@ -451,8 +472,15 @@ public class BackupImport {
 			Configuration.Type type = configTypes.get(c.getKey());
 			if (type != null) {
 				c.setType(type);
-				if (Configuration.Type.bool == type) {
+				if (Configuration.Type.BOOL == type) {
 					c.setValue(String.valueOf("1".equals(c.getValue()) || "yes".equals(c.getValue()) || "true".equals(c.getValue())));
+				} else if (Configuration.Type.HOTKEY == type) {
+					try {
+						int val = c.getValueN().intValue();
+						c.setValue(keyMap.get(val));
+					} catch(Exception e) {
+						//no-op, value is already HOTKEY
+					}
 				}
 			}
 			Configuration cfg = cfgDao.forceGet(c.getKey());
@@ -558,7 +586,7 @@ public class BackupImport {
 	/*
 	 * ##################### Import Users
 	 */
-	private void importUsers(File f, Long defaultLdapId) throws Exception {
+	private void importUsers(File f) throws Exception {
 		log.info("OAuth2 servers import complete, starting user import");
 		String jNameTimeZone = getDefaultTimezone();
 		//add existence email from database
@@ -588,14 +616,14 @@ public class BackupImport {
 			// check that email is unique
 			if (u.getAddress() != null && u.getAddress().getEmail() != null && User.Type.user == u.getType()) {
 				if (userEmailMap.containsKey(u.getAddress().getEmail())) {
-					log.warn("Email is duplicated for user " + u.toString());
+					log.warn("Email is duplicated for user {}", u);
 					String updateEmail = String.format("modified_by_import_<%s>%s", randomUUID(), u.getAddress().getEmail());
 					u.getAddress().setEmail(updateEmail);
 				}
 				userEmailMap.put(u.getAddress().getEmail(), Integer.valueOf(userEmailMap.size()));
 			}
 			if (userLoginMap.containsKey(u.getLogin())) {
-				log.warn("Login is duplicated for user " + u.toString());
+				log.warn("Login is duplicated for user {}", u);
 				String updateLogin = String.format("modified_by_import_<%s>%s", randomUUID(), u.getLogin());
 				u.setLogin(updateLogin);
 			}
@@ -621,17 +649,6 @@ public class BackupImport {
 			u.setId(null);
 			if (u.getSipUser() != null && u.getSipUser().getId() != 0) {
 				u.getSipUser().setId(0);
-			}
-			if (LDAP_EXT_TYPE.equals(u.getExternalType()) && User.Type.external != u.getType()) {
-				log.warn("Found LDAP user in 'old' format, external_type == 'LDAP':: " + u);
-				u.setType(User.Type.ldap);
-				u.setExternalType(null);
-				if (u.getDomainId() == null) {
-					u.setDomainId(defaultLdapId); //domainId was not supported in old versions of OM
-				}
-			}
-			if (!Strings.isEmpty(u.getExternalType())) {
-				u.setType(User.Type.external);
 			}
 			if (AuthLevelUtil.hasLoginLevel(u.getRights()) && !Strings.isEmpty(u.getActivatehash())) {
 				u.setActivatehash(null);
@@ -845,14 +862,14 @@ public class BackupImport {
 					chunk.setRecording(r);
 				}
 			}
-			if (!Strings.isEmpty(r.getHash()) && r.getHash().startsWith(RECORDING_FILE_NAME)) {
-				String name = getFileName(r.getHash());
-				r.setHash(randomUUID().toString());
+			String oldHash = r.getHash();
+			r.setHash(randomUUID().toString());
+			if (!Strings.isEmpty(oldHash) && oldHash.startsWith(RECORDING_FILE_NAME)) {
+				String name = getFileName(oldHash);
 				fileMap.put(String.format(FILE_NAME_FMT, name, EXTENSION_JPG), String.format(FILE_NAME_FMT, r.getHash(), EXTENSION_PNG));
 				fileMap.put(String.format("%s.%s.%s", name, "flv", EXTENSION_MP4), String.format(FILE_NAME_FMT, r.getHash(), EXTENSION_MP4));
-			}
-			if (Strings.isEmpty(r.getHash())) {
-				r.setHash(randomUUID().toString());
+			} else {
+				hashMap.put(oldHash, r.getHash());
 			}
 			r = recordingDao.update(r);
 			fileItemMap.put(recId, r.getId());
@@ -976,9 +993,9 @@ public class BackupImport {
 			if (file.getParentId() != null && file.getParentId().longValue() <= 0L) {
 				file.setParentId(null);
 			}
-			if (Strings.isEmpty(file.getHash())) {
-				file.setHash(randomUUID().toString());
-			}
+			String oldHash = file.getHash();
+			file.setHash(randomUUID().toString());
+			hashMap.put(oldHash, file.getHash());
 			file = fileItemDao.update(file);
 			result.add(file);
 			fileItemMap.put(fId, file.getId());
@@ -1072,7 +1089,7 @@ public class BackupImport {
 			if (listNodeName.equals(listNode1.getName())) {
 				InputNode item1 = listNode1.getNext();
 				while (item1 != null) {
-					T o = ser.read(clazz, item1, false);;
+					T o = ser.read(clazz, item1, false);
 					if (consumer != null) {
 						consumer.accept(listNode2, o);
 					}
@@ -1084,71 +1101,111 @@ public class BackupImport {
 		return list;
 	}
 
-	private static Long getPrefixedId(String prefix, File f) {
-		String n = f.getName();
-		int dIdx = n.indexOf('.', prefix.length());
+	private static Long getPrefixedId(String prefix, File f, Map<Long, Long> map) {
+		String n = getFileName(f.getName());
+		Long id = null;
 		if (n.indexOf(prefix) > -1) {
-			return importLongType(n.substring(prefix.length(), dIdx > -1 ? dIdx : n.length()));
+			id = importLongType(n.substring(prefix.length(), n.length()));
 		}
-		return null;
+		return id == null ? null : map.get(id);
 	}
 
-	private void importFolders(File importBaseDir) throws IOException {
-		// Now check the room files and import them
-		final File roomFilesFolder = new File(importBaseDir, BCKP_ROOM_FILES);
-
-		File uploadDir = getUploadDir();
-
-		log.debug("roomFilesFolder PATH {} ", roomFilesFolder.getCanonicalPath());
-
-		if (roomFilesFolder.exists()) {
-			for (File file : roomFilesFolder.listFiles()) {
-				if (file.isDirectory()) {
-					String fName = file.getName();
-					if (PROFILES_DIR.equals(fName)) {
-						// profile should correspond to the new user id
-						for (File profile : file.listFiles()) {
-							Long oldId = getPrefixedId(PROFILES_PREFIX, profile);
-							Long id = oldId != null ? userMap.get(oldId) : null;
-							if (id != null) {
-								FileUtils.copyDirectory(profile, getUploadProfilesUserDir(id));
-							}
-						}
-					} else if (FILES_DIR.equals(fName)) {
-						log.debug("Entered FILES folder");
-						for (File rf : file.listFiles()) {
-							// going to fix images
-							if (rf.isFile() && rf.getName().endsWith(EXTENSION_JPG)) {
-								FileUtils.copyFileToDirectory(rf, getImgDir(rf.getName()));
-							} else {
-								FileUtils.copyDirectory(rf, new File(getUploadFilesDir(), rf.getName()));
-							}
-						}
-					} else if (GROUP_LOGO_DIR.equals(fName)) {
-						log.debug("Entered group logo folder");
-						for (File logo : file.listFiles()) {
-							Long oldId = getPrefixedId(GROUP_LOGO_PREFIX, logo);
-							Long id = oldId != null ? groupMap.get(oldId) : null;
-							if (id != null) {
-								FileUtils.moveFile(logo, OmFileHelper.getGroupLogo(id, false));
-							}
-						}
-					} else {
-						// check if folder is room folder, store it under new id if necessary
-						Long oldId = importLongType(fName);
-						Long id = oldId != null ? roomMap.get(oldId) : null;
-						if (id != null) {
-							FileUtils.copyDirectory(file, getUploadRoomDir(id.toString()));
-						} else {
-							FileUtils.copyDirectory(file, new File(uploadDir, fName));
-						}
-					}
+	private void processGroupFiles(File baseDir) throws IOException {
+		log.debug("Entered group logo folder");
+		for (File f : baseDir.listFiles()) {
+			String ext = getFileExt(f.getName());
+			if (EXTENSION_PNG.equals(ext)) {
+				Long id = getPrefixedId(GROUP_LOGO_PREFIX, f, groupMap);
+				if (id != null) {
+					FileUtils.moveFile(f, getGroupLogo(id, false));
+				}
+			} else if (EXTENSION_CSS.equals(ext)) {
+				Long id = getPrefixedId(GROUP_CSS_PREFIX, f, groupMap);
+				if (id != null) {
+					FileUtils.moveFile(f, getGroupCss(id, false));
 				}
 			}
 		}
+	}
+
+	private static void changeHash(File f, File dir, String hash, String inExt) throws IOException {
+		String ext = inExt == null ? getFileExt(f.getName()) : inExt;
+		FileUtils.copyFile(f, new File(dir, getName(hash, ext)));
+	}
+
+	private void processFiles(File baseDir) throws IOException {
+		log.debug("Entered FILES folder");
+		for (File rf : baseDir.listFiles()) {
+			String oldHash = OmFileHelper.getFileName(rf.getName());
+			String hash = hashMap.get(oldHash);
+			if (hash == null) {
+				continue;
+			}
+			File dir = new File(getUploadFilesDir(), hash);
+			// going to fix images
+			if (rf.isFile() && rf.getName().endsWith(EXTENSION_JPG)) {
+				changeHash(rf, dir, hash, EXTENSION_JPG);
+			} else {
+				for (File f : rf.listFiles()) {
+					FileUtils.copyFile(f, new File(dir
+							, f.getName().startsWith(oldHash) ? getName(hash, getFileExt(f.getName())) : f.getName()));
+				}
+			}
+		}
+	}
+
+	private void processProfiles(File baseDir) throws IOException {
+		log.debug("Entered profiles folder");
+		for (File profile : baseDir.listFiles()) {
+			Long id = getPrefixedId(PROFILES_PREFIX, profile, userMap);
+			if (id != null) {
+				FileUtils.copyDirectory(profile, getUploadProfilesUserDir(id));
+			}
+		}
+	}
+
+	private void processWmls(File baseDir) throws IOException {
+		log.debug("Entered WML folder");
+		File dir = getUploadWmlDir();
+		for (File wml : baseDir.listFiles()) {
+			String oldHash = OmFileHelper.getFileName(wml.getName());
+			String hash = hashMap.get(oldHash);
+			if (hash == null) {
+				continue;
+			}
+			changeHash(wml, dir, hash, null);
+		}
+	}
+
+	private void processFilesRoot(File baseDir) throws IOException {
+		// Now check the room files and import them
+		final File roomFilesFolder = new File(baseDir, BCKP_ROOM_FILES);
+		log.debug("roomFilesFolder PATH {} ", roomFilesFolder.getCanonicalPath());
+		if (!roomFilesFolder.exists()) {
+			return;
+		}
+
+		for (File file : roomFilesFolder.listFiles()) {
+			if (file.isDirectory()) {
+				String fName = file.getName();
+				if (PROFILES_DIR.equals(fName)) {
+					processProfiles(file);
+				} else if (FILES_DIR.equals(fName)) {
+					processFiles(file);
+				} else if (GROUP_LOGO_DIR.equals(fName)) {
+					processGroupFiles(file);
+				} else if (WML_DIR.equals(fName)) {
+					processWmls(file);
+				}
+			}
+		}
+	}
+
+	private void importFolders(File baseDir) throws IOException {
+		processFilesRoot(baseDir);
 
 		// Now check the recordings and import them
-		final File recDir = new File(importBaseDir, BCKP_RECORD_FILES);
+		final File recDir = new File(baseDir, BCKP_RECORD_FILES);
 		log.debug("sourceDirRec PATH {}", recDir.getCanonicalPath());
 		if (recDir.exists()) {
 			final File hiberDir = getStreamsHibernateDir();
@@ -1157,23 +1214,23 @@ public class BackupImport {
 				if (n != null) {
 					FileUtils.copyFile(r, new File(hiberDir, n));
 				} else {
-					FileUtils.copyFileToDirectory(r, hiberDir);
+					String oldHash = OmFileHelper.getFileName(r.getName());
+					String hash = hashMap.get(oldHash);
+					if (hash == null) {
+						FileUtils.copyFileToDirectory(r, hiberDir);
+					} else {
+						changeHash(r, hiberDir, hash, null);
+					}
 				}
 			}
 		}
-		final File cssDir = new File(importBaseDir, CSS_DIR);
+		final File cssDir = new File(baseDir, CSS_DIR);
 		if (cssDir.exists()) {
 			final File wCssDir = getCssDir();
 			for (File css : cssDir.listFiles()) {
 				FileUtils.copyFileToDirectory(css, wCssDir);
 			}
 		}
-	}
-
-	private static File getImgDir(String name) {
-		int start = name.startsWith(THUMB_IMG_PREFIX) ? THUMB_IMG_PREFIX.length() : 0;
-		String hash = name.substring(start, name.length() - EXTENSION_PNG.length() - 1);
-		return new File(getUploadFilesDir(), hash);
 	}
 
 	private static Long importLongType(String value) {

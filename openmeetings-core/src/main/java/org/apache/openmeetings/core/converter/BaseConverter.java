@@ -64,6 +64,7 @@ public abstract class BaseConverter {
 	public static final String EXEC_EXT = System.getProperty("os.name").toUpperCase(Locale.ROOT).indexOf("WINDOWS") < 0 ? "" : ".exe";
 	private static final int MINUTE_MULTIPLIER = 60 * 1000;
 	public static final int TIME_TO_WAIT_FOR_FRAME = 15 * MINUTE_MULTIPLIER;
+	public static final double HALF_STEP = 1. / 2;
 
 	@Autowired
 	protected ConfigurationDao cfgDao;
@@ -270,8 +271,6 @@ public abstract class BaseConverter {
 
 				if (outputWav.exists() && outputWav.length() != 0) {
 					// Strip Wave to Full Length
-					File outputGapFullWav = outputWav;
-
 					// Strip Wave to Full Length
 					String hashFileFullName = chunk.getStreamName() + "_FULL_WAVE.wav";
 					File outputFullWav = new File(streamFolder, hashFileFullName);
@@ -282,7 +281,7 @@ public abstract class BaseConverter {
 					// Calculate delta at ending
 					double endPad = diffSeconds(recording.getRecordEnd(), chunk.getEnd());
 
-					addSoxPad(logs, "addStartEndToAudio", startPad, endPad, outputGapFullWav, outputFullWav);
+					addSoxPad(logs, "addStartEndToAudio", startPad, endPad, outputWav, outputFullWav);
 
 					// Fix for Audio Length - Invalid Audio Length in Recorded Files
 					// Audio must match 100% the Video
@@ -354,10 +353,10 @@ public abstract class BaseConverter {
 	protected static Dimension getDimension(String txt) {
 		Matcher matcher = p.matcher(txt);
 
-		while (matcher.find()) {
+		if (matcher.find()) {
 			String foundResolution = txt.substring(matcher.start(), matcher.end());
-			String[] resultions = foundResolution.split("x");
-			return new Dimension(toInt(resultions[0]), toInt(resultions[1]));
+			String[] resolutions = foundResolution.split("x");
+			return new Dimension(toInt(resolutions[0]), toInt(resolutions[1]));
 		}
 
 		return new Dimension(100, 100); // will return 100x100 for non-video to be able to play

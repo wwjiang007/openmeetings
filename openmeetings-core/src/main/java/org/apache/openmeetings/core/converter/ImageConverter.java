@@ -34,6 +34,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.Optional;
+import java.util.function.DoubleConsumer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.openmeetings.db.dao.user.UserDao;
@@ -64,21 +66,23 @@ public class ImageConverter extends BaseConverter {
 	@Autowired
 	private UserDao userDao;
 
-	public ProcessResultList convertImage(BaseFileItem f, StoredFile sf) throws IOException {
-		return convertImage(f, sf, new ProcessResultList());
+	public ProcessResultList convertImage(BaseFileItem f, StoredFile sf, Optional<DoubleConsumer> progress) throws IOException {
+		return convertImage(f, sf, new ProcessResultList(), progress);
 	}
 
-	public ProcessResultList convertImage(BaseFileItem f, StoredFile sf, ProcessResultList logs) throws IOException {
+	public ProcessResultList convertImage(BaseFileItem f, StoredFile sf, ProcessResultList logs, Optional<DoubleConsumer> progress) throws IOException {
 		File png = f.getFile(EXTENSION_PNG);
 		if (!sf.isPng()) {
 			File img = f.getFile(sf.getExt());
 
-			log.debug("##### convertImage destinationFile: " + png);
+			log.debug("##### convertImage destinationFile: {}", png);
 			logs.add(convertSinglePng(img, png));
 		} else if (!png.exists()){
 			copyFile(f.getFile(sf.getExt()), png);
 		}
+		progress.ifPresent(theProgress -> theProgress.accept(HALF_STEP));
 		logs.add(initSize(f, png, PNG_MIME_TYPE));
+		progress.ifPresent(theProgress -> theProgress.accept(HALF_STEP));
 		return logs;
 	}
 
@@ -146,7 +150,7 @@ public class ImageConverter extends BaseConverter {
 	 * @param in - input file
 	 * @param out - output file
 	 * @return - conversion result
-	 * @throws IOException
+	 * @throws IOException - if any Io exception occurs while processing
 	 *
 	 */
 	private ProcessResult convertSinglePng(File in, File out) throws IOException {
@@ -172,17 +176,19 @@ public class ImageConverter extends BaseConverter {
 	 * @return - result of conversion
 	 * @throws IOException in case IO exception occurred
 	 */
-	public ProcessResultList convertDocument(FileItem f, File pdf, ProcessResultList logs) throws IOException {
+	public ProcessResultList convertDocument(FileItem f, File pdf, ProcessResultList logs, Optional<DoubleConsumer> progress) throws IOException {
 		log.debug("convertDocument");
 		String[] argv = new String[] {
 			getPathToConvert()
 			, "-density", getDpi()
 			, pdf.getCanonicalPath()
+			, "+profile", "'*'"
 			, "-quality", getQuality()
 			, new File(pdf.getParentFile(), PAGE_TMPLT).getCanonicalPath()
 			};
 		ProcessResult res = ProcessHelper.executeScript("convert PDF to images", argv);
 		logs.add(res);
+		progress.ifPresent(theProgress -> theProgress.accept(1. / 4));
 		if (res.isOk()) {
 			File[] pages = pdf.getParentFile().listFiles(fi -> fi.isFile() && fi.getName().startsWith(DOC_PAGE_PREFIX) && fi.getName().endsWith(EXTENSION_PNG));
 			if (pages == null || pages.length == 0) {
@@ -192,6 +198,7 @@ public class ImageConverter extends BaseConverter {
 				logs.add(initSize(f, pages[0], PNG_MIME_TYPE));
 			}
 		}
+		progress.ifPresent(theProgress -> theProgress.accept(1. / 4));
 		return logs;
 	}
 }

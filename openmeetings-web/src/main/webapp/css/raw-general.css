@@ -1,26 +1,18 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License") +  you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+/* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
 html, body {
 	height: 100%;
 	margin: 0;
 	font-family: Arial, Helvetica, sans-serif;
 	overflow-y: hidden;
+}
+.main-container {
+	height: calc(100% - var(--header-height));
+}
+.main-container .main
+, #contents .child-panel
+, .full-height
+{
+	height: 100%;
 }
 * {
 	box-sizing: content-box; /* IE */
@@ -149,7 +141,6 @@ html, body {
 	display: inline;
 	float: none;
 }
-
 .goto, .goto :link, .goto :hover {
 	font-size: 14px;
 	line-height: 14px;
@@ -158,7 +149,6 @@ html, body {
 	vertical-align: middle;
 	min-width: 16px;
 }
-
 .goto.icon {
 	display: inline-block;
 	width: 16px;
@@ -168,16 +158,7 @@ html, body {
 	padding: 0px;
 	zoom: 1.2;
 }
-
 .ui-dialog {
-	-moz-box-shadow: 3px 3px 4px #000;
-	-webkit-box-shadow: 3px 3px 4px #000;
-	/* For IE 8 */
-	-ms-filter:
-		"progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135, Color='#000000')";
-	/* For IE 5.5 - 7 */
-	filter: progid:DXImageTransform.Microsoft.Shadow(Strength=4, Direction=135,
-		Color='#000000' );
 	box-shadow: 3px 3px 4px #000;
 }
 .sort-icon, .sort-icon a {
@@ -289,7 +270,6 @@ html, body {
 	margin: 50px;
 	border: 1px solid black;
 	padding: 15px;
-	-webkit-border-radius: 8px;
 	border-radius: 8px;
 }
 .private.message.body {
@@ -506,7 +486,7 @@ select.messages.selector {
 	height: var(--rooms-header-height);
 }
 #orgTabs, .rooms-area {
-	height: calc(100% - var(--rooms-header-height) - var(--buffer-height));
+	height: calc(100% - var(--rooms-header-height) - var(--buffer-size));
 	padding-top: 0;
 	padding-bottom: 0;
 }
@@ -545,8 +525,6 @@ select.messages.selector {
 	height: var(--menu-height);
 }
 #topControls #wicketDebugBar {
-	right: auto; /* IE */
-	top: auto; /* IE */
 	right: initial;
 	top: initial;
 	z-index: 2;
@@ -657,7 +635,7 @@ form .input {
 	width: 100%;
 	max-width: 518px;
 	min-width: 518px;
-	height: calc(100% - var(--nav-height) - var(--lbl-nav-height) - var(--buffer-height));
+	height: calc(100% - var(--nav-height) - var(--lbl-nav-height) - var(--buffer-size));
 }
 .list-table thead {
 	/* head takes the height it requires, 
