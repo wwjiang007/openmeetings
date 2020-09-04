@@ -23,14 +23,13 @@ import static org.apache.openmeetings.db.util.TimezoneUtil.getTimeZone;
 import static org.apache.openmeetings.util.CalendarPatterns.ISO8601_FULL_FORMAT_STRING;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DASHBOARD_SHOW_MYROOMS;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DASHBOARD_SHOW_RSS;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MYROOMS_ENABLED;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getDefaultLang;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isMyRoomsEnabled;
 import static org.apache.openmeetings.web.app.Application.getAuthenticationStrategy;
 import static org.apache.openmeetings.web.app.Application.getDashboardContext;
 import static org.apache.openmeetings.web.app.Application.isInvaldSession;
 import static org.apache.openmeetings.web.app.Application.removeInvalidSession;
 
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -38,6 +37,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -47,11 +47,13 @@ import org.apache.openmeetings.core.ldap.LdapLoginManager;
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.dao.room.InvitationDao;
+import org.apache.openmeetings.db.dao.room.RoomDao;
 import org.apache.openmeetings.db.dao.server.SOAPLoginDao;
 import org.apache.openmeetings.db.dao.server.SessiondataDao;
 import org.apache.openmeetings.db.dao.user.GroupDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.room.Invitation;
+import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.server.RemoteSessionObject;
 import org.apache.openmeetings.db.entity.server.SOAPLogin;
 import org.apache.openmeetings.db.entity.server.Sessiondata;
@@ -63,6 +65,8 @@ import org.apache.openmeetings.db.util.AuthLevelUtil;
 import org.apache.openmeetings.db.util.FormatHelper;
 import org.apache.openmeetings.db.util.LocaleHelper;
 import org.apache.openmeetings.util.OmException;
+import org.apache.openmeetings.web.app.ClientManager.InstantToken;
+import org.apache.openmeetings.web.pages.HashPage;
 import org.apache.openmeetings.web.user.dashboard.MyRoomsWidget;
 import org.apache.openmeetings.web.user.dashboard.MyRoomsWidgetDescriptor;
 import org.apache.openmeetings.web.user.dashboard.RssWidget;
@@ -71,6 +75,7 @@ import org.apache.openmeetings.web.user.dashboard.StartWidgetDescriptor;
 import org.apache.openmeetings.web.user.dashboard.WelcomeWidgetDescriptor;
 import org.apache.openmeetings.web.user.dashboard.admin.AdminWidget;
 import org.apache.openmeetings.web.user.dashboard.admin.AdminWidgetDescriptor;
+import org.apache.openmeetings.web.user.rooms.RoomEnterBehavior;
 import org.apache.openmeetings.web.util.ExtendedClientProperties;
 import org.apache.openmeetings.web.util.OmUrlFragment;
 import org.apache.openmeetings.web.util.UserDashboard;
@@ -78,7 +83,11 @@ import org.apache.wicket.authentication.IAuthenticationStrategy;
 import org.apache.wicket.authroles.authentication.AbstractAuthenticatedWebSession;
 import org.apache.wicket.authroles.authorization.strategies.role.Roles;
 import org.apache.wicket.injection.Injector;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.flow.RedirectToUrlException;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.apache.wicket.util.string.Strings;
@@ -93,7 +102,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(WebSession.class);
 	public static final int MILLIS_IN_MINUTE = 60000;
-	public static final List<String> AVAILABLE_TIMEZONES = Collections.unmodifiableList(Arrays.asList(TimeZone.getAvailableIDs()));
+	public static final List<String> AVAILABLE_TIMEZONES = Collections.unmodifiableList(List.of(TimeZone.getAvailableIDs()));
 	public static final Set<String> AVAILABLE_TIMEZONE_SET = Collections.unmodifiableSet(new LinkedHashSet<>(AVAILABLE_TIMEZONES));
 	public static final String WICKET_ROOM_ID = "wicketroomid";
 	private Long userId = null;
@@ -127,6 +136,8 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private LdapLoginManager ldapManager;
 	@SpringBean
 	private ConfigurationDao cfgDao;
+	@SpringBean
+	private RoomDao roomDao;
 
 	public WebSession(Request request) {
 		super(request);
@@ -182,7 +193,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 						// the loaded credentials are wrong. erase them.
 						strategy.remove();
 					}
-				} catch (OmException e) {
+				} catch (Exception e) {
 					//no-op, bad credentials
 				}
 			}
@@ -190,11 +201,34 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		return userId != null && userId.longValue() > 0;
 	}
 
+	private void redirectHash(Room r, Runnable nullAction) {
+		if (r != null) {
+			String url = cm.getServerUrl(r, baseUrl -> {
+				PageParameters params = new PageParameters();
+				IRequestParameters reqParams = RequestCycle.get().getRequest().getQueryParameters();
+				reqParams.getParameterNames().forEach(name -> {
+					params.add(name, reqParams.getParameterValue(name));
+				});
+				return Application.urlForPage(HashPage.class
+						, params
+						, baseUrl);
+			});
+			if (url == null) {
+				nullAction.run();
+			} else {
+				throw new RedirectToUrlException(url);
+			}
+		}
+	}
+
 	public void checkHashes(StringValue secure, StringValue invitation) {
+		log.debug("checkHashes, secure: '{}', invitation: '{}'", secure, invitation);
 		try {
+			log.debug("checkHashes, has soap in session ? '{}'", (soap != null));
 			if (!secure.isEmpty() && (soap == null || !soap.getHash().equals(secure.toString()))) {
 				// otherwise already logged-in with the same hash
 				if (isSignedIn()) {
+					log.debug("secure: Session is authorized, going to invalidate");
 					invalidateNow();
 				}
 				signIn(secure.toString(), true);
@@ -202,49 +236,76 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 			if (!invitation.isEmpty() && (i == null || !i.getHash().equals(invitation.toString()))) {
 				// otherwise already logged-in with the same hash
 				if (isSignedIn()) {
+					log.debug("invitation: Session is authorized, going to invalidate");
 					invalidateNow();
 				}
-				i = inviteDao.getByHash(invitation.toString(), false, true);
+				i = inviteDao.getByHash(invitation.toString(), false);
+				Room r = null;
 				if (i != null && i.isAllowEntry()) {
 					Set<Right> hrights = new HashSet<>();
 					if (i.getRoom() != null) {
-						hrights.add(Right.Room);
-						roomId = i.getRoom().getId();
+						r = i.getRoom();
 					} else if (i.getAppointment() != null && i.getAppointment().getRoom() != null) {
-						hrights.add(Right.Room);
-						roomId = i.getAppointment().getRoom().getId();
+						r = i.getAppointment().getRoom();
 					} else if (i.getRecording() != null) {
 						recordingId = i.getRecording().getId();
+					}
+					if (r != null) {
+						redirectHash(r, () -> inviteDao.markUsed(i));
+						hrights.add(Right.ROOM);
+						roomId = r.getId();
 					}
 					setUser(i.getInvitee(), hrights);
 				}
 			}
+		} catch (RedirectToUrlException e) {
+			throw e;
 		} catch (Exception e) {
 			log.error("Unexpected exception while checking hashes", e);
+		}
+	}
+
+	public void checkToken(StringValue intoken) {
+		Optional<InstantToken> token = cm.getToken(intoken);
+		if (token.isPresent()) {
+			invalidateNow();
+			signIn(userDao.get(token.get().getUserId()));
+			log.debug("Cluster:: Token for room {} is found, signedIn ? {}", token.get().getRoomId(), userId != null);
+			area = RoomEnterBehavior.getRoomUrlFragment(token.get().getRoomId());
 		}
 	}
 
 	public boolean signIn(String secureHash, boolean markUsed) {
 		SOAPLogin soapLogin = soapDao.get(secureHash);
 		if (soapLogin == null) {
+			log.warn("Secure hash not found in DB");
 			return false;
 		}
+		log.debug("Secure hash found, is used ? {}", soapLogin.isUsed());
 		if (!soapLogin.isUsed() || soapLogin.getAllowSameURLMultipleTimes()) {
 			Sessiondata sd = sessionDao.check(soapLogin.getSessionHash());
+			log.debug("Do we have data for hash ? {}", (sd.getXml() != null));
 			if (sd.getXml() != null) {
-				RemoteSessionObject remoteUser = RemoteSessionObject.fromXml(sd.getXml());
-				if (remoteUser != null && !Strings.isEmpty(remoteUser.getExternalUserId())) {
-					User user = userDao.getExternalUser(remoteUser.getExternalUserId(), remoteUser.getExternalUserType());
+				RemoteSessionObject remoteUser = RemoteSessionObject.fromString(sd.getXml());
+				log.debug("Hash data was parsed successfuly ? {}, containg exterlaId ? {}", (remoteUser != null), !Strings.isEmpty(remoteUser.getExternalId()));
+				if (remoteUser != null && !Strings.isEmpty(remoteUser.getExternalId())) {
+					Room r = roomDao.get(soapLogin.getRoomId());
+					if (r == null) {
+						log.warn("Room was not found");
+					} else {
+						redirectHash(r, () -> {});
+					}
+					User user = userDao.getExternalUser(remoteUser.getExternalId(), remoteUser.getExternalType());
 					if (user == null) {
 						user = getNewUserInstance(null);
 						user.setFirstname(remoteUser.getFirstname());
 						user.setLastname(remoteUser.getLastname());
 						user.setLogin(remoteUser.getUsername());
-						user.setType(Type.external);
-						user.setExternalId(remoteUser.getExternalUserId());
-						user.addGroup(groupDao.getExternal(remoteUser.getExternalUserType()));
+						user.setType(Type.EXTERNAL);
+						user.setExternalId(remoteUser.getExternalId());
+						user.addGroup(groupDao.getExternal(remoteUser.getExternalType()));
 						user.getRights().clear();
-						user.getRights().add(Right.Room);
+						user.getRights().add(Right.ROOM);
 						user.getAddress().setEmail(remoteUser.getEmail());
 						user.setPictureUri(remoteUser.getPictureUrl());
 					} else {
@@ -265,10 +326,12 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 					setUser(user, null);
 					recordingId = soapLogin.getRecordingId();
 					soap = soapLogin;
+					log.info("Hash was authorized");
 					return true;
 				}
 			}
 		}
+		log.warn("Hash was NOT authorized");
 		return false;
 	}
 
@@ -280,7 +343,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 			if (u.getGroupUsers() != null && !AuthLevelUtil.hasAdminLevel(r)) {
 				for (GroupUser gu : u.getGroupUsers()) {
 					if (gu.isModerator()) {
-						r.add(Right.GroupAdmin);
+						r.add(Right.GROUP_ADMIN);
 						break;
 					}
 				}
@@ -299,16 +362,16 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	public boolean signIn(String login, String password, Type type, Long domainId) throws OmException {
 		User u;
 		switch (type) {
-			case ldap:
+			case LDAP:
 				u = ldapManager.login(login, password, domainId);
 				break;
-			case user:
+			case USER:
 				/* we will allow login against internal DB in case user 'guess' LDAP password */
 				u = userDao.login(login, password);
 				break;
-			case oauth:
+			case OAUTH:
 				// we did all the checks at this stage, just set the user
-				u = userDao.getByLogin(login, Type.oauth, domainId);
+				u = userDao.getByLogin(login, Type.OAUTH, domainId);
 				break;
 			default:
 				throw new OmException("error.unknown");
@@ -460,9 +523,9 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		DashboardContext dashboardContext = getDashboardContext();
 		dashboard = (UserDashboard)dashboardContext.getDashboardPersister().load();
 		boolean existMyRoomWidget = false, existRssWidget = false, existAdminWidget = false;
-		boolean showMyRoomConfValue = cfgDao.getBool(CONFIG_MYROOMS_ENABLED, true) && cfgDao.getBool(CONFIG_DASHBOARD_SHOW_MYROOMS, false);
+		boolean showMyRoomConfValue = isMyRoomsEnabled() && cfgDao.getBool(CONFIG_DASHBOARD_SHOW_MYROOMS, false);
 		boolean showRssConfValue = cfgDao.getBool(CONFIG_DASHBOARD_SHOW_RSS, false);
-		boolean showAdminWidget = getRights().contains(User.Right.Admin);
+		boolean showAdminWidget = getRights().contains(User.Right.ADMIN);
 		boolean save = false;
 
 		WidgetFactory widgetFactory = dashboardContext.getWidgetFactory();
@@ -534,10 +597,10 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	}
 
 	private static void checkIsInvalid() {
-		if (isInvaldSession(get().getId())) {
+		WebSession session = get();
+		if (isInvaldSession(session.getId())) {
 			setKickedByAdmin(true);
-			removeInvalidSession(get().getId());
-			org.apache.wicket.Session session = get();
+			removeInvalidSession(session.getId());
 			session.invalidateNow();
 			Application.get().restartResponseAtSignInPage();
 		}

@@ -20,9 +20,9 @@ package org.apache.openmeetings.web.room.poll;
 
 import static org.apache.openmeetings.core.util.WebSocketHelper.sendRoom;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelDangerConfirm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.openmeetings.db.dao.room.PollDao;
@@ -31,6 +31,7 @@ import org.apache.openmeetings.db.entity.room.RoomPoll;
 import org.apache.openmeetings.db.entity.room.RoomPollAnswer;
 import org.apache.openmeetings.db.util.ws.RoomMessage;
 import org.apache.openmeetings.web.common.MainPanel;
+import org.apache.openmeetings.web.common.OmModalCloseButton;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -43,6 +44,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.jqplot.behavior.JqPlotBehavior;
@@ -58,29 +60,26 @@ import org.wicketstuff.jqplot.lib.elements.Highlighter;
 import org.wicketstuff.jqplot.lib.elements.Location;
 import org.wicketstuff.jqplot.lib.elements.RendererOptions;
 
-import com.googlecode.wicket.jquery.ui.widget.dialog.AbstractDialog;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButtons;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogIcon;
-import com.googlecode.wicket.jquery.ui.widget.dialog.MessageDialog;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 
 /**
  * @author solomax
  *
  */
-public class PollResultsDialog extends AbstractDialog<RoomPoll> {
+public class PollResultsDialog extends Modal<RoomPoll> {
 	private static final long serialVersionUID = 1L;
+	private static final String[] NUM_TICKS = new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
 	private final WebMarkupContainer chartDiv = new WebMarkupContainer("chart");
 	private final Long roomId;
-	private final PollSelectForm selForm;
-	private final PollResultsForm dispForm;
-	private DialogButton cancel;
-	private DialogButton close;
-	private DialogButton delete;
-	private DialogButton clone;
+	private PollSelectForm selForm;
+	private PollResultsForm dispForm;
+	private BootstrapAjaxLink<String> close;
+	private BootstrapAjaxLink<String> delete;
+	private BootstrapAjaxLink<String> clone;
 	private boolean moderator = false;
-	private MessageDialog closeConfirm;
-	private MessageDialog deleteConfirm;
 	private boolean opened = false;
 	private final CreatePollDialog createPoll;
 	@SpringBean
@@ -89,61 +88,74 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 	private UserDao userDao;
 
 	public PollResultsDialog(String id, CreatePollDialog createPoll, Long _roomId) {
-		super(id, "");
+		super(id);
 		this.roomId = _roomId;
 		this.createPoll = createPoll;
-		add(selForm = new PollSelectForm("selForm"));
-		add(dispForm = new PollResultsForm("dispForm"));
 	}
 
 	@Override
 	protected void onInitialize() {
-		getTitle().setObject(getString("37"));
-		cancel = new DialogButton("cancel", getString("lbl.cancel"));
-		close = new DialogButton("close", getString("1418"));
-		delete = new DialogButton("delete", getString("1420"));
-		clone = new DialogButton("clone", getString("poll.clone"));
-		add(closeConfirm = new MessageDialog("closeConfirm", getString("1418"), getString("1419"), DialogButtons.YES_NO, DialogIcon.WARN) {
+		header(new ResourceModel("37"));
+		setCloseOnEscapeKey(false);
+		setBackdrop(Backdrop.STATIC);
+		setUseCloseHandler(true);
+
+		add(selForm = new PollSelectForm("selForm"));
+		add(dispForm = new PollResultsForm("dispForm"));
+		addButton(close = new BootstrapAjaxLink<>("button", null, Buttons.Type.Outline_Danger, new ResourceModel("1418")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void onClose(IPartialPageRequestHandler handler, DialogButton button) {
-				if(button != null && button.match(YES)) {
-					Long id = dispForm.getModelObject().getId();
-					pollDao.close(roomId);
-					selForm.updateModel(handler);
+			public void onClick(AjaxRequestTarget target) {
+				Long id = dispForm.getModelObject().getId();
+				pollDao.close(roomId);
+				selForm.updateModel(target);
 
-					RoomPoll p = pollDao.get(id);
-					selForm.select.setModelObject(p);
-					dispForm.updateModel(p, true, handler);
-					sendRoom(new RoomMessage(roomId, findParent(MainPanel.class).getClient(), RoomMessage.Type.pollUpdated));
-				}
+				RoomPoll p = pollDao.get(id);
+				selForm.select.setModelObject(p);
+				dispForm.updateModel(p, true, target);
+				sendRoom(new RoomMessage(roomId, findParent(MainPanel.class).getClient(), RoomMessage.Type.POLL_UPDATED));
+				close(target);
 			}
 		});
-		add(deleteConfirm = new MessageDialog("deleteConfirm", getString("1420"), getString("1421"), DialogButtons.YES_NO, DialogIcon.WARN) {
+		close.setIconType(FontAwesome5IconType.times_s).add(newOkCancelDangerConfirm(this, getString("1419")));
+		close.setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		addButton(delete = new BootstrapAjaxLink<>("button", null, Buttons.Type.Outline_Danger, new ResourceModel("1420")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void onClose(IPartialPageRequestHandler handler, DialogButton button) {
-				if(button != null && button.match(YES)) {
-					pollDao.delete(dispForm.getModelObject());
-					selForm.updateModel(handler);
-					dispForm.updateModel(selForm.select.getModelObject(), true, handler);
-					sendRoom(new RoomMessage(roomId, findParent(MainPanel.class).getClient(), RoomMessage.Type.pollUpdated));
-				}
+			public void onClick(AjaxRequestTarget target) {
+				pollDao.delete(dispForm.getModelObject());
+				selForm.updateModel(target);
+				dispForm.updateModel(selForm.select.getModelObject(), true, target);
+				sendRoom(new RoomMessage(roomId, findParent(MainPanel.class).getClient(), RoomMessage.Type.POLL_UPDATED));
+				close(target);
 			}
 		});
+		delete.setIconType(FontAwesome5IconType.times_s).add(newOkCancelDangerConfirm(this, getString("1421")));
+		delete.setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		addButton(clone = new BootstrapAjaxLink<>("button", null, Buttons.Type.Outline_Danger, new ResourceModel("poll.clone")) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onClick(AjaxRequestTarget target) {
+				RoomPoll rp = dispForm.getModelObject();
+				RoomPoll nrp = new RoomPoll();
+				nrp.setCreator(userDao.get(getUserId()));
+				nrp.setName(rp.getName());
+				nrp.setQuestion(rp.getQuestion());
+				nrp.setType(rp.getType());
+				nrp.setRoom(rp.getRoom());
+				createPoll.setModelObject(nrp);
+				createPoll.setModelObject(nrp);
+				target.add(createPoll.getForm());
+				createPoll.show(target);
+				close(target);
+			}
+		});
+		clone.setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		addButton(OmModalCloseButton.of());
 		super.onInitialize();
-	}
-
-	@Override
-	public int getWidth() {
-		return 500;
-	}
-
-	@Override
-	protected List<DialogButton> getButtons() {
-		return Arrays.asList(clone, delete, close, cancel);
 	}
 
 	public void updateModel(IPartialPageRequestHandler target, boolean moderator) {
@@ -153,21 +165,27 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 		dispForm.updateModel(p, false, target);
 		StringBuilder builder = new StringBuilder();
 		builder.append("$('#").append(PollResultsDialog.this.getMarkupId()).append("').on('dialogopen', function( event, ui ) {");
-		builder.append(getScript(barChart(p)));
+		builder.append(getScript(barChart(p), true));
 		builder.append("});");
 
 		target.appendJavaScript(builder.toString());
 	}
 
-	private StringBuilder getScript(Chart<?> chart) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("$('#").append(chartDiv.getMarkupId()).append("').html(''); ");
-		builder.append("$.jqplot('").append(chartDiv.getMarkupId()).append("', ");
-		builder.append(chart.getChartData().toJsonString());
-		builder.append(", ");
-		builder.append(JqPlotUtils.jqPlotToJson(chart.getChartConfiguration()));
-		builder.append(");");
-		return builder;
+	private StringBuilder getScript(Chart<?> chart, boolean onShow) {
+		StringBuilder sb = new StringBuilder()
+				.append("$('#").append(chartDiv.getMarkupId()).append("').html(''); ");
+		if (onShow) {
+			sb.append("$('#").append(getMarkupId()).append("').on('shown.bs.modal', function (e) {\n");
+		}
+		sb.append("$.jqplot('").append(chartDiv.getMarkupId()).append("', ")
+				.append(chart.getChartData().toJsonString())
+				.append(", ")
+				.append(JqPlotUtils.jqPlotToJson(chart.getChartConfiguration()))
+				.append(");");
+		if (onShow) {
+			sb.append("});");
+		}
+		return sb;
 	}
 
 	@Override
@@ -198,38 +216,17 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 	}
 
 	@Override
-	public void onClick(AjaxRequestTarget target, DialogButton button) {
-		if (close.equals(button)) {
-			closeConfirm.open(target);
-			return;
-		} else if (delete.equals(button)) {
-			deleteConfirm.open(target);
-			return;
-		} else if (moderator && clone.equals(button)) {
-			RoomPoll rp = dispForm.getModelObject();
-			RoomPoll nrp = new RoomPoll();
-			nrp.setCreator(userDao.get(getUserId()));
-			nrp.setName(rp.getName());
-			nrp.setQuestion(rp.getQuestion());
-			nrp.setType(rp.getType());
-			nrp.setRoom(rp.getRoom());
-			createPoll.setModelObject(nrp);
-			createPoll.getForm().setModelObject(nrp);
-			target.add(createPoll.getForm());
-			createPoll.open(target);
-		}
-		super.onClick(target, button);
-	}
-
-	@Override
-	protected void onOpen(IPartialPageRequestHandler handler) {
-		super.onOpen(handler);
+	public Modal<RoomPoll> show(IPartialPageRequestHandler handler) {
 		opened = true;
+		super.show(handler);
+		dispForm.redraw(handler, true);
+		return this;
 	}
 
 	@Override
-	public void onClose(IPartialPageRequestHandler handler, DialogButton button) {
+	public void onClose(IPartialPageRequestHandler handler) {
 		opened = false;
+		super.onClose(handler);
 	}
 
 	public boolean isOpened() {
@@ -237,8 +234,8 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 	}
 
 	private String[] getTicks(RoomPoll p) {
-		return p != null && RoomPoll.Type.numeric == p.getType()
-				? new String[] {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}
+		return p != null && RoomPoll.Type.NUMERIC == p.getType()
+				? NUM_TICKS
 				: new String[] {getString("35"), getString("34")};
 	}
 
@@ -251,10 +248,10 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 	}
 
 	private static Integer[] getValues(RoomPoll p) {
-		Integer[] values = initValues(p != null && RoomPoll.Type.numeric == p.getType() ? 10 : 2);
+		Integer[] values = initValues(p != null && RoomPoll.Type.NUMERIC == p.getType() ? 10 : 2);
 		if (p != null) {
 			for (RoomPollAnswer a : p.getAnswers()) {
-				if (RoomPoll.Type.numeric == p.getType()) {
+				if (RoomPoll.Type.NUMERIC == p.getType()) {
 					values[a.getPointList() - 1] ++;
 				} else {
 					values[Boolean.FALSE.equals(a.getAnswer()) ? 0 : 1] ++;
@@ -267,7 +264,7 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 	private BarChart<Integer> barChart(RoomPoll p) {
 		String[] ticks = getTicks(p);
 		BarChart<Integer> barChart = new BarChart<>(null);
-		barChart.addValue(Arrays.asList(getValues(p)));
+		barChart.addValue(List.of(getValues(p)));
 
 		barChart.getSeriesDefaults()
 				.setRendererOptions(new RendererOptions().setHighlightMouseDown(true).setShowDataLabels(true)
@@ -289,10 +286,15 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 
 	private class PollSelectForm extends Form<RoomPoll> {
 		private static final long serialVersionUID = 1L;
-		private final DropDownChoice<RoomPoll> select;
+		private DropDownChoice<RoomPoll> select;
 
 		PollSelectForm(String id) {
 			super(id);
+		}
+
+		@Override
+		protected void onInitialize() {
+			super.onInitialize();
 			add((select = new DropDownChoice<>("polls", Model.of((RoomPoll)null), new ArrayList<RoomPoll>(), new ChoiceRenderer<RoomPoll>() {
 				private static final long serialVersionUID = 1L;
 
@@ -343,21 +345,21 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 		PollResultsForm(String id) {
 			super(id, Model.of((RoomPoll)null));
 			setOutputMarkupId(true);
-			add(chartDiv.setOutputMarkupId(true));
 		}
 
 		@Override
 		protected void onInitialize() {
+			add(chartDiv.setOutputMarkupId(true));
 			chartSimple = getString("1414");
 			chartPie = getString("1415");
 			add(name, question, count);
-			chartType = new DropDownChoice<>("chartType", Model.of(chartSimple), Arrays.asList(chartSimple, chartPie));
+			chartType = new DropDownChoice<>("chartType", Model.of(chartSimple), List.of(chartSimple, chartPie));
 			add(chartType.add(new AjaxFormComponentUpdatingBehavior("change") {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				protected void onUpdate(AjaxRequestTarget target) {
-					redraw(target);
+					redraw(target, false);
 				}
 			}));
 			super.onInitialize();
@@ -369,18 +371,19 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 			question.setDefaultModelObject(poll == null ? "" : poll.getQuestion());
 			count.setDefaultModelObject(poll == null ? 0 : poll.getAnswers().size());
 			handler.add(this);
-			close.setVisible(moderator && (poll != null && !poll.isArchived()), handler);
-			clone.setVisible(moderator && (poll != null && poll.isArchived()), handler);
-			delete.setVisible(moderator, handler);
+			close.setVisible(moderator && (poll != null && !poll.isArchived()));
+			clone.setVisible(moderator && (poll != null && poll.isArchived()));
+			delete.setVisible(moderator);
+			handler.add(close, clone, delete);
 			if (redraw) {
-				redraw(handler);
+				redraw(handler, false);
 			}
 		}
 
-		private void redraw(IPartialPageRequestHandler handler) {
+		private void redraw(IPartialPageRequestHandler handler, boolean onShow) {
 			RoomPoll poll = getModelObject();
 			Chart<?> chart = chartSimple.equals(chartType.getModelObject()) ? barChart(poll) : pieChart(poll);
-			handler.appendJavaScript(getScript(chart));
+			handler.appendJavaScript(getScript(chart, onShow));
 		}
 
 		private PieChart<Integer> pieChart(RoomPoll p) {
@@ -401,7 +404,8 @@ public class PollResultsDialog extends AbstractDialog<RoomPoll> {
 			h.setShowTooltip(true);
 			h.setUseAxesFormatters(false);
 
-			pieChart.getChartConfiguration().setLegend(null).setHighlighter(h);
+			pieChart.getChartConfiguration()
+				.setLegend(null).setHighlighter(h);
 			return pieChart;
 		}
 	}

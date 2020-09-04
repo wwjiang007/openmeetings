@@ -211,12 +211,12 @@ public class InvitationDTO implements Serializable {
 		try {
 			// valid period of Invitation
 			switch (valid) {
-				case Period:
+				case PERIOD:
 					i.setValidFrom(new Date(SDF.parse(validFrom).getTime() - (5 * 60 * 1000)));
 					i.setValidTo(SDF.parse(validTo));
 					break;
-				case Endless:
-				case OneTime:
+				case ENDLESS:
+				case ONE_TIME:
 				default:
 					break;
 			}
@@ -229,7 +229,7 @@ public class InvitationDTO implements Serializable {
 
 		i.setInvitedBy(userDao.get(userId));
 		i.setInvitee(userDao.getContact(email, firstname, lastname, userId));
-		if (Type.contact == i.getInvitee().getType()) {
+		if (Type.CONTACT == i.getInvitee().getType()) {
 			i.getInvitee().setLanguageId(languageId);
 		}
 		i.setRoom(roomDao.get(roomId));
@@ -255,7 +255,7 @@ public class InvitationDTO implements Serializable {
 		i.subject = o.optString("subject");
 		i.roomId = o.getLong("roomId");
 		i.message = o.optString("message");
-		i.valid = Valid.valueOf(o.optString("valid", Valid.Period.name()));
+		i.valid = Valid.valueOf(o.optString("valid", Valid.PERIOD.name()));
 		i.validFrom = o.optString("validFrom");
 		i.validTo = o.optString("validTo");
 		return i;

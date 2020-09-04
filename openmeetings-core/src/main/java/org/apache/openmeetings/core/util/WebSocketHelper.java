@@ -55,25 +55,25 @@ import com.github.openjson.JSONObject;
 public class WebSocketHelper {
 	private static final Logger log = LoggerFactory.getLogger(WebSocketHelper.class);
 
-	public static void sendClient(final IWsClient inC, byte[] b) {
-		if (inC != null) {
-			sendClient(inC, c -> {
+	public static void sendClient(final IWsClient omClient, byte[] b) {
+		if (omClient != null) {
+			sendClient(omClient, c -> {
 				try {
 					c.sendMessage(b, 0, b.length);
-				} catch (IOException e) {
+				} catch (Throwable e) {
 					log.error("Error while sending binary message to client", e);
 				}
 			});
 		}
 	}
 
-	public static void sendClient(final IWsClient inC, JSONObject msg) {
-		log.trace("Sending WebSocket message to Client: {} -> {}", inC, msg);
-		if (inC != null) {
-			sendClient(inC, c -> {
+	public static void sendClient(final IWsClient omClient, JSONObject msg) {
+		log.trace("Sending WebSocket message to Client: {} -> {}", omClient, msg);
+		if (omClient != null) {
+			sendClient(omClient, c -> {
 				try {
 					c.sendMessage(msg.toString());
-				} catch (IOException e) {
+				} catch (Throwable e) {
 					log.error("Error while sending message to client", e);
 				}
 			});
@@ -85,17 +85,19 @@ public class WebSocketHelper {
 	}
 
 	private static void sendClient(IWsClient client, Consumer<IWebSocketConnection> wsc) {
-		Application app = (Application)getApp();
-		WebSocketSettings settings = WebSocketSettings.Holder.get(app);
-		IWebSocketConnectionRegistry reg = settings.getConnectionRegistry();
-		Executor executor = settings.getWebSocketPushMessageExecutor();
-		final IWebSocketConnection wc = reg.getConnection(app, client.getSessionId(), new PageIdKey(client.getPageId()));
-		if (wc != null && wc.isOpen()) {
-			executor.run(() -> wsc.accept(wc));
-		}
+		new Thread(() -> {
+			Application app = (Application)getApp();
+			WebSocketSettings settings = WebSocketSettings.Holder.get(app);
+			IWebSocketConnectionRegistry reg = settings.getConnectionRegistry();
+			Executor executor = settings.getWebSocketPushMessageExecutor();
+			final IWebSocketConnection wc = reg.getConnection(app, client.getSessionId(), new PageIdKey(client.getPageId()));
+			if (wc != null && wc.isOpen()) {
+				executor.run(() -> wsc.accept(wc));
+			}
+		}).start();
 	}
 
-	public static void send(IClusterWsMessage msg) {
+	public static boolean send(IClusterWsMessage msg) {
 		if (msg instanceof WsMessageRoomMsg) {
 			sendRoom(((WsMessageRoomMsg)msg).getMsg(), false);
 		} else if (msg instanceof WsMessageRoomOthers) {
@@ -110,6 +112,7 @@ public class WebSocketHelper {
 		} else if (msg instanceof WsMessageAll) {
 			sendAll(((WsMessageAll)msg).getMsg(), false);
 		}
+		return true;
 	}
 
 	public static void sendRoom(final RoomMessage m) {
@@ -120,12 +123,12 @@ public class WebSocketHelper {
 		if (publish) {
 			publish(new WsMessageRoomMsg(m));
 		}
-		log.debug("Sending WebSocket message to room: {} {}", m.getType(), m instanceof TextRoomMessage ? ((TextRoomMessage)m).getText() : "");
+		log.trace("Sending WebSocket message to room: {} {}", m.getType(), m instanceof TextRoomMessage ? ((TextRoomMessage)m).getText() : "");
 		sendRoom(m.getRoomId(), (t, c) -> t.sendMessage(m), null);
 	}
 
 	public static void sendServer(final RoomMessage m) {
-		log.debug("Sending WebSocket message to All: {}", m);
+		log.trace("Sending WebSocket message to All: {}", m);
 		sendAll(c -> {
 			try {
 				c.sendMessage(m);
@@ -177,7 +180,7 @@ public class WebSocketHelper {
 		if (publish) {
 			publish(new WsMessageAll(m));
 		}
-		log.debug("Sending text WebSocket message to All: {}", m);
+		log.trace("Sending text WebSocket message to All: {}", m);
 		sendAll(c -> doSend(c, m, "ALL"));
 	}
 
@@ -190,8 +193,10 @@ public class WebSocketHelper {
 			WebSocketSettings settings = WebSocketSettings.Holder.get(app);
 			IWebSocketConnectionRegistry reg = settings.getConnectionRegistry();
 			Executor executor = settings.getWebSocketPushMessageExecutor();
-			for (IWebSocketConnection c : reg.getConnections(app)) {
-				executor.run(() -> sender.accept(c));
+			for (IWebSocketConnection wc : reg.getConnections(app)) {
+				if (wc != null && wc.isOpen()) {
+					executor.run(() -> sender.accept(wc));
+				}
 			}
 		}).start();
 	}
@@ -202,7 +207,7 @@ public class WebSocketHelper {
 	}
 
 	protected static void sendRoom(final Long roomId, final JSONObject m, Predicate<Client> check, BiFunction<JSONObject, Client, JSONObject> func) {
-		log.debug("Sending json WebSocket message to room: {}", m);
+		log.trace("Sending json WebSocket message to room: {}", m);
 		sendRoom(roomId, (t, c) -> doSend(t, c, m, func, "room"), check);
 	}
 

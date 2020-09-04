@@ -40,6 +40,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.openmeetings.db.dao.IDataProviderDao;
 import org.apache.openmeetings.db.entity.room.Invitation;
+import org.apache.openmeetings.db.entity.room.Invitation.Valid;
 import org.apache.openmeetings.util.CalendarHelper;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -138,22 +139,25 @@ public class InvitationDao implements IDataProviderDao<Invitation> {
 		update(entity, userId);
 	}
 
-	public Invitation getByHash(String hash, boolean hidePass, boolean markUsed) {
+	public void markUsed(Invitation i) {
+		if (Valid.ONE_TIME == i.getValid()) {
+			i.setUsed(true);
+			update(i);
+			em.flush(); // flash is required to eliminate 'detach' effect
+		}
+	}
+
+	public Invitation getByHash(String hash, boolean hidePass) {
 		List<Invitation> list = em.createNamedQuery("getInvitationByHashCode", Invitation.class)
 				.setParameter("hashCode", hash).getResultList();
 		Invitation i = list != null && list.size() == 1 ? list.get(0) : null;
 		if (i != null) {
 			switch (i.getValid()) {
-				case OneTime:
+				case ONE_TIME:
 					// one-time invitation
 					i.setAllowEntry(!i.isUsed());
-					if (markUsed) {
-						i.setUsed(true);
-						update(i);
-						em.flush(); // flash is required to eliminate 'detach' effect
-					}
 					break;
-				case Period:
+				case PERIOD:
 					String tzId = i.getInvitee().getTimeZoneId();
 					if (Strings.isEmpty(tzId) && i.getAppointment() != null) {
 						log.warn("User with NO timezone found: {}", i.getInvitee().getId());
@@ -168,7 +172,7 @@ public class InvitationDao implements IDataProviderDao<Invitation> {
 					LocalDateTime to = CalendarHelper.getDateTime(i.getValidTo(), tzId);
 					i.setAllowEntry(now.isAfter(from) && now.isBefore(to));
 					break;
-				case Endless:
+				case ENDLESS:
 				default:
 					i.setAllowEntry(true);
 					break;

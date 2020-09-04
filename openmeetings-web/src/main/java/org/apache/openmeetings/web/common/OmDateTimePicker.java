@@ -18,38 +18,53 @@
  */
 package org.apache.openmeetings.web.common;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Locale;
 
-import org.apache.openmeetings.web.app.WebSession;
+import org.apache.wicket.extensions.markup.html.form.datetime.LocalDateTimeTextField;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.util.convert.IConverter;
+import org.apache.wicket.util.convert.converter.LocalDateTimeConverter;
 
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.form.datetime.local.DatePicker;
-import com.googlecode.wicket.kendo.ui.form.datetime.local.DateTimePicker;
-import com.googlecode.wicket.kendo.ui.form.datetime.local.TimePicker;
-
-public class OmDateTimePicker extends DateTimePicker {
+public class OmDateTimePicker extends AbstractOmDateTimePicker<LocalDateTime> {
 	private static final long serialVersionUID = 1L;
+	private final LocalDateTimeConverter converter;
 
 	public OmDateTimePicker(String id, IModel<LocalDateTime> model) {
-		super(id, model, WebSession.get().getLocale());
+		this(id, model, getDateTimeFormat());
+	}
+
+	private OmDateTimePicker(String id, IModel<LocalDateTime> model, final String pattern) {
+		super(id, model, pattern);
+		this.converter = new LocalDateTimeConverter() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public DateTimeFormatter getDateTimeFormatter(Locale locale)
+			{
+				return new DateTimeFormatterBuilder()
+						.parseCaseInsensitive()
+						.appendPattern(pattern)
+						.toFormatter(Locale.ENGLISH);
+			}
+		};
 	}
 
 	@Override
-	protected DatePicker newDatePicker(String id, IModel<LocalDate> model, Locale locale, String datePattern, Options options) {
-		DatePicker dp = super.newDatePicker(id, model, locale, datePattern, options);
-		dp.setLabel(getLabel());
-		return dp;
-	}
+	protected FormComponent<LocalDateTime> newInput(String wicketId, String dateFormat) {
+		return new LocalDateTimeTextField(wicketId, getModel(), dateFormat) {
+			private static final long serialVersionUID = 1L;
 
-	@Override
-	protected TimePicker newTimePicker(String id, IModel<LocalTime> model, Locale locale, String timePattern, Options options) {
-		TimePicker tp = super.newTimePicker(id, model, locale, timePattern, options);
-		tp.setLabel(getLabel());
-		return tp;
+			@Override
+			protected IConverter<?> createConverter(Class<?> clazz) {
+				if (LocalDateTime.class.isAssignableFrom(clazz)) {
+					return converter;
+				}
+				return null;
+			}
+		};
 	}
-	//TODO render KendoCultureHeaderItem as soon as localized AM/PM will be correctly handled
 }

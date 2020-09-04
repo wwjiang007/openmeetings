@@ -7,7 +7,7 @@ var hark = require('hark');
 var EventEmitter = require('events').EventEmitter;
 var recursive = require('merge').recursive.bind(undefined, true);
 var sdpTranslator = require('sdp-translator');
-var logger = window.Logger || console;
+var logger = typeof window === 'undefined' ? console : window.Logger || console;
 try {
     require('kurento-browser-extensions');
 } catch (error) {
@@ -25,7 +25,7 @@ var MEDIA_CONSTRAINTS = {
             framerate: 15
         }
     };
-var ua = window && window.navigator ? window.navigator.userAgent : '';
+var ua = typeof window !== 'undefined' && window.navigator ? window.navigator.userAgent : '';
 var parser = new UAParser(ua);
 var browser = parser.getBrowser();
 var usePlanB = false;
@@ -151,7 +151,6 @@ function WebRtcPeer(mode, options, callback) {
     var videoStream = options.videoStream;
     var audioStream = options.audioStream;
     var mediaConstraints = options.mediaConstraints;
-    var connectionConstraints = options.connectionConstraints;
     var pc = options.peerConnection;
     var sendSource = options.sendSource || 'webcam';
     var dataChannelConfig = options.dataChannelConfig;
@@ -302,29 +301,21 @@ function WebRtcPeer(mode, options, callback) {
     };
     this.generateOffer = function (callback) {
         callback = callback.bind(this);
-        var offerAudio = true;
-        var offerVideo = true;
-        if (mediaConstraints) {
-            offerAudio = typeof mediaConstraints.audio === 'boolean' ? mediaConstraints.audio : true;
-            offerVideo = typeof mediaConstraints.video === 'boolean' ? mediaConstraints.video : true;
+        if (mode === 'recvonly') {
+            var useAudio = mediaConstraints && typeof mediaConstraints.audio === 'boolean' ? mediaConstraints.audio : true;
+            var useVideo = mediaConstraints && typeof mediaConstraints.video === 'boolean' ? mediaConstraints.video : true;
+            if (useAudio) {
+                pc.addTransceiver('audio', { direction: 'recvonly' });
+            }
+            if (useVideo) {
+                pc.addTransceiver('video', { direction: 'recvonly' });
+            }
         }
-        var browserDependantConstraints = {
-                offerToReceiveAudio: mode !== 'sendonly' && offerAudio,
-                offerToReceiveVideo: mode !== 'sendonly' && offerVideo
-            };
-        if (mode === 'recvonly' && pc.addTransceiver && browserDependantConstraints.offerToReceiveAudio) {
-            pc.addTransceiver('audio');
-        }
-        if (mode === 'recvonly' && pc.addTransceiver && browserDependantConstraints.offerToReceiveVideo) {
-            pc.addTransceiver('video');
-        }
-        var constraints = browserDependantConstraints;
-        logger.debug('constraints: ' + JSON.stringify(constraints));
         if (typeof AdapterJS !== 'undefined' && AdapterJS.webrtcDetectedBrowser === 'IE' && AdapterJS.webrtcDetectedVersion >= 9) {
             var setLocalDescriptionOnSuccess = function () {
                 sleep(1000);
                 var localDescription = pc.localDescription;
-                logger.debug('Local description set', localDescription.sdp);
+                logger.debug('Local description set\n', localDescription.sdp);
                 if (multistream && usePlanB) {
                     localDescription = interop.toUnifiedPlan(localDescription);
                     logger.debug('offer::origPlanB->UnifiedPlan', dumpSDP(localDescription));
@@ -333,18 +324,18 @@ function WebRtcPeer(mode, options, callback) {
             };
             var createOfferOnSuccess = function (offer) {
                 logger.debug('Created SDP offer');
-                logger.debug('Local description set', pc.localDescription);
+                logger.debug('Local description set\n', pc.localDescription);
                 pc.setLocalDescription(offer, setLocalDescriptionOnSuccess, callback);
             };
-            pc.createOffer(createOfferOnSuccess, callback, constraints);
+            pc.createOffer(createOfferOnSuccess, callback);
         } else {
-            pc.createOffer(constraints).then(function (offer) {
+            pc.createOffer().then(function (offer) {
                 logger.debug('Created SDP offer');
                 offer = mangleSdpToAddSimulcast(offer);
                 return pc.setLocalDescription(offer);
             }).then(function () {
                 var localDescription = pc.localDescription;
-                logger.debug('Local description set', localDescription.sdp);
+                logger.debug('Local description set\n', localDescription.sdp);
                 if (multistream && usePlanB) {
                     localDescription = interop.toUnifiedPlan(localDescription);
                     logger.debug('offer::origPlanB->UnifiedPlan', dumpSDP(localDescription));
@@ -401,7 +392,7 @@ function WebRtcPeer(mode, options, callback) {
         if (pc.signalingState === 'closed') {
             return callback('PeerConnection is closed');
         }
-        pc.setRemoteDescription(answer, function () {
+        pc.setRemoteDescription(answer).then(function () {
             setRemoteVideo();
             callback();
         }, callback);
@@ -435,7 +426,7 @@ function WebRtcPeer(mode, options, callback) {
                 localDescription = interop.toUnifiedPlan(localDescription);
                 logger.debug('answer::origPlanB->UnifiedPlan', dumpSDP(localDescription));
             }
-            logger.debug('Local description set', localDescription.sdp);
+            logger.debug('Local description set\n', localDescription.sdp);
             callback(null, localDescription.sdp);
         }).catch(callback);
     };
@@ -524,7 +515,7 @@ function WebRtcPeer(mode, options, callback) {
             }
         }
         self.removeAllListeners();
-        if (window.cancelChooseDesktopMedia !== undefined) {
+        if (typeof window !== 'undefined' && window.cancelChooseDesktopMedia !== undefined) {
             window.cancelChooseDesktopMedia(guid);
         }
     });
@@ -587,7 +578,7 @@ WebRtcPeer.prototype.dispose = function () {
     var dc = this.dataChannel;
     try {
         if (dc) {
-            if (dc.signalingState === 'closed')
+            if (dc.readyState === 'closed')
                 return;
             dc.close();
         }
@@ -662,8 +653,16 @@ exports.WebRtcPeer = WebRtcPeer;
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+var objectCreate = Object.create || objectCreatePolyfill
+var objectKeys = Object.keys || objectKeysPolyfill
+var bind = Function.prototype.bind || functionBindPolyfill
+
 function EventEmitter() {
-  this._events = this._events || {};
+  if (!this._events || !Object.prototype.hasOwnProperty.call(this, '_events')) {
+    this._events = objectCreate(null);
+    this._eventsCount = 0;
+  }
+
   this._maxListeners = this._maxListeners || undefined;
 }
 module.exports = EventEmitter;
@@ -676,272 +675,485 @@ EventEmitter.prototype._maxListeners = undefined;
 
 // By default EventEmitters will print a warning if more than 10 listeners are
 // added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
+var defaultMaxListeners = 10;
+
+var hasDefineProperty;
+try {
+  var o = {};
+  if (Object.defineProperty) Object.defineProperty(o, 'x', { value: 0 });
+  hasDefineProperty = o.x === 0;
+} catch (err) { hasDefineProperty = false }
+if (hasDefineProperty) {
+  Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
+    enumerable: true,
+    get: function() {
+      return defaultMaxListeners;
+    },
+    set: function(arg) {
+      // check whether the input is a positive number (whose value is zero or
+      // greater and not a NaN).
+      if (typeof arg !== 'number' || arg < 0 || arg !== arg)
+        throw new TypeError('"defaultMaxListeners" must be a positive number');
+      defaultMaxListeners = arg;
+    }
+  });
+} else {
+  EventEmitter.defaultMaxListeners = defaultMaxListeners;
+}
 
 // Obviously not all Emitters should be limited to 10. This function allows
 // that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
+EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+  if (typeof n !== 'number' || n < 0 || isNaN(n))
+    throw new TypeError('"n" argument must be a positive number');
   this._maxListeners = n;
   return this;
 };
 
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
+function $getMaxListeners(that) {
+  if (that._maxListeners === undefined)
+    return EventEmitter.defaultMaxListeners;
+  return that._maxListeners;
+}
 
-  if (!this._events)
-    this._events = {};
+EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+  return $getMaxListeners(this);
+};
 
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      } else {
-        // At least give some kind of context to the user
-        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-        err.context = er;
-        throw err;
-      }
-    }
+// These standalone emit* functions are used to optimize calling of event
+// handlers for fast cases because emit() itself often has a variable number of
+// arguments and can be deoptimized because of that. These functions always have
+// the same number of arguments and thus do not get deoptimized, so the code
+// inside them can execute faster.
+function emitNone(handler, isFn, self) {
+  if (isFn)
+    handler.call(self);
+  else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      listeners[i].call(self);
   }
+}
+function emitOne(handler, isFn, self, arg1) {
+  if (isFn)
+    handler.call(self, arg1);
+  else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      listeners[i].call(self, arg1);
+  }
+}
+function emitTwo(handler, isFn, self, arg1, arg2) {
+  if (isFn)
+    handler.call(self, arg1, arg2);
+  else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      listeners[i].call(self, arg1, arg2);
+  }
+}
+function emitThree(handler, isFn, self, arg1, arg2, arg3) {
+  if (isFn)
+    handler.call(self, arg1, arg2, arg3);
+  else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      listeners[i].call(self, arg1, arg2, arg3);
+  }
+}
 
-  handler = this._events[type];
+function emitMany(handler, isFn, self, args) {
+  if (isFn)
+    handler.apply(self, args);
+  else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      listeners[i].apply(self, args);
+  }
+}
 
-  if (isUndefined(handler))
+EventEmitter.prototype.emit = function emit(type) {
+  var er, handler, len, args, i, events;
+  var doError = (type === 'error');
+
+  events = this._events;
+  if (events)
+    doError = (doError && events.error == null);
+  else if (!doError)
     return false;
 
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        args = Array.prototype.slice.call(arguments, 1);
-        handler.apply(this, args);
+  // If there is no 'error' event listener then throw.
+  if (doError) {
+    if (arguments.length > 1)
+      er = arguments[1];
+    if (er instanceof Error) {
+      throw er; // Unhandled 'error' event
+    } else {
+      // At least give some kind of context to the user
+      var err = new Error('Unhandled "error" event. (' + er + ')');
+      err.context = er;
+      throw err;
     }
-  } else if (isObject(handler)) {
-    args = Array.prototype.slice.call(arguments, 1);
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
+    return false;
+  }
+
+  handler = events[type];
+
+  if (!handler)
+    return false;
+
+  var isFn = typeof handler === 'function';
+  len = arguments.length;
+  switch (len) {
+      // fast cases
+    case 1:
+      emitNone(handler, isFn, this);
+      break;
+    case 2:
+      emitOne(handler, isFn, this, arguments[1]);
+      break;
+    case 3:
+      emitTwo(handler, isFn, this, arguments[1], arguments[2]);
+      break;
+    case 4:
+      emitThree(handler, isFn, this, arguments[1], arguments[2], arguments[3]);
+      break;
+      // slower
+    default:
+      args = new Array(len - 1);
+      for (i = 1; i < len; i++)
+        args[i - 1] = arguments[i];
+      emitMany(handler, isFn, this, args);
   }
 
   return true;
 };
 
-EventEmitter.prototype.addListener = function(type, listener) {
+function _addListener(target, type, listener, prepend) {
   var m;
+  var events;
+  var existing;
 
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
+  if (typeof listener !== 'function')
+    throw new TypeError('"listener" argument must be a function');
 
-  if (!this._events)
-    this._events = {};
+  events = target._events;
+  if (!events) {
+    events = target._events = objectCreate(null);
+    target._eventsCount = 0;
+  } else {
+    // To avoid recursion in the case that type === "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    if (events.newListener) {
+      target.emit('newListener', type,
+          listener.listener ? listener.listener : listener);
 
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
+      // Re-assign `events` because a newListener handler could have caused the
+      // this._events to be assigned to a new object
+      events = target._events;
+    }
+    existing = events[type];
+  }
 
-  if (!this._events[type])
+  if (!existing) {
     // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
+    existing = events[type] = listener;
+    ++target._eventsCount;
+  } else {
+    if (typeof existing === 'function') {
+      // Adding the second element, need to change to array.
+      existing = events[type] =
+          prepend ? [listener, existing] : [existing, listener];
     } else {
-      m = EventEmitter.defaultMaxListeners;
+      // If we've already got an array, just append.
+      if (prepend) {
+        existing.unshift(listener);
+      } else {
+        existing.push(listener);
+      }
     }
 
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
+    // Check for listener leak
+    if (!existing.warned) {
+      m = $getMaxListeners(target);
+      if (m && m > 0 && existing.length > m) {
+        existing.warned = true;
+        var w = new Error('Possible EventEmitter memory leak detected. ' +
+            existing.length + ' "' + String(type) + '" listeners ' +
+            'added. Use emitter.setMaxListeners() to ' +
+            'increase limit.');
+        w.name = 'MaxListenersExceededWarning';
+        w.emitter = target;
+        w.type = type;
+        w.count = existing.length;
+        if (typeof console === 'object' && console.warn) {
+          console.warn('%s: %s', w.name, w.message);
+        }
       }
     }
   }
 
-  return this;
+  return target;
+}
+
+EventEmitter.prototype.addListener = function addListener(type, listener) {
+  return _addListener(this, type, listener, false);
 };
 
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
+EventEmitter.prototype.prependListener =
+    function prependListener(type, listener) {
+      return _addListener(this, type, listener, true);
+    };
 
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
+function onceWrapper() {
+  if (!this.fired) {
+    this.target.removeListener(this.type, this.wrapFn);
+    this.fired = true;
+    switch (arguments.length) {
+      case 0:
+        return this.listener.call(this.target);
+      case 1:
+        return this.listener.call(this.target, arguments[0]);
+      case 2:
+        return this.listener.call(this.target, arguments[0], arguments[1]);
+      case 3:
+        return this.listener.call(this.target, arguments[0], arguments[1],
+            arguments[2]);
+      default:
+        var args = new Array(arguments.length);
+        for (var i = 0; i < args.length; ++i)
+          args[i] = arguments[i];
+        this.listener.apply(this.target, args);
     }
   }
+}
 
-  g.listener = listener;
-  this.on(type, g);
+function _onceWrap(target, type, listener) {
+  var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
+  var wrapped = bind.call(onceWrapper, state);
+  wrapped.listener = listener;
+  state.wrapFn = wrapped;
+  return wrapped;
+}
 
+EventEmitter.prototype.once = function once(type, listener) {
+  if (typeof listener !== 'function')
+    throw new TypeError('"listener" argument must be a function');
+  this.on(type, _onceWrap(this, type, listener));
   return this;
 };
 
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
+EventEmitter.prototype.prependOnceListener =
+    function prependOnceListener(type, listener) {
+      if (typeof listener !== 'function')
+        throw new TypeError('"listener" argument must be a function');
+      this.prependListener(type, _onceWrap(this, type, listener));
       return this;
+    };
 
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
+// Emits a 'removeListener' event if and only if the listener was removed.
+EventEmitter.prototype.removeListener =
+    function removeListener(type, listener) {
+      var list, events, position, i, originalListener;
 
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
+      if (typeof listener !== 'function')
+        throw new TypeError('"listener" argument must be a function');
 
-  return this;
+      events = this._events;
+      if (!events)
+        return this;
+
+      list = events[type];
+      if (!list)
+        return this;
+
+      if (list === listener || list.listener === listener) {
+        if (--this._eventsCount === 0)
+          this._events = objectCreate(null);
+        else {
+          delete events[type];
+          if (events.removeListener)
+            this.emit('removeListener', type, list.listener || listener);
+        }
+      } else if (typeof list !== 'function') {
+        position = -1;
+
+        for (i = list.length - 1; i >= 0; i--) {
+          if (list[i] === listener || list[i].listener === listener) {
+            originalListener = list[i].listener;
+            position = i;
+            break;
+          }
+        }
+
+        if (position < 0)
+          return this;
+
+        if (position === 0)
+          list.shift();
+        else
+          spliceOne(list, position);
+
+        if (list.length === 1)
+          events[type] = list[0];
+
+        if (events.removeListener)
+          this.emit('removeListener', type, originalListener || listener);
+      }
+
+      return this;
+    };
+
+EventEmitter.prototype.removeAllListeners =
+    function removeAllListeners(type) {
+      var listeners, events, i;
+
+      events = this._events;
+      if (!events)
+        return this;
+
+      // not listening for removeListener, no need to emit
+      if (!events.removeListener) {
+        if (arguments.length === 0) {
+          this._events = objectCreate(null);
+          this._eventsCount = 0;
+        } else if (events[type]) {
+          if (--this._eventsCount === 0)
+            this._events = objectCreate(null);
+          else
+            delete events[type];
+        }
+        return this;
+      }
+
+      // emit removeListener for all listeners on all events
+      if (arguments.length === 0) {
+        var keys = objectKeys(events);
+        var key;
+        for (i = 0; i < keys.length; ++i) {
+          key = keys[i];
+          if (key === 'removeListener') continue;
+          this.removeAllListeners(key);
+        }
+        this.removeAllListeners('removeListener');
+        this._events = objectCreate(null);
+        this._eventsCount = 0;
+        return this;
+      }
+
+      listeners = events[type];
+
+      if (typeof listeners === 'function') {
+        this.removeListener(type, listeners);
+      } else if (listeners) {
+        // LIFO order
+        for (i = listeners.length - 1; i >= 0; i--) {
+          this.removeListener(type, listeners[i]);
+        }
+      }
+
+      return this;
+    };
+
+function _listeners(target, type, unwrap) {
+  var events = target._events;
+
+  if (!events)
+    return [];
+
+  var evlistener = events[type];
+  if (!evlistener)
+    return [];
+
+  if (typeof evlistener === 'function')
+    return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+
+  return unwrap ? unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
+}
+
+EventEmitter.prototype.listeners = function listeners(type) {
+  return _listeners(this, type, true);
 };
 
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else if (listeners) {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.prototype.listenerCount = function(type) {
-  if (this._events) {
-    var evlistener = this._events[type];
-
-    if (isFunction(evlistener))
-      return 1;
-    else if (evlistener)
-      return evlistener.length;
-  }
-  return 0;
+EventEmitter.prototype.rawListeners = function rawListeners(type) {
+  return _listeners(this, type, false);
 };
 
 EventEmitter.listenerCount = function(emitter, type) {
-  return emitter.listenerCount(type);
+  if (typeof emitter.listenerCount === 'function') {
+    return emitter.listenerCount(type);
+  } else {
+    return listenerCount.call(emitter, type);
+  }
 };
 
-function isFunction(arg) {
-  return typeof arg === 'function';
+EventEmitter.prototype.listenerCount = listenerCount;
+function listenerCount(type) {
+  var events = this._events;
+
+  if (events) {
+    var evlistener = events[type];
+
+    if (typeof evlistener === 'function') {
+      return 1;
+    } else if (evlistener) {
+      return evlistener.length;
+    }
+  }
+
+  return 0;
 }
 
-function isNumber(arg) {
-  return typeof arg === 'number';
+EventEmitter.prototype.eventNames = function eventNames() {
+  return this._eventsCount > 0 ? Reflect.ownKeys(this._events) : [];
+};
+
+// About 1.5x faster than the two-arg version of Array#splice().
+function spliceOne(list, index) {
+  for (var i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1)
+    list[i] = list[k];
+  list.pop();
 }
 
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
+function arrayClone(arr, n) {
+  var copy = new Array(n);
+  for (var i = 0; i < n; ++i)
+    copy[i] = arr[i];
+  return copy;
 }
 
-function isUndefined(arg) {
-  return arg === void 0;
+function unwrapListeners(arr) {
+  var ret = new Array(arr.length);
+  for (var i = 0; i < ret.length; ++i) {
+    ret[i] = arr[i].listener || arr[i];
+  }
+  return ret;
+}
+
+function objectCreatePolyfill(proto) {
+  var F = function() {};
+  F.prototype = proto;
+  return new F;
+}
+function objectKeysPolyfill(obj) {
+  var keys = [];
+  for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) {
+    keys.push(k);
+  }
+  return k;
+}
+function functionBindPolyfill(context) {
+  var fn = this;
+  return function () {
+    return fn.apply(context, arguments);
+  };
 }
 
 },{}],5:[function(require,module,exports){
@@ -3029,7 +3241,7 @@ exports.parse = function(sdp) {
 
 },{"sdp-transform":14}],21:[function(require,module,exports){
 /*!
- * UAParser.js v0.7.20
+ * UAParser.js v0.7.21
  * Lightweight JavaScript-based User-Agent string parser
  * https://github.com/faisalman/ua-parser-js
  *
@@ -3046,7 +3258,7 @@ exports.parse = function(sdp) {
     /////////////
 
 
-    var LIBVERSION  = '0.7.20',
+    var LIBVERSION  = '0.7.21',
         EMPTY       = '',
         UNKNOWN     = '?',
         FUNC_TYPE   = 'function',
@@ -3267,10 +3479,10 @@ exports.parse = function(sdp) {
             /(kindle)\/([\w\.]+)/i,                                             // Kindle
             /(lunascape|maxthon|netfront|jasmine|blazer)[\/\s]?([\w\.]*)/i,
                                                                                 // Lunascape/Maxthon/Netfront/Jasmine/Blazer
-
             // Trident based
-            /(avant\s|iemobile|slim|baidu)(?:browser)?[\/\s]?([\w\.]*)/i,
-                                                                                // Avant/IEMobile/SlimBrowser/Baidu
+            /(avant\s|iemobile|slim)(?:browser)?[\/\s]?([\w\.]*)/i,
+                                                                                // Avant/IEMobile/SlimBrowser
+            /(bidubrowser|baidubrowser)[\/\s]?([\w\.]+)/i,                      // Baidu Browser
             /(?:ms|\()(ie)\s([\w\.]+)/i,                                        // Internet Explorer
 
             // Webkit/KHTML based
@@ -3290,6 +3502,12 @@ exports.parse = function(sdp) {
 
             /(yabrowser)\/([\w\.]+)/i                                           // Yandex
             ], [[NAME, 'Yandex'], VERSION], [
+
+            /(Avast)\/([\w\.]+)/i                                               // Avast Secure Browser
+            ], [[NAME, 'Avast Secure Browser'], VERSION], [
+
+            /(AVG)\/([\w\.]+)/i                                                 // AVG Secure Browser
+            ], [[NAME, 'AVG Secure Browser'], VERSION], [
 
             /(puffin)\/([\w\.]+)/i                                              // Puffin
             ], [[NAME, 'Puffin'], VERSION], [
@@ -3312,7 +3530,7 @@ exports.parse = function(sdp) {
             /(micromessenger)\/([\w\.]+)/i                                      // WeChat
             ], [[NAME, 'WeChat'], VERSION], [
 
-            /(brave)\/([\w\.]+)/i                                              // Brave browser
+            /(brave)\/([\w\.]+)/i                                               // Brave browser
             ], [[NAME, 'Brave'], VERSION], [
 
             /(qqbrowserlite)\/([\w\.]+)/i                                       // QQBrowserLite
@@ -3324,7 +3542,7 @@ exports.parse = function(sdp) {
             /m?(qqbrowser)[\/\s]?([\w\.]+)/i                                    // QQBrowser
             ], [NAME, VERSION], [
 
-            /(BIDUBrowser)[\/\s]?([\w\.]+)/i                                    // Baidu Browser
+            /(baiduboxapp)[\/\s]?([\w\.]+)/i                                    // Baidu App
             ], [NAME, VERSION], [
 
             /(2345Explorer)[\/\s]?([\w\.]+)/i                                   // 2345 Browser
@@ -3333,7 +3551,7 @@ exports.parse = function(sdp) {
             /(MetaSr)[\/\s]?([\w\.]+)/i                                         // SouGouBrowser
             ], [NAME], [
 
-            /(LBBROWSER)/i                                      // LieBao Browser
+            /(LBBROWSER)/i                                                      // LieBao Browser
             ], [NAME], [
 
             /xiaomi\/miuibrowser\/([\w\.]+)/i                                   // MIUI Browser
@@ -3367,6 +3585,9 @@ exports.parse = function(sdp) {
 
             /(dolfin)\/([\w\.]+)/i                                              // Dolphin
             ], [[NAME, 'Dolphin'], VERSION], [
+
+            /(qihu|qhbrowser|qihoobrowser|360browser)/i                         // 360
+            ], [[NAME, '360 Browser']], [
 
             /((?:android.+)crmo|crios)\/([\w\.]+)/i                             // Chrome for Android/iOS
             ], [[NAME, 'Chrome'], VERSION], [
@@ -3448,7 +3669,7 @@ exports.parse = function(sdp) {
             ], [MODEL, [VENDOR, 'Apple'], [TYPE, TABLET]], [
 
             /(apple\s{0,1}tv)/i                                                 // Apple TV
-            ], [[MODEL, 'Apple TV'], [VENDOR, 'Apple']], [
+            ], [[MODEL, 'Apple TV'], [VENDOR, 'Apple'], [TYPE, SMARTTV]], [
 
             /(archos)\s(gamepad2?)/i,                                           // Archos
             /(hp).+(touchpad)/i,                                                // HP TouchPad
@@ -3511,8 +3732,11 @@ exports.parse = function(sdp) {
             ], [MODEL, [VENDOR, 'HTC'], [TYPE, TABLET]], [
 
             /d\/huawei([\w\s-]+)[;\)]/i,
-            /(nexus\s6p)/i                                                      // Huawei
+            /(nexus\s6p|vog-l29|ane-lx1|eml-l29)/i                              // Huawei
             ], [MODEL, [VENDOR, 'Huawei'], [TYPE, MOBILE]], [
+
+            /android.+(bah2?-a?[lw]\d{2})/i                                     // Huawei MediaPad
+            ], [MODEL, [VENDOR, 'Huawei'], [TYPE, TABLET]], [
 
             /(microsoft);\s(lumia[\s\w]+)/i                                     // Microsoft Lumia
             ], [VENDOR, MODEL, [TYPE, MOBILE]], [
@@ -3588,7 +3812,7 @@ exports.parse = function(sdp) {
             ], [VENDOR, MODEL, [TYPE, MOBILE]], [
 
             /crkey/i                                                            // Google Chromecast
-            ], [[MODEL, 'Chromecast'], [VENDOR, 'Google']], [
+            ], [[MODEL, 'Chromecast'], [VENDOR, 'Google'], [TYPE, SMARTTV]], [
 
             /android.+;\s(glass)\s\d/i                                          // Google Glass
             ], [MODEL, [VENDOR, 'Google'], [TYPE, WEARABLE]], [
@@ -3613,7 +3837,7 @@ exports.parse = function(sdp) {
             ], [[VENDOR, 'Meizu'], MODEL, [TYPE, MOBILE]], [
 
             /android.+a000(1)\s+build/i,                                        // OnePlus
-            /android.+oneplus\s(a\d{4})\s+build/i
+            /android.+oneplus\s(a\d{4})[\s)]/i
             ], [MODEL, [VENDOR, 'OnePlus'], [TYPE, MOBILE]], [
 
             /android.+[;\/]\s*(RCT[\d\w]+)\s+build/i                            // RCA Tablets
@@ -3699,8 +3923,8 @@ exports.parse = function(sdp) {
             /windows.+\sedge\/([\w\.]+)/i                                       // EdgeHTML
             ], [VERSION, [NAME, 'EdgeHTML']], [
 
-            /webkit\/537\.36.+chrome\/(?!27)/i                                  // Blink
-            ], [[NAME, 'Blink']], [
+            /webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i                         // Blink
+            ], [VERSION, [NAME, 'Blink']], [
 
             /(presto)\/([\w\.]+)/i,                                             // Presto
             /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i,     
@@ -3729,7 +3953,7 @@ exports.parse = function(sdp) {
             /\((bb)(10);/i                                                      // BlackBerry 10
             ], [[NAME, 'BlackBerry'], VERSION], [
             /(blackberry)\w*\/?([\w\.]*)/i,                                     // Blackberry
-            /(tizen)[\/\s]([\w\.]+)/i,                                          // Tizen
+            /(tizen|kaios)[\/\s]([\w\.]+)/i,                                    // Tizen/KaiOS
             /(android|webos|palm\sos|qnx|bada|rim\stablet\sos|meego|sailfish|contiki)[\/\s-]?([\w\.]*)/i
                                                                                 // Android/WebOS/Palm/QNX/Bada/RIM/MeeGo/Contiki/Sailfish OS
             ], [NAME, VERSION], [
@@ -3908,7 +4132,7 @@ exports.parse = function(sdp) {
     //   jQuery always exports to global scope, unless jQuery.noConflict(true) is used,
     //   and we should catch that.
     var $ = window && (window.jQuery || window.Zepto);
-    if (typeof $ !== UNDEF_TYPE && !$.ua) {
+    if ($ && !$.ua) {
         var parser = new UAParser();
         $.ua = parser.getResult();
         $.ua.get = function () {
@@ -3939,14 +4163,16 @@ function bytesToUuid(buf, offset) {
   var i = offset || 0;
   var bth = byteToHex;
   // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-  return ([bth[buf[i++]], bth[buf[i++]], 
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]], '-',
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]],
-	bth[buf[i++]], bth[buf[i++]]]).join('');
+  return ([
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]], '-',
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]],
+    bth[buf[i++]], bth[buf[i++]]
+  ]).join('');
 }
 
 module.exports = bytesToUuid;

@@ -22,8 +22,8 @@ import static java.util.UUID.randomUUID;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_ID;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_FILE_TYPE;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_HEIGHT;
-import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_SLIDE;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_OMTYPE;
+import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_SLIDE;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_TYPE;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_WIDTH;
 import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_ZOOM;
@@ -34,14 +34,10 @@ import static org.apache.openmeetings.web.room.wb.WbWebSocketHelper.getObjWbJson
 import static org.apache.openmeetings.web.room.wb.WbWebSocketHelper.getWbJson;
 import static org.apache.wicket.AttributeModifier.append;
 
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -53,9 +49,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.codec.binary.Base64;
 import org.apache.openmeetings.db.dao.file.FileItemDao;
 import org.apache.openmeetings.db.dto.room.Whiteboard;
 import org.apache.openmeetings.db.dto.room.Whiteboard.ZoomMode;
@@ -71,28 +64,23 @@ import org.apache.openmeetings.util.OmFileHelper;
 import org.apache.openmeetings.web.app.WhiteboardManager;
 import org.apache.openmeetings.web.common.NameDialog;
 import org.apache.openmeetings.web.room.RoomPanel;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
+import org.danekja.java.util.function.serializable.SerializableConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 import com.github.openjson.JSONTokener;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
 
 public class WbPanel extends AbstractWbPanel {
 	private static final long serialVersionUID = 1L;
@@ -111,27 +99,35 @@ public class WbPanel extends AbstractWbPanel {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		protected void onSubmit(AjaxRequestTarget target, DialogButton btn) {
+		protected void onSubmit(AjaxRequestTarget target) {
 			String res = saveWb(roomId, wb2save, getModelObject());
 			if (!Strings.isEmpty(res)) {
 				error("Unexpected error while saving WB: " + res);
 				target.add(feedback);
+			} else {
+				super.onSubmit(target);
 			}
 		}
 
 		@Override
-		protected String getTitleStr() {
-			return getString("199");
+		protected IModel<String> getTitle() {
+			return new ResourceModel("199");
 		}
 
 		@Override
-		protected String getLabelStr() {
-			return getString("200");
+		protected IModel<String> getLabel() {
+			return new ResourceModel("200");
 		}
 
 		@Override
-		protected String getAddStr() {
-			return getString("144");
+		protected IModel<String> getAddBtnLabel() {
+			return new ResourceModel("144");
+		}
+	};
+	private final SerializableConsumer<Whiteboard> addUndo = wb -> {
+		JSONArray arr = getArray(wb.toJson(), null);
+		if (arr.length() != 0) {
+			addUndo(wb.getId(), new UndoObject(UndoObject.Type.remove, arr));
 		}
 	};
 	@SpringBean
@@ -142,11 +138,11 @@ public class WbPanel extends AbstractWbPanel {
 	public WbPanel(String id, RoomPanel rp) {
 		super(id, rp);
 		this.roomId = rp.getRoom().getId();
-		if (rp.getRoom().isHidden(RoomElement.Whiteboard)) {
+		if (rp.getRoom().isHidden(RoomElement.WHITEBOARD)) {
 			setVisible(false);
 		} else {
 			add(new ListView<>("clipart"
-					, Arrays.asList(OmFileHelper.getPublicClipartsDir().list())
+					, List.of(OmFileHelper.getPublicClipartsDir().list())
 						.stream()
 						.sorted()
 						.collect(Collectors.toList()))
@@ -201,36 +197,18 @@ public class WbPanel extends AbstractWbPanel {
 			case modifyObj:
 			{
 				JSONObject o = obj.optJSONObject("obj");
-				if (o != null && "pointer".equals(o.getString(ATTR_TYPE))) {
+				if (o != null && "pointer".equals(o.getString(ATTR_OMTYPE))) {
 					sendWbOthers(a, obj);
 					return;
 				}
 			}
 				break;
-			case downloadPdf:
+			case download:
 			{
-				boolean moder = c.hasRight(Room.Right.moderator);
+				boolean moder = c.hasRight(Room.Right.MODERATOR);
 				Room r = rp.getRoom();
-				if ((moder && !r.isHidden(RoomElement.ActionMenu)) || (!moder && r.isAllowUserQuestions())) {
-					try (PDDocument doc = new PDDocument()) {
-						JSONArray arr = obj.getJSONArray("slides");
-						for (int i = 0; i < arr.length(); ++i) {
-							String base64Image = arr.getString(i).split(",")[1];
-							byte[] bb = Base64.decodeBase64(base64Image);
-							BufferedImage img = ImageIO.read(new ByteArrayInputStream(bb));
-							float width = img.getWidth();
-							float height = img.getHeight();
-							PDPage page = new PDPage(new PDRectangle(width, height));
-							PDImageXObject pdImageXObject = LosslessFactory.createFromImage(doc, img);
-							try (PDPageContentStream contentStream = new PDPageContentStream(doc, page, AppendMode.APPEND, false)) {
-								contentStream.drawImage(pdImageXObject, 0, 0, width, height);
-							}
-							doc.addPage(page);
-						}
-						ByteArrayOutputStream baos = new ByteArrayOutputStream();
-						doc.save(baos);
-						rp.startDownload(handler, baos.toByteArray());
-					}
+				if (moder && !r.isHidden(RoomElement.ACTION_MENU)) {
+					rp.startDownload(handler, obj.getString("type"), obj.getString("fuid"));
 				}
 				return;
 			}
@@ -242,12 +220,12 @@ public class WbPanel extends AbstractWbPanel {
 					Whiteboard wb = entry.getValue();
 					for (JSONObject o : wb.list()) {
 						String ft = o.optString(ATTR_FILE_TYPE);
-						if (BaseFileItem.Type.Recording.name().equals(ft) || BaseFileItem.Type.Video.name().equals(ft)) {
-							JSONObject _sts = o.optJSONObject(PARAM_STATUS);
-							if (_sts == null) {
+						if (BaseFileItem.Type.RECORDING.name().equals(ft) || BaseFileItem.Type.VIDEO.name().equals(ft)) {
+							JSONObject status = o.optJSONObject(PARAM_STATUS);
+							if (status == null) {
 								continue;
 							}
-							JSONObject sts = new JSONObject(_sts.toString()); //copy
+							JSONObject sts = new JSONObject(status.toString()); //copy
 							sts.put("pos", sts.getDouble("pos") + (System.currentTimeMillis() - sts.getLong(PARAM_UPDATED)) * 1. / 1000);
 							arr.put(new JSONObject()
 									.put("wbId", wb.getId())
@@ -266,12 +244,12 @@ public class WbPanel extends AbstractWbPanel {
 		}
 
 		//presenter-right
-		if (c.hasRight(Right.presenter)) {
+		if (c.hasRight(Right.PRESENTER)) {
 			switch (a) {
 				case createWb:
 				{
 					Whiteboard wb = wbm.add(roomId, c.getUser().getLanguageId());
-					sendWbAll(WbAction.createWb, getAddWbJson(wb));
+					sendWbAll(WbAction.createWb, wb.getAddJson());
 				}
 					break;
 				case removeWb:
@@ -285,9 +263,9 @@ public class WbPanel extends AbstractWbPanel {
 					break;
 				case activateWb:
 				{
-					long _id = obj.optLong("wbId", -1);
-					if (_id > -1) {
-						wbm.activate(roomId, _id);
+					long wbId = obj.optLong("wbId", -1);
+					if (wbId > -1) {
+						wbm.activate(roomId, wbId);
 						sendWbAll(WbAction.activateWb, obj);
 					}
 				}
@@ -313,7 +291,7 @@ public class WbPanel extends AbstractWbPanel {
 					break;
 				case clearAll:
 				{
-					clearAll(roomId, obj.getLong("wbId"));
+					wbm.clearAll(roomId, obj.getLong("wbId"), addUndo);
 				}
 					break;
 				case setSize:
@@ -324,7 +302,7 @@ public class WbPanel extends AbstractWbPanel {
 					wb.setZoom(obj.getDouble(ATTR_ZOOM));
 					wb.setZoomMode(ZoomMode.valueOf(obj.getString("zoomMode")));
 					wbm.update(roomId, wb);
-					sendWbOthers(WbAction.setSize, getAddWbJson(wb));
+					sendWbOthers(WbAction.setSize, wb.getAddJson());
 				}
 					break;
 				default:
@@ -332,7 +310,7 @@ public class WbPanel extends AbstractWbPanel {
 			}
 		}
 		//wb-right
-		if (c.hasRight(Right.presenter) || c.hasRight(Right.whiteBoard)) {
+		if (c.hasRight(Right.PRESENTER) || c.hasRight(Right.WHITEBOARD)) {
 			switch (a) {
 				case createObj:
 				{
@@ -350,12 +328,12 @@ public class WbPanel extends AbstractWbPanel {
 					JSONArray arr = obj.getJSONArray("obj");
 					JSONArray undo = new JSONArray();
 					for (int i = 0; i < arr.length(); ++i) {
-						JSONObject _o = arr.getJSONObject(i);
-						String uid = _o.getString("uid");
+						JSONObject oi = arr.getJSONObject(i);
+						String uid = oi.getString("uid");
 						JSONObject po = wb.get(uid);
 						if (po != null) {
 							undo.put(po);
-							wb.put(uid, _o);
+							wb.put(uid, oi);
 						}
 					}
 					if (arr.length() != 0) {
@@ -371,8 +349,8 @@ public class WbPanel extends AbstractWbPanel {
 					JSONArray arr = obj.getJSONArray("obj");
 					JSONArray undo = new JSONArray();
 					for (int i = 0; i < arr.length(); ++i) {
-						JSONObject _o = arr.getJSONObject(i);
-						JSONObject u = wb.remove(_o.getString("uid"));
+						JSONObject oi = arr.getJSONObject(i);
+						JSONObject u = wb.remove(oi.getString("uid"));
 						if (u != null) {
 							undo.put(u);
 						}
@@ -386,18 +364,14 @@ public class WbPanel extends AbstractWbPanel {
 					break;
 				case clearSlide:
 				{
-					Whiteboard wb = wbm.get(roomId).get(obj.getLong("wbId"));
-					JSONArray arr = wb.clearSlide(obj.getInt(ATTR_SLIDE));
-					if (arr.length() != 0) {
-						wbm.update(roomId, wb);
+					wbm.cleanSlide(roomId, obj.getLong("wbId"), obj.getInt(ATTR_SLIDE), (wb, arr) -> {
 						addUndo(wb.getId(), new UndoObject(UndoObject.Type.remove, arr));
-					}
-					sendWbAll(WbAction.clearSlide, obj);
+					});
 				}
 					break;
 				case save:
 					wb2save = obj.getLong("wbId");
-					fileName.open(handler);
+					fileName.show(handler);
 					break;
 				case undo:
 				{
@@ -460,46 +434,37 @@ public class WbPanel extends AbstractWbPanel {
 		}
 	}
 
-	private static JSONObject getAddWbJson(final Whiteboard wb) {
-		return new JSONObject().put("wbId", wb.getId())
-				.put("name", wb.getName())
-				.put(ATTR_WIDTH, wb.getWidth())
-				.put(ATTR_HEIGHT, wb.getHeight())
-				.put(ATTR_ZOOM, wb.getZoom())
-				.put("zoomMode", wb.getZoomMode().name());
-	}
-
 	@Override
 	protected String getRole() {
 		String role = ROLE_NONE;
-		if (rp.getClient().hasRight(Right.presenter)) {
-			role = Right.presenter.name();
-		} else if (rp.getClient().hasRight(Right.whiteBoard)) {
-			role = Right.whiteBoard.name();
+		if (rp.getClient().hasRight(Right.PRESENTER)) {
+			role = Right.PRESENTER.name();
+		} else if (rp.getClient().hasRight(Right.WHITEBOARD)) {
+			role = Right.WHITEBOARD.name();
 		}
 		return role;
 	}
 
-	private JSONObject addFileUrl(Client cl, String ruid, JSONObject _file) {
-		return addFileUrl(cl, ruid, _file, null);
+	private JSONObject addFileUrl(Client cl, String ruid, JSONObject file) {
+		return addFileUrl(cl, ruid, file, null);
 	}
 
-	private JSONObject addFileUrl(Client cl, String ruid, JSONObject _file, Consumer<BaseFileItem> consumer) {
+	private JSONObject addFileUrl(Client cl, String ruid, JSONObject file, Consumer<BaseFileItem> consumer) {
 		try {
-			final long fid = _file.optLong(ATTR_FILE_ID, -1);
+			final long fid = file.optLong(ATTR_FILE_ID, -1);
 			if (fid > 0) {
 				BaseFileItem fi = fileDao.getAny(fid);
 				if (fi != null) {
 					if (consumer != null) {
 						consumer.accept(fi);
 					}
-					return WbWebSocketHelper.addFileUrl(ruid, _file, fi, cl);
+					return WbWebSocketHelper.addFileUrl(ruid, file, fi, cl);
 				}
 			}
 		} catch (Exception e) {
 			//no-op, non-file object
 		}
-		return _file;
+		return file;
 	}
 
 	private static JSONArray getArray(JSONObject wb, Function<JSONObject, JSONObject> postprocess) {
@@ -513,20 +478,6 @@ public class WbPanel extends AbstractWbPanel {
 			arr.put(o);
 		}
 		return arr;
-	}
-
-	private void clearAll(Long roomId, long wbId) {
-		Whiteboard wb = wbm.get(roomId).get(wbId);
-		if (wb == null) {
-			return;
-		}
-		JSONArray arr = getArray(wb.toJson(), null);
-		if (arr.length() != 0) {
-			addUndo(wb.getId(), new UndoObject(UndoObject.Type.remove, arr));
-		}
-		wb = wbm.clear(roomId, wbId);
-		sendWbAll(WbAction.clearAll, new JSONObject().put("wbId", wbId));
-		sendWbAll(WbAction.setSize, getAddWbJson(wb));
 	}
 
 	private static void updateWbSize(Whiteboard wb, final BaseFileItem fi) {
@@ -547,10 +498,10 @@ public class WbPanel extends AbstractWbPanel {
 				return;
 			}
 			switch (fi.getType()) {
-				case Folder:
+				case FOLDER:
 					//do nothing
 					break;
-				case WmlFile:
+				case WML_FILE:
 				{
 					File f = fi.getFile();
 					if (f.exists() && f.isFile()) {
@@ -559,12 +510,12 @@ public class WbPanel extends AbstractWbPanel {
 							JSONArray arr = getArray(new JSONObject(new JSONTokener(br)), o -> {
 									wb.put(o.getString("uid"), o);
 									updated[0] = true;
-									return addFileUrl(rp.getClient(), wbs.getUid(), o, _f -> updateWbSize(wb, _f));
+									return addFileUrl(rp.getClient(), wbs.getUid(), o, bf -> updateWbSize(wb, bf));
 								});
 							if (updated[0]) {
 								wbm.update(roomId, wb);
 							}
-							sendWbAll(WbAction.setSize, getAddWbJson(wb));
+							sendWbAll(WbAction.setSize, wb.getAddJson());
 							sendWbAll(WbAction.load, getObjWbJson(wb.getId(), arr));
 						} catch (Exception e) {
 							log.error("Unexpected error while loading WB", e);
@@ -572,7 +523,7 @@ public class WbPanel extends AbstractWbPanel {
 					}
 				}
 					break;
-				case PollChart:
+				case POLL_CHART:
 					break;
 				default:
 				{
@@ -588,8 +539,8 @@ public class WbPanel extends AbstractWbPanel {
 							.put("uid", wuid)
 							.put(ATTR_SLIDE, wb.getSlide())
 							;
-					if (FileItem.Type.Video == fi.getType() || FileItem.Type.Recording == fi.getType()) {
-						file.put(ATTR_TYPE, "video");
+					if (FileItem.Type.VIDEO == fi.getType() || FileItem.Type.RECORDING == fi.getType()) {
+						file.put(ATTR_OMTYPE, "Video");
 						file.put(PARAM_STATUS, new JSONObject()
 								.put("paused", true)
 								.put("pos", 0.0)
@@ -597,12 +548,12 @@ public class WbPanel extends AbstractWbPanel {
 					}
 					final String ruid = wbs.getUid();
 					if (clean) {
-						clearAll(roomId, wb.getId());
+						wbm.clearAll(roomId, wb.getId(), addUndo);
 					}
 					wb.put(wuid, file);
 					updateWbSize(wb, fi);
 					wbm.update(roomId, wb);
-					sendWbAll(WbAction.setSize, getAddWbJson(wb));
+					sendWbAll(WbAction.setSize, wb.getAddJson());
 					WbWebSocketHelper.sendWbFile(roomId, wb.getId(), ruid, file, fi);
 				}
 					break;
@@ -656,7 +607,7 @@ public class WbPanel extends AbstractWbPanel {
 	public String saveWb(Long roomId, Long wbId, String name) {
 		Whiteboard wb = wbm.get(roomId).get(wbId);
 		FileItem f = new FileItem();
-		f.setType(BaseFileItem.Type.WmlFile);
+		f.setType(BaseFileItem.Type.WML_FILE);
 		f.setRoomId(roomId);
 		f.setHash(randomUUID().toString());
 		f.setName(name);
@@ -667,7 +618,7 @@ public class WbPanel extends AbstractWbPanel {
 	private StringBuilder loadWhiteboards(StringBuilder sb, Client cl, Whiteboards wbs, Set<Entry<Long, Whiteboard>> boardSet) {
 		for (Entry<Long, Whiteboard> entry : boardSet) {
 			Whiteboard wb = entry.getValue();
-			sb.append(new StringBuilder("WbArea.create(").append(getAddWbJson(wb)).append(");"));
+			sb.append(new StringBuilder("WbArea.create(").append(wb.getAddJson()).append(");"));
 			JSONArray arr = new JSONArray();
 			for (JSONObject o : wb.list()) {
 				arr.put(addFileUrl(cl, wbs.getUid(), o));

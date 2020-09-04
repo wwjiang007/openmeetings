@@ -1,12 +1,12 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
-var PRESENTER = 'presenter';
-var WHITEBOARD = 'whiteBoard';
+var PRESENTER = 'PRESENTER';
+var WHITEBOARD = 'WHITEBOARD';
 var DrawWbArea = function() {
 	const self = BaseWbArea()
 		, arrowImg = new Image(), delImg = new Image();
 	arrowImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAICAYAAADqSp8ZAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAygAAAMoBawMUsgAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFsSURBVCiRrdI/SEJRFMfx37lPGxqKoGwxKJoaImhpCf8NEUFL9WgLUrPnIyEIa6reVEPQn0GeWDS4NDQETQ2JT4waojUoHBqCoJKWINB3720yIhGl+q7ncj5nuIQ6jWiaq1xmU4IwBACQ5GCAU5D8IECRAkUQzt8V++wmlSrX20e1BoFIrFdwHidIIQhH5O68sgzD/vnOF4m0QyijJGgMQIHZtJdJJ4oNg6qqNr20dKwBaOWKvZFPpZ7qXV3JH4wNSMbjJHGZ7XIlYRiiFkiBsL4CphwLwbck5E7uwMw3ClXD2iRImYYUq9lD886nLXZbyd2HL9AbXpglySOQeFVstpRJJ+5/i1UajkbbHCXahMS1ZAiS2+W1DMNmqqoqBLFMYIME1uxkvPRXDAAuTPMNhCwIGiT62eOzAQDkD+nbAjQDxudy+8mT/8C+FwjNjwuwdQnqY7b0kCesT7DC7allWVU/8D/zh3SdC/R8Aq9QhRc3h8LfAAAAAElFTkSuQmCC';
 	delImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAMAAAGgrv1cAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADNQTFRFAAAA4j094j094j094j094j094j094j094j094j094j094j094j094j094j094j094j09hIdAxgAAABB0Uk5TABAgMEBQYHCAj5+vv8/f7yMagooAAADXSURBVBgZBcEBYoQgDACw1DJETmz//9olwGn6AAAbBxoiSACTpCTtJd02smg+MPoef7UgnpPQeVM42Vg02kl+qAPeE2B19wYAgO83xi6ggRMoBfuvsUSxp+vPjag98VqwC8oI9ozC5rMnUVbw5ITID94Fo4D4umsAwN/+urvfOwDg6d8FiFUnALPnkwCs6zvg+UKcSmD3ZBWyL4hTye4J3s16AXG6J+D+uD/A7vtUAutFT9g9EacSURNX33ZPQJzKqAW8lQCIXyWAVfUM5Hz7vQAAMcZIAP9DvgiOL2K6DwAAAABJRU5ErkJggg==';
-	let container, area, tabs, scroll, role = NONE, _inited = false;
+	let scroll, role = NONE, _inited = false;
 
 	// Fabric overrides (should be kept up-to-date on fabric.js updates)
 	if ('function' !== typeof(window.originalDrawControl)) {
@@ -60,16 +60,10 @@ var DrawWbArea = function() {
 		}
 	}
 
-	function refreshTabs() {
-		tabs.tabs('refresh').find('ul').removeClass('ui-corner-all').removeClass('ui-widget-header');
-	}
 	function getActive() {
-		const idx = tabs.tabs('option', 'active');
-		if (idx > -1) {
-			const href = tabs.find('a')[idx];
-			if (!!href) {
-				return $($(href).attr('href'));
-			}
+		const tab = $('.room-block .wb-block .tabs .wb-tab-content .wb-tab.active');
+		if (tab.length === 1) {
+			return tab;
 		}
 		return null;
 	}
@@ -105,33 +99,54 @@ var DrawWbArea = function() {
 			}
 		}
 	}
-	function _getWbTab(wbId) {
-		return tabs.find('li[data-wb-id="' + wbId + '"]');
-	}
 	function _activateTab(wbId) {
-		container.find('.wb-tabbar li').each(function(idx) {
-			if (wbId === 1 * $(this).data('wb-id')) {
-				tabs.tabs('option', 'active', idx);
-				$(this)[0].scrollIntoView();
-				return false;
+		const link = _getWbTab(wbId);
+		if (link.length > 0) {
+			link.tab('show');
+			if (role !== PRESENTER) {
+				$('.wb-tabbar ul.nav-tabs a.nav-link').removeClass('active');
+				link.addClass('active');
+				$('.wb-tab-content .wb-tab').removeClass('active');
+				$('#' + link.attr('aria-controls')).addClass('active');
 			}
-		});
+			link[0].scrollIntoView();
+		}
 	}
-	function _setTabName(li, name) {
-		return li.find('a').attr('title', name)
+	function _setTabName(link, name) {
+		return link.attr('title', name)
 			.find('span').text(name)
 	}
+	function _getWbTab(wbId) {
+		return $('#' + __getWbTabId(wbId));
+	}
+	function _getWbContent(wbId) {
+		return $('#' + __getWbContentId(wbId));
+	};
 	function _renameTab(obj) {
 		_setTabName(_getWbTab(obj.wbId), obj.name);
 	}
 	function _addCloseBtn(li) {
-		if (role !== PRESENTER) {
+		if (role !== PRESENTER || li.find('button').length > 0) {
 			return;
 		}
-		li.append(OmUtil.tmpl('#wb-tab-close'));
-		li.find('button').click(function() {
-			OmUtil.confirmDlg('wb-confirm-remove', function() { OmUtil.wbAction({action: 'removeWb', data: {wbId: li.data().wbId}}); });
-		});
+		const link = li.find('a')
+			, wbId = link.data('wb-id');
+		// Apply right click menu only to the text item
+		li.find(".nav-link").find("span").first().contextmenu(
+			function(e) {
+				e.preventDefault();
+				$('#wb-rename-menu').show().data('wb-id', wbId)
+					.position({my: 'left top', collision: 'none', of: _getWbTab(wbId)});
+			});
+		
+		link.append(OmUtil.tmpl('#wb-tab-close'));
+		li.find('button')
+			.confirmation({
+				confirmationEvent: 'bla'
+				, onConfirm: function() {
+					OmUtil.wbAction({action: 'removeWb', data: {wbId: wbId}});
+				}
+			});
 	}
 	function _getImage(cnv) {
 		return cnv.toDataURL({
@@ -151,12 +166,34 @@ var DrawWbArea = function() {
 			 _videoStatus(arr[i]);
 		}
 	}
-
-	self.getWbTabId = function(id) {
+	function __getWbTabId(id) {
 		return 'wb-tab-' + id;
 	};
+	function __getWbContentId(id) {
+		return 'wb-content-' + id;
+	};
+	function __initTab(elems) {
+		const links = elems.find('a');
+		if (role === PRESENTER) {
+			elems.each(function() {
+				_addCloseBtn($(this));
+			});
+			links.prop('disabled', false).removeClass('disabled');
+		} else {
+			links.prop('disabled', true).addClass('disabled');
+			elems.find('button').remove();
+		}
+		links.off()
+			.click(function(e) {
+				e.preventDefault();
+				if (role === PRESENTER) {
+					_actionActivateWb($(this).data('wb-id'));
+				}
+			});
+	};
+
 	self.getWb = function(id) {
-		return $('#' + self.getWbTabId(id)).data();
+		return _getWbContent(id).data();
 	};
 	self.getCanvas = function(id) {
 		return self.getWb(id).getCanvas();
@@ -166,7 +203,8 @@ var DrawWbArea = function() {
 			return;
 		}
 		role = _role;
-		const tabsNav = tabs.find('.ui-tabs-nav');
+		const tabs = $('.room-block .wb-block .tabs');
+		const tabsNav = tabs.find('ul.nav-tabs');
 		tabsNav.sortable(role === PRESENTER ? 'enable' : 'disable');
 		const prev = tabs.find('.prev.om-icon'), next = tabs.find('.next.om-icon');
 		if (role === PRESENTER) {
@@ -184,62 +222,47 @@ var DrawWbArea = function() {
 				tabs.find('.next.om-icon').click(function() {
 					scroll.scrollLeft(scroll.scrollLeft() + 30);
 				});
-				tabsNav.find('li').each(function() {
-					const li = $(this);
-					_addCloseBtn(li);
-				});
 				self.addDeleteHandler();
 			}
 		} else {
 			if (prev.length > 0) {
 				prev.parent().remove();
 				next.parent().remove();
-				tabsNav.find('li button').remove();
 			}
 			self.removeDeleteHandler();
 		}
-		tabs.find('.ui-tabs-panel').each(function() {
+		__initTab(tabsNav.find('li'));
+		tabs.find('.wb-tab-content .wb-tab').each(function() {
 			$(this).data().setRole(role);
 		});
 	}
 	function _actionActivateWb(_wbId) {
 		OmUtil.wbAction({action: 'activateWb', data: {wbId: _wbId}});
 	}
-	self.init = function() {
-		Wicket.Event.subscribe('/websocket/message', self.wbWsHandler);
-		container = $('.room-block .wb-block');
-		tabs = container.find('.tabs');
+	function _doInit(callback) {
+		const tabs = $('.room-block .wb-block .tabs');
 		if (tabs.length === 0) {
+			setTimeout(_doInit, 100, callback);
 			return;
 		}
-		tabs.tabs({
-			beforeActivate: function(e) {
-				let res = true;
-				if (e.originalEvent && e.originalEvent.type === 'click') {
-					res = role === PRESENTER;
-				}
-				return res;
-			}
-			, activate: function(e, ui) {
-				//only send `activateWb` event if activation was initiated by user
-				if (e.originalEvent && e.originalEvent.type === 'click') {
-					_actionActivateWb(ui.newTab.data('wb-id'));
-				}
-			}
-		});
 		scroll = tabs.find('.scroll-container');
-		area = container.find('.wb-area');
-		tabs.find('.ui-tabs-nav').sortable({
+		$('.room-block .wb-block .tabs ul.nav-tabs').sortable({
 			axis: 'x'
-			, stop: function() {
-				refreshTabs();
-			}
 		});
 		_inited = true;
 		self.setRole(role);
+		if (typeof(callback) === 'function') {
+			callback();
+		}
 		$('#wb-rename-menu').menu().find('.wb-rename').click(function() {
-			_getWbTab($(this).parent().data('wb-id')).find('a span').trigger('dblclick');
+			const textSpan = _getWbTab($(this).parent().data('wb-id')).find('.wb-nav-tab-text').first();
+			textSpan.trigger('dblclick');
 		});
+	}
+
+	self.init = function(callback) {
+		Wicket.Event.subscribe('/websocket/message', self.wbWsHandler);
+		_doInit(callback);
 	};
 	self.destroy = function() {
 		self.removeDeleteHandler();
@@ -249,24 +272,18 @@ var DrawWbArea = function() {
 		if (!_inited) {
 			return;
 		}
-		const tid = self.getWbTabId(obj.wbId)
-			, wb = OmUtil.tmpl('#wb-area', tid)
-			, li = OmUtil.tmpl('#wb-area-tab').data('wb-id', obj.wbId).attr('data-wb-id', obj.wbId)
-				.contextmenu(function(e) {
-					if (role !== PRESENTER) {
-						return;
-					}
-					e.preventDefault();
-					$('#wb-rename-menu').show().data('wb-id', obj.wbId)
-						.position({my: 'left top', collision: 'none', of: _getWbTab(obj.wbId)});
-				});
-		li.find('a').attr('href', '#' + tid);
-		_setTabName(li, obj.name)
+		const tid = __getWbTabId(obj.wbId)
+			, tcid = __getWbContentId(obj.wbId)
+			, wb = OmUtil.tmpl('#wb-area', tcid).attr('aria-labelledby', tid)
+			, li = OmUtil.tmpl('#wb-area-tab')
+			, link = li.find('a');
+		link.attr('id', tid).attr('data-wb-id', obj.wbId).attr('href', '#' + tcid).attr('aria-controls', tcid);
+		_setTabName(link, obj.name)
 			.dblclick(function() {
 				if (role !== PRESENTER) {
 					return;
 				}
-				const editor = $('<input name="newName" type="text" style="color: black;"/>')
+				const editor = $('<input class="newName" name="newName" type="text"/>')
 					, name = $(this).hide().after(editor.val(obj.name))
 					, renameWbTab = function() {
 						const newName = editor.val();
@@ -285,13 +302,13 @@ var DrawWbArea = function() {
 					});
 			});
 
-		tabs.find('.ui-tabs-nav').append(li);
-		tabs.append(wb);
-		refreshTabs();
-		_addCloseBtn(li);
+		const tabs = $('.room-block .wb-block .tabs');
+		tabs.find('ul.nav-tabs').append(li);
+		tabs.find('.wb-tab-content').append(wb);
+		__initTab(li);
 
 		const wbo = Wb();
-		wbo.init(obj, tid, role);
+		wbo.init(obj, tcid, role);
 		wb.on('remove', wbo.destroy);
 		wb.data(wbo);
 	}
@@ -319,10 +336,8 @@ var DrawWbArea = function() {
 		if (!_inited) {
 			return;
 		}
-		const tabId = self.getWbTabId(obj.wbId);
-		_getWbTab(obj.wbId).remove();
-		$('#' + tabId).remove();
-		refreshTabs();
+		_getWbTab(obj.wbId).parent().remove();
+		_getWbContent(obj.wbId).remove();
 		_actionActivateWb(getActive().data().id);
 	};
 	self.load = function(json) {
@@ -377,29 +392,38 @@ var DrawWbArea = function() {
 		if (!_inited) {
 			return;
 		}
-		const wb = getActive().data();
+		const wb = getActive().data()
+			, url = location.pathname.substring(0, location.pathname.indexOf('/', 1)) + '/services/wb/uploadwb/'
+			, arr = [];
+		let type;
 		if ('pdf' === fmt) {
-			const arr = [];
 			wb.eachCanvas(function(cnv) {
 				arr.push(_getImage(cnv));
 			});
-			OmUtil.wbAction({action: 'downloadPdf', data: {
-				slides: arr
-			}});
+			type = 'pdf';
 		} else {
-			const cnv = wb.getCanvas()
-				, dataUri = _getImage(cnv);
-			try {
-				const dlg = $('#download-png');
-				dlg.find('img').attr('src', dataUri);
-				dlg.dialog({
-					width: 350
-					, appendTo: '.room-block .wb-block'
-				});
-			} catch (e) {
-				console.error(e);
-			}
+			const cnv = wb.getCanvas();
+			arr.push(_getImage(cnv));
+			type = 'png';
 		}
+		$.ajax({
+			type: "POST"
+			, url: url + type + '?sid=' + Room.getOptions().sid
+			, data: {data: JSON.stringify(arr)}
+			, dataType: 'json'
+			, cache: false
+		}).done(function(res) {
+			if ('SUCCESS' === res.serviceResult.type) {
+				OmUtil.wbAction({action: 'download', data: {
+					type: type
+					, fuid: res.serviceResult.message
+				}});
+			} else {
+				OmUtil.error(res.serviceResult.message);
+			}
+		}).fail(function(err) {
+			OmUtil.error(err);
+		});
 	}
 	self.videoStatus = _videoStatus;
 	self.loadVideos = function() {
@@ -422,13 +446,11 @@ var DrawWbArea = function() {
 		if (!_inited) {
 			return;
 		}
-		tabs.find('li').each(function() {
-			const wbId = $(this).data('wb-id')
-				, tabId = self.getWbTabId(wbId);
-			$(this).remove();
-			$('#' + tabId).remove();
+		$('.room-block .wb-block .tabs li a').each(function() {
+			const wbId = $(this).data('wb-id');
+			_getWbTab(wbId).remove();
+			_getWbContent(wbId).remove();
 		});
-		refreshTabs();
 	};
 	return self;
 };

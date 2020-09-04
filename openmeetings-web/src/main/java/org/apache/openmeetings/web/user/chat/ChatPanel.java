@@ -28,7 +28,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.panel.Panel;
 
-@AuthorizeInstantiation({"Dashboard", "Room"})
+@AuthorizeInstantiation({"DASHBOARD", "ROOM"})
 public class ChatPanel extends Panel {
 	private static final long serialVersionUID = 1L;
 	private final Chat chat;
@@ -42,13 +42,13 @@ public class ChatPanel extends Panel {
 	}
 
 	public void roomEnter(Room r, IPartialPageRequestHandler handler) {
-		if (r.isHidden(RoomElement.Chat)) {
+		if (r.isHidden(RoomElement.CHAT)) {
 			toggle(handler, false);
 			return;
 		}
 		StringBuilder sb = new StringBuilder("$(function() {");
 		if (!chat.isShowDashboardChat()) {
-			sb.append("$('#chatPanel,#chat').show();");
+			sb.append("$('#chatPanel').show();");
 		}
 		sb.append("Chat.setRoomMode(true);")
 			.append(chat.addRoom(r))
@@ -59,14 +59,14 @@ public class ChatPanel extends Panel {
 	}
 
 	public void roomExit(Room r, IPartialPageRequestHandler handler) {
-		if (r.isHidden(RoomElement.Chat)) {
+		if (r.isHidden(RoomElement.CHAT)) {
 			return;
 		}
 		handler.appendJavaScript(String.format("if (typeof(Chat) === 'object') { Chat.removeTab('%1$s%2$d'); }", ID_ROOM_PREFIX, r.getId()));
 		StringBuilder sb = new StringBuilder("$(function() {")
 				.append("Chat.setRoomMode(false);");
 		if (!chat.isShowDashboardChat()) {
-			sb.append("$('#chatPanel,#chat').hide();");
+			sb.append("$('#chatPanel').hide();");
 		}
 		sb.append("});");
 		handler.appendJavaScript(sb);
@@ -86,12 +86,7 @@ public class ChatPanel extends Panel {
 	public void renderHead(IHeaderResponse response) {
 		super.renderHead(response);
 		if (!chat.isShowDashboardChat()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("$(document).ready(function(){");
-			sb.append("$('#ui-id-1').hide();");
-			sb.append("$('#chatPanel,#chat').hide();");
-			sb.append("});");
-			response.render(OnDomReadyHeaderItem.forScript(sb.toString()));
+			response.render(OnDomReadyHeaderItem.forScript("$('#chatPanel').hide();"));
 		}
 	}
 }

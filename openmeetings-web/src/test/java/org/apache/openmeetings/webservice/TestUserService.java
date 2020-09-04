@@ -100,23 +100,31 @@ public class TestUserService extends AbstractWebServiceTest {
 		getHash("aa", true);
 	}
 
-	@Test
-	public void hashTest() throws OmException {
+	private Long getAndcheckHash(Long adminId) {
 		ServiceResult r = login();
-		ServiceResult r1 = getHash(r.getMessage(), false);
+		String sid = r.getMessage();
+		ServiceResult r1 = getHash(sid, false);
 		assertEquals(Type.SUCCESS.name(), r1.getType(), "OM Call should be successful");
-
-		ensureApplication(-1L); // to ensure WebSession is attached
 		WebSession ws = WebSession.get();
-		assertTrue(ws.signIn(adminUsername, userpass, User.Type.user, null));
-		Long userId0 = WebSession.getUserId();
 		ws.checkHashes(StringValue.valueOf(r1.getMessage()), StringValue.valueOf(""));
 		assertTrue(ws.isSignedIn(), "Login via secure hash should be successful");
-		Long userId1 = WebSession.getUserId();
-		assertNotEquals(userId0, userId1);
-		User u = getBean(UserDao.class).get(userId1);
+		Long userId = WebSession.getUserId();
+		assertNotEquals(adminId, userId);
+		User u = getBean(UserDao.class).get(userId);
 		assertNotNull(u, "User should be created successfuly");
 		assertEquals(DUMMY_PICTURE_URL, u.getPictureUri(), "Picture URL should be preserved");
+		return userId;
+	}
+
+	@Test
+	public void hashTest() throws OmException {
+		ensureApplication(-1L); // to ensure WebSession is attached
+		WebSession ws = WebSession.get();
+		assertTrue(ws.signIn(adminUsername, userpass, User.Type.USER, null));
+		Long userId0 = WebSession.getUserId();
+		Long userId1 = getAndcheckHash(userId0);
+		Long userId2 = getAndcheckHash(userId0);
+		assertEquals(userId1, userId2, "User should be the same");
 	}
 
 	@Test
@@ -144,7 +152,7 @@ public class TestUserService extends AbstractWebServiceTest {
 		assertNotNull(user, "Valid UserDTO should be returned");
 		assertNotNull(user.getId(), "Id should not be NULL");
 		assertEquals(u.getLogin(), user.getLogin(), "Login should match");
-		assertEquals(User.Type.external, user.getType(), "Type should match");
+		assertEquals(User.Type.EXTERNAL, user.getType(), "Type should match");
 		assertEquals(tz, user.getTimeZoneId(), "Timezone should match");
 	}
 

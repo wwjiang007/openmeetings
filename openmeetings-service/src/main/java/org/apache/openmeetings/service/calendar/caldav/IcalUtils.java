@@ -103,7 +103,7 @@ public class IcalUtils {
 		a.setCalendar(omCalendar);
 		a.setOwner(omCalendar.getOwner());
 		a.setRoom(createDefaultRoom());
-		a.setReminder(Appointment.Reminder.none);
+		a.setReminder(Appointment.Reminder.NONE);
 
 		return this.parseCalendartoAppointment(a, calendar, etag);
 	}
@@ -125,7 +125,7 @@ public class IcalUtils {
 			a.setOwner(owner);
 			a.setDeleted(false);
 			a.setRoom(createDefaultRoom());
-			a.setReminder(Appointment.Reminder.none);
+			a.setReminder(Appointment.Reminder.NONE);
 			a = addVEventPropertiestoAppointment(a, event);
 			appointments.add(a);
 		}
@@ -286,7 +286,7 @@ public class IcalUtils {
 		Room r = new Room();
 		r.setAppointment(true);
 		if (r.getType() == null) {
-			r.setType(Room.Type.conference);
+			r.setType(Room.Type.CONFERENCE);
 		}
 		return r;
 	}
@@ -340,15 +340,15 @@ public class IcalUtils {
 	 *
 	 * @param str      Date representation in String.
 	 * @param patterns Patterns to parse the date against
-	 * @param _timeZone Timezone of the Date.
+	 * @param inTimeZone Timezone of the Date.
 	 * @return <code>java.util.Date</code> representation of string or
 	 * <code>null</code> if the Date could not be parsed.
 	 */
-	public Date parseDate(String str, String[] patterns, TimeZone _timeZone) {
+	public Date parseDate(String str, String[] patterns, TimeZone inTimeZone) {
 		FastDateFormat parser;
 		Locale locale = WebSession.get().getLocale();
 
-		TimeZone timeZone = str.endsWith("Z") ? TimeZone.getTimeZone("UTC") : _timeZone;
+		TimeZone timeZone = str.endsWith("Z") ? TimeZone.getTimeZone("UTC") : inTimeZone;
 
 		ParsePosition pos = new ParsePosition(0);
 		for (String pattern : patterns) {

@@ -24,9 +24,7 @@ import static org.apache.openmeetings.web.app.WebSession.AVAILABLE_TIMEZONES;
 import static org.apache.openmeetings.web.app.WebSession.getRights;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.openmeetings.db.dao.user.GroupDao;
@@ -35,13 +33,9 @@ import org.apache.openmeetings.db.entity.user.Group;
 import org.apache.openmeetings.db.entity.user.GroupUser;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.entity.user.User.Salutation;
-import org.apache.openmeetings.util.CalendarHelper;
-import org.apache.openmeetings.web.app.WebSession;
 import org.apache.openmeetings.web.util.CountryDropDown;
 import org.apache.openmeetings.web.util.RestrictiveChoiceProvider;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.validation.validator.RfcCompliantEmailAddressValidator;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -51,21 +45,17 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.IMarkupSourcingStrategy;
 import org.apache.wicket.markup.html.panel.PanelMarkupSourcingStrategy;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.wicketstuff.select2.Response;
 import org.wicketstuff.select2.Select2MultiChoice;
 
-import com.googlecode.wicket.kendo.ui.KendoCultureHeaderItem;
-import com.googlecode.wicket.kendo.ui.form.datetime.local.AjaxDatePicker;
-
 public class GeneralUserForm extends Form<User> {
 	private static final long serialVersionUID = 1L;
 	private final RequiredTextField<String> email = new RequiredTextField<>("address.email");
-	private LocalDate age;
 	private final List<GroupUser> grpUsers = new ArrayList<>();
+	private final AjaxOmDatePicker bday = new AjaxOmDatePicker("age");
 	private final boolean isAdminForm;
 	@SpringBean
 	private GroupDao groupDao;
@@ -76,6 +66,7 @@ public class GeneralUserForm extends Form<User> {
 		super(id, model);
 		this.isAdminForm = isAdminForm;
 		updateModelObject(getModelObject(), isAdminForm);
+		setOutputMarkupId(true);
 	}
 
 	@Override
@@ -85,7 +76,7 @@ public class GeneralUserForm extends Form<User> {
 		email.setLabel(new ResourceModel("119"));
 		email.add(RfcCompliantEmailAddressValidator.getInstance());
 		add(new DropDownChoice<>("salutation"
-				, Arrays.asList(Salutation.values())
+				, List.of(Salutation.values())
 				, new ChoiceRenderer<Salutation>() {
 					private static final long serialVersionUID = 1L;
 
@@ -105,15 +96,7 @@ public class GeneralUserForm extends Form<User> {
 		add(new DropDownChoice<>("timeZoneId", AVAILABLE_TIMEZONES));
 		add(new LanguageDropDown("languageId"));
 		add(new TextField<String>("address.phone"));
-		add(new AjaxDatePicker("age", new PropertyModel<LocalDate>(this, "age"), WebSession.get().getLocale()) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onValueChanged(IPartialPageRequestHandler target) {
-				User u = GeneralUserForm.this.getModelObject();
-				u.setAge(CalendarHelper.getDate(age, u.getTimeZoneId()));
-			}
-		});
+		add(bday);
 		add(new TextField<String>("address.street"));
 		add(new TextField<String>("address.additionalname"));
 		add(new TextField<String>("address.zip"));
@@ -156,6 +139,9 @@ public class GeneralUserForm extends Form<User> {
 	}
 
 	public void updateModelObject(User u, boolean isAdminForm) {
+		/*bday.getConfig()
+			.withDate(u.getAge() == null ? LocalDate.now() : u.getAge())
+			.withMaxDate(LocalDate.now());*/
 		grpUsers.clear();
 		grpUsers.addAll(u.getGroupUsers());
 		if (isAdminForm) {
@@ -170,13 +156,12 @@ public class GeneralUserForm extends Form<User> {
 				}
 			}
 		}
-		age = CalendarHelper.getDate(u.getAge(), u.getTimeZoneId());
 	}
 
 	@Override
 	protected void onValidate() {
 		User u = getModelObject();
-		if(!userDao.checkEmail(email.getConvertedInput(), u.getType(), u.getDomainId(), u.getId())) {
+		if (!userDao.checkEmail(email.getConvertedInput(), u.getType(), u.getDomainId(), u.getId())) {
 			error(getString("error.email.inuse"));
 		}
 		super.onValidate();
@@ -185,11 +170,5 @@ public class GeneralUserForm extends Form<User> {
 	@Override
 	protected IMarkupSourcingStrategy newMarkupSourcingStrategy() {
 		return new PanelMarkupSourcingStrategy(false);
-	}
-
-	@Override
-	public void renderHead(IHeaderResponse response) {
-		super.renderHead(response);
-		response.render(KendoCultureHeaderItem.of(WebSession.get().getLocale()));
 	}
 }

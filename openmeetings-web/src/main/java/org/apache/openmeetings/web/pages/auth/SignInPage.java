@@ -56,8 +56,15 @@ import org.apache.openmeetings.db.entity.user.User.Type;
 import org.apache.openmeetings.util.OmException;
 import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.app.WebSession;
+import org.apache.openmeetings.web.common.OmModalCloseButton;
 import org.apache.openmeetings.web.pages.BaseInitedPage;
+import org.apache.openmeetings.web.room.IconTextModal;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
@@ -70,11 +77,63 @@ import org.slf4j.LoggerFactory;
 import com.github.openjson.JSONException;
 import com.github.openjson.JSONObject;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.TextContentModal;
+
 public class SignInPage extends BaseInitedPage {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(SignInPage.class);
-	private SignInDialog d;
-	private KickMessageDialog m;
+	public static final String TOKEN_PARAM = "token";
+	private SignInDialog signin;
+	private final Modal<String> kick = new IconTextModal("kick") {
+		private static final long serialVersionUID = 1L;
+		{
+			withLabel(new ResourceModel("606"));
+			withErrorIcon();
+			setCloseOnEscapeKey(false);
+			show(true);
+			setUseCloseHandler(true);
+			addButton(OmModalCloseButton.of("54"));
+		}
+
+		@Override
+		protected void onClose(IPartialPageRequestHandler target) {
+			WebSession.setKickedByAdmin(false);
+			Application.get().restartResponseAtSignInPage();
+		}
+	};
+	private final Modal<String> forgetInfoDialog = new TextContentModal("forgetInfo", new ResourceModel("321")) {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected void onClose(IPartialPageRequestHandler handler) {
+			signin.show(handler);
+		}
+	};
+	private final ForgetPasswordDialog forget = new ForgetPasswordDialog("forget", forgetInfoDialog);
+	private final Modal<String> registerInfoDialog = new TextContentModal("registerInfo", Model.of("")) {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		protected void onInitialize() {
+			super.onInitialize();
+			setModelObject(getString("warn.notverified"));
+			get("content").setOutputMarkupId(true);
+		}
+
+		@Override
+		public Modal<String> setModelObject(String obj) {
+			super.setModelObject(obj);
+			get("content").setDefaultModelObject(obj);
+			return this;
+		}
+
+		@Override
+		protected void onClose(IPartialPageRequestHandler handler) {
+			signin.show(handler);
+		}
+	};
+	RegisterDialog r = new RegisterDialog("register", registerInfoDialog);
 	@SpringBean
 	private ConfigurationDao cfgDao;
 	@SpringBean
@@ -88,6 +147,10 @@ public class SignInPage extends BaseInitedPage {
 
 	public SignInPage(PageParameters p) {
 		super();
+		WebSession.get().checkToken(p.get(TOKEN_PARAM));
+		if (WebSession.get().isSignedIn()) {
+			setResponsePage(Application.get().getHomePage());
+		}
 		StringValue oauthid = p.get("oauthid");
 		if (!oauthid.isEmpty()) { // oauth2 login
 			try {
@@ -121,7 +184,7 @@ public class SignInPage extends BaseInitedPage {
 		StringValue login = pp.getParameterValue("login"), password = pp.getParameterValue("password");
 		if (!login.isEmpty() && !password.isEmpty()) {
 			try {
-				if (WebSession.get().signIn(login.toString(), password.toString(), Type.user, null)) {
+				if (WebSession.get().signIn(login.toString(), password.toString(), Type.USER, null)) {
 					setResponsePage(Application.get().getHomePage());
 				} else {
 					log.error("Failed to login using POST parameters passed");
@@ -136,16 +199,33 @@ public class SignInPage extends BaseInitedPage {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		RegisterDialog r = new RegisterDialog("register");
-		ForgetPasswordDialog f = new ForgetPasswordDialog("forget");
-		d = new SignInDialog("signin", this);
-		d.setRegisterDialog(r);
-		d.setForgetPasswordDialog(f);
-		r.setSignInDialog(d);
-		f.setSignInDialog(d);
-		m = new KickMessageDialog("kick");
-		add(d.setVisible(!WebSession.get().isKickedByAdmin()),
-				r.setVisible(allowRegister()), f, m.setVisible(WebSession.get().isKickedByAdmin()));
+		signin = new SignInDialog("signin");
+		signin.setRegisterDialog(r);
+		signin.setForgetPasswordDialog(forget);
+		r.setSignInDialog(signin);
+		forget.setSignInDialog(signin);
+		add(signin.setVisible(!WebSession.get().isKickedByAdmin()),
+				r.setVisible(allowRegister()), forget, kick.setVisible(WebSession.get().isKickedByAdmin()));
+		add(forgetInfoDialog
+				.header(new ResourceModel("312"))
+				.addButton(OmModalCloseButton.of("54"))
+				.setUseCloseHandler(true)
+		);
+		add(registerInfoDialog
+				.header(new ResourceModel("235"))
+				.addButton(OmModalCloseButton.of("54"))
+				.setUseCloseHandler(true)
+		);
+	}
+
+	@Override
+	public void renderHead(IHeaderResponse response) {
+		super.renderHead(response);
+		response.render(OnDomReadyHeaderItem.forScript(""
+				+ "$('#signin-dialog, #register-dialog, #forget-dialog').on('shown.bs.modal', function () {\n"
+				+ "	$(this).find('.auto-focus').trigger('focus');\n"
+				+ "})"
+				));
 	}
 
 	boolean allowRegister() {

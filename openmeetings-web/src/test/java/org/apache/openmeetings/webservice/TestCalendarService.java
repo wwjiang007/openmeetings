@@ -92,11 +92,11 @@ public class TestCalendarService extends AbstractWebServiceTest {
 			.put("start", "2025-01-20T20:30:03+0300")
 			.put("end", "2025-01-20T21:30:03+0300")
 			.put("description", "Русский Тест")
-			.put("reminder", "email")
+			.put("reminder", "EMAIL")
 			.put("room", new JSONObject()
 					.put("name", "test24")
 					.put("comment", "appointment test room")
-					.put("type", "conference")
+					.put("type", "CONFERENCE")
 					.put("capacity", 15)
 					.put("appointment", true)
 					.put("isPublic", false)
@@ -108,15 +108,8 @@ public class TestCalendarService extends AbstractWebServiceTest {
 					.put("moderated", true)
 					.put("allowUserQuestions", true)
 					.put("allowRecording", false)
-					.put("waitForRecording", false)
-					.put("audioOnly", true)
-					.put("topBarHidden", false)
-					.put("chatHidden", false)
-					.put("activitiesHidden", false)
-					.put("filesExplorerHidden", false)
-					.put("actionsMenuHidden", false)
-					.put("screenSharingHidden", false)
-					.put("whiteboardHidden", false))
+					.put("waitRecording", false)
+					.put("audioOnly", true))
 			.put("languageId", 9)
 			.put("passwordProtected", false)
 			.put("connectedEvent", false)
@@ -275,7 +268,7 @@ public class TestCalendarService extends AbstractWebServiceTest {
 		assertEquals(1, dto.getMeetingMembers().size(), "DTO should have 1 attendees");
 
 		assertNull(mmDao.get(mmId), "Meeting member should deleted");
-		assertNull(getBean(InvitationDao.class).getByHash(hash, true, false), "Invitation should deleted");
+		assertNull(getBean(InvitationDao.class).getByHash(hash, true), "Invitation should deleted");
 		User uc = getBean(UserDao.class).get(mmUserId);
 		assertNotNull(uc, "Meeting member user should not be deleted");
 		assertFalse(uc.isDeleted(), "Meeting member user should not be deleted");

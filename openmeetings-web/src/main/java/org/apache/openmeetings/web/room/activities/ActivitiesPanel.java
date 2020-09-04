@@ -18,8 +18,14 @@
  */
 package org.apache.openmeetings.web.room.activities;
 
-import com.github.openjson.JSONArray;
-import com.github.openjson.JSONObject;
+import static org.apache.openmeetings.core.util.WebSocketHelper.sendRoom;
+import static org.apache.openmeetings.web.app.WebSession.getUserId;
+import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getNamedFunction;
+import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.room.Room.Right;
@@ -42,13 +48,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import static org.apache.openmeetings.core.util.WebSocketHelper.sendRoom;
-import static org.apache.openmeetings.web.app.WebSession.getUserId;
-import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getNamedFunction;
-import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
+import com.github.openjson.JSONArray;
+import com.github.openjson.JSONObject;
 
 public class ActivitiesPanel extends Panel {
 	private static final long serialVersionUID = 1L;
@@ -68,7 +69,7 @@ public class ActivitiesPanel extends Panel {
 		private static final long serialVersionUID = 1L;
 
 		private TextRoomMessage getRemoveMsg(String id) {
-			return new TextRoomMessage(room.getRoom().getId(), room.getClient(), RoomMessage.Type.activityRemove, id);
+			return new TextRoomMessage(room.getRoom().getId(), room.getClient(), RoomMessage.Type.ACTIVITY_REMOVE, id);
 		}
 
 		@Override
@@ -90,45 +91,45 @@ public class ActivitiesPanel extends Panel {
 						remove(target, id);
 						break;
 					case decline:
-						if (room.getClient().hasRight(Right.moderator)) {
+						if (room.getClient().hasRight(Right.MODERATOR)) {
 							sendRoom(getRemoveMsg(id));
 						}
 						break;
 					case accept:
 						Client client = cm.get(a.getUid());
-						if (room.getClient().hasRight(Right.moderator) && client != null && client.getRoom() != null && roomId == client.getRoom().getId()) {
+						if (room.getClient().hasRight(Right.MODERATOR) && client != null && client.getRoom() != null && roomId == client.getRoom().getId()) {
 							switch (a.getType()) {
 								case reqRightModerator:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.moderator);
+									room.allowRight(client, Right.MODERATOR);
 									break;
 								case reqRightAv:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.audio, Right.video);
+									room.allowRight(client, Right.AUDIO, Right.VIDEO);
 									break;
 								case reqRightPresenter:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.presenter);
+									room.allowRight(client, Right.PRESENTER);
 									break;
 								case reqRightWb:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.whiteBoard);
+									room.allowRight(client, Right.WHITEBOARD);
 									break;
 								case reqRightShare:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.share);
+									room.allowRight(client, Right.SHARE);
 									break;
 								case reqRightRemote:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.remoteControl);
+									room.allowRight(client, Right.REMOTE_CONTROL);
 									break;
 								case reqRightA:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.audio);
+									room.allowRight(client, Right.AUDIO);
 									break;
 								case reqRightMuteOthers:
 									sendRoom(getRemoveMsg(id));
-									room.allowRight(client, Right.muteOthers);
+									room.allowRight(client, Right.MUTE_OTHERS);
 									break;
 								default:
 									break;
@@ -153,14 +154,14 @@ public class ActivitiesPanel extends Panel {
 	public ActivitiesPanel(String id, RoomPanel room) {
 		super(id);
 		this.room = room;
-		setVisible(!room.getRoom().isHidden(RoomElement.Activities));
+		setVisible(!room.getRoom().isHidden(RoomElement.ACTIVITIES));
 		setOutputMarkupPlaceholderTag(true);
 		setMarkupId(id);
 		add(action);
 	}
 
 	private boolean shouldSkip(final boolean self, final Activity a) {
-		return !self && a.getType().isAction() && !room.getClient().hasRight(Right.moderator);
+		return !self && a.getType().isAction() && !room.getClient().hasRight(Right.MODERATOR);
 	}
 
 	public void add(Activity a, IPartialPageRequestHandler handler) {
@@ -233,8 +234,8 @@ public class ActivitiesPanel extends Panel {
 			case reqRightA:
 			case reqRightAv:
 			case reqRightMuteOthers:
-				aobj.put("accept", room.getClient().hasRight(Right.moderator));
-				aobj.put("decline", room.getClient().hasRight(Right.moderator));
+				aobj.put("accept", room.getClient().hasRight(Right.MODERATOR));
+				aobj.put("decline", room.getClient().hasRight(Right.MODERATOR));
 				break;
 			case haveQuestion:
 				aobj.put("find", !self);
@@ -277,11 +278,11 @@ public class ActivitiesPanel extends Panel {
 			case reqRightAv:
 			case reqRightMuteOthers:
 			case haveQuestion:
-				cls.append("ui-state-highlight");
+				cls.append("bg-warning");
 				break;
 			case roomEnter:
 			case roomExit:
-				cls.append("ui-state-default auto-clean");
+				cls.append("bg-white auto-clean");
 		}
 		return cls;
 	}

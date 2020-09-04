@@ -18,32 +18,24 @@
  */
 package org.apache.openmeetings.web.room;
 
-import java.util.ArrayList;
-
 import org.apache.openmeetings.web.app.Application;
-import org.apache.openmeetings.web.util.NonClosableMessageDialog;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.util.string.Strings;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogIcon;
-
-public class RedirectMessageDialog extends NonClosableMessageDialog {
+public class RedirectMessageDialog extends IconTextModal {
 	private static final long serialVersionUID = 1L;
 	private static final int DELAY = 5;
 	private final String labelId;
 	private final String url;
 	private final boolean autoOpen;
-	private Component label;
 
 	public RedirectMessageDialog(String id, String labelId, boolean autoOpen, String url) {
-		super(id, "", "", new ArrayList<DialogButton>(), DialogIcon.ERROR);
+		super(id);
 		this.labelId = labelId;
 		this.url = url;
 		this.autoOpen = autoOpen;
@@ -51,7 +43,11 @@ public class RedirectMessageDialog extends NonClosableMessageDialog {
 
 	@Override
 	protected void onInitialize() {
-		getTitle().setObject(getString("204"));
+		header(new ResourceModel("204"));
+		setCloseOnEscapeKey(false);
+		show(autoOpen);
+		withLabel(labelId);
+		withErrorIcon();
 		super.onInitialize();
 		if (autoOpen) {
 			startTimer(null);
@@ -59,7 +55,7 @@ public class RedirectMessageDialog extends NonClosableMessageDialog {
 	}
 
 	private void startTimer(IPartialPageRequestHandler handler) {
-		label.add(new OmRedirectTimerBehavior(DELAY, labelId) {
+		getLabel().add(new OmTimerBehavior(DELAY, labelId) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -70,43 +66,21 @@ public class RedirectMessageDialog extends NonClosableMessageDialog {
 					throw new RedirectToUrlException(url);
 				}
 			}
-		});
+		}).setOutputMarkupId(true);
 		if (handler != null) {
-			handler.add(label);
+			handler.add(getLabel());
 		}
 	}
 
 	@Override
-	protected void onOpen(IPartialPageRequestHandler handler) {
-		super.onOpen(handler);
+	public RedirectMessageDialog show(IPartialPageRequestHandler handler) {
+		super.show(handler);
 		startTimer(handler);
+		return this;
 	}
 
 	@Override
-	public void onConfigure(JQueryBehavior behavior) {
-		super.onConfigure(behavior);
-		behavior.setOption("autoOpen", autoOpen);
-		behavior.setOption("resizable", false);
-	}
-
-	@Override
-	public boolean isModal() {
-		return true;
-	}
-
-	@Override
-	public boolean isDefaultCloseEventEnabled() {
-		return false;
-	}
-
-	@Override
-	public void onClose(IPartialPageRequestHandler handler, DialogButton button) {
-		//no-op
-	}
-
-	@Override
-	protected Component newLabel(String id, IModel<String> model) {
-		label = super.newLabel(id, model);
-		return label;
+	protected Component createHeaderCloseButton(String id) {
+		return super.createHeaderCloseButton(id).setVisible(false);
 	}
 }

@@ -96,7 +96,7 @@ public class TestAppointmentAddAppointment extends AbstractWicketTester {
 		Boolean isMonthly = false;
 		Boolean isDaily = false;
 		Boolean isWeekly = false;
-		String remind = Appointment.Reminder.ical.name();
+		String remind = Appointment.Reminder.ICAL.name();
 		Boolean isYearly = false;
 		String[] mmClient = new String[1];
 		for (int i = 0; i < 1; i++) {
@@ -150,13 +150,13 @@ public class TestAppointmentAddAppointment extends AbstractWicketTester {
 		Appointment a = new Appointment();
 		a.setTitle("Test title");
 		setTime(a);
-		a.setReminder(Reminder.ical);
+		a.setReminder(Reminder.ICAL);
 		a.setMeetingMembers(new ArrayList<>());
 		User owner = userDao.get(1L);
 		a.setOwner(owner);
 		a.setRoom(new Room());
 		a.getRoom().setAppointment(true);
-		a.getRoom().setType(Room.Type.conference);
+		a.getRoom().setType(Room.Type.CONFERENCE);
 		for (int i = 0; i < 3; ++i) {
 			MeetingMember mm = new MeetingMember();
 			mm.setUser(getContact(randomUUID().toString(), owner.getId()));

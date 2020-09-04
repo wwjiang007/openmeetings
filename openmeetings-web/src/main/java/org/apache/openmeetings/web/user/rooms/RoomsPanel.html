@@ -25,32 +25,30 @@
 		<div wicket:id="list"></div>
 	</div>
 	<!-- Users in this Room -->
-	<div class="ui-widget-content" wicket:id="details" style="vertical-align: top; padding: 10px;">
-		<div class="formelement" style="font-style: italic;">
-			<label><wicket:message key="404" /></label>
+	<div class="p-3" wicket:id="details">
+		<div class="formelement">
+			<label><i><wicket:message key="404" /></i></label>
 		</div>
 		<div class="formelement">
-			<label style="font-weight: bold;"><wicket:message key="406" /></label>
+			<label><strong><wicket:message key="406" /></strong></label>
 			<span wicket:id="roomName"></span>&nbsp;#<span wicket:id="roomId"></span>
 		</div>
 		<div class="formelement">
-			<label style="font-weight: bold;"><wicket:message key="196" /></label>
+			<label><strong><wicket:message key="196" /></strong></label>
 			<span wicket:id="roomComment"></span>
 		</div>
 		<div class="formelement">
 			<label><wicket:message key="407" /></label>
 		</div>
-		<div class="tableWrapper" id="adminTable">
-			<table class="list-table full-width">
-				<tbody wicket:id="clientsContainer">
-					<tr wicket:id="clients">
-						<td style="width: 50px;"><img wicket:id="clientImage" style="min-width: 50px; height:50px" /></td>
-						<td style="width: 350px; height:50px">
-							<div style="width: 350px; height:50px"><span wicket:id="clientLogin"></span>&nbsp;<wicket:message key="408"/>&nbsp;<span wicket:id="from"></span></div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+		<div class="tableWrapper overflow-y-auto" id="adminTable" wicket:id="clientsContainer">
+			<div class="row no-gutters" wicket:id="clients">
+				<div class="col-2">
+					<img class="img-fluid" wicket:id="clientImage"/>
+				</div>
+				<div class="col-10">
+					<span wicket:id="clientLogin"></span>&nbsp;<wicket:message key="408"/>&nbsp;<span wicket:id="from"></span>
+				</div>
+			</div>
 		</div>
 	</div>
 </wicket:panel>

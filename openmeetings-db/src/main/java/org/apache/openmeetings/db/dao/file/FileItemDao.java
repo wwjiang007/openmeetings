@@ -153,7 +153,7 @@ public class FileItemDao extends BaseFileItemDao {
 	}
 
 	public FileItem update(FileItem f) {
-		return (FileItem)super._update(f);
+		return (FileItem)super.updateBase(f);
 	}
 
 	private void updateChilds(FileItem f) {
@@ -161,7 +161,7 @@ public class FileItemDao extends BaseFileItemDao {
 			child.setOwnerId(f.getOwnerId());
 			child.setRoomId(f.getRoomId());
 			update(child);
-			if (Type.Folder == f.getType()) {
+			if (Type.FOLDER == f.getType()) {
 				updateChilds(child);
 			}
 		}
@@ -178,7 +178,7 @@ public class FileItemDao extends BaseFileItemDao {
 	public FileItem move(long id, long parentId, long ownerId, long roomId) {
 		log.debug(".move() started");
 
-		FileItem f = get(id);
+		FileItem f = get(Long.valueOf(id));
 		if (f == null) {
 			return null;
 		}
@@ -198,7 +198,7 @@ public class FileItemDao extends BaseFileItemDao {
 			f.setParentId(parentId);
 			f.setOwnerId(null);
 		}
-		if (Type.Folder == f.getType()) {
+		if (Type.FOLDER == f.getType()) {
 			updateChilds(f);
 		}
 		return update(f);
@@ -206,7 +206,7 @@ public class FileItemDao extends BaseFileItemDao {
 
 	public List<BaseFileItem> getAllRoomFiles(String search, long start, long count, Long roomId/*, Long ownerId*/, List<Group> groups) {
 		return setLimits(em.createNamedQuery("getAllFileItemsForRoom", BaseFileItem.class)
-					.setParameter("folder", Type.Folder)
+					.setParameter("folder", Type.FOLDER)
 					.setParameter("roomId", roomId)
 					.setParameter("groups", groups.parallelStream().map(Group::getId).collect(Collectors.toList()))
 					.setParameter("name", String.format("%%%s%%", search == null ? "" : search))
@@ -241,9 +241,9 @@ public class FileItemDao extends BaseFileItemDao {
 			if (f.exists()) {
 				File base = OmFileHelper.getUploadFilesDir();
 				switch (f.getType()) {
-					case Image:
-					case Presentation:
-					case Video:
+					case IMAGE:
+					case PRESENTATION:
+					case VIDEO:
 						File tFolder = new File(base, f.getHash());
 
 						if (tFolder.exists()) {
@@ -254,7 +254,7 @@ public class FileItemDao extends BaseFileItemDao {
 						break;
 				}
 			}
-			if (Type.Folder == f.getType()) {
+			if (Type.FOLDER == f.getType()) {
 				for (FileItem child : getByParent(f.getId())) {
 					size += getSize(child);
 				}

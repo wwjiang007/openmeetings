@@ -35,7 +35,6 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.getVideoPreset;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -310,29 +309,34 @@ public abstract class BaseConverter {
 		return getDimensions(r, 'x');
 	}
 
-	protected List<String> addMp4OutParams(Recording r, List<String> argv, String mp4path) {
-		argv.addAll(Arrays.asList(
-				"-c:v", "h264", //
-				"-crf", "24",
-				"-vsync", "0",
-				"-pix_fmt", "yuv420p",
-				"-preset", getVideoPreset(),
-				"-profile:v", "baseline",
-				"-level", "3.0",
-				"-movflags", "faststart",
-				"-c:a", "aac",
-				"-ar", String.valueOf(getAudioRate()),
-				"-b:a", getAudioBitrate(),
-				"-s", getDimensions(r), //
-				mp4path
+	protected List<String> additionalMp4OutParams(Recording r) {
+		return List.of();
+	}
+
+	private List<String> addMp4OutParams(Recording r, List<String> argv, String mp4path) {
+		argv.addAll(List.of(
+				"-c:v", "h264" //
+				, "-crf", "24"
+				, "-vsync", "0"
+				, "-pix_fmt", "yuv420p"
+				, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+				, "-preset", getVideoPreset()
+				, "-profile:v", "baseline"
+				, "-level", "3.0"
+				, "-movflags", "faststart"
+				, "-c:a", "aac"
+				, "-ar", String.valueOf(getAudioRate())
+				, "-b:a", getAudioBitrate()
 				));
+		argv.addAll(additionalMp4OutParams(r));
+		argv.add(mp4path);
 		return argv;
 	}
 
-	protected String convertToMp4(Recording r, List<String> _argv, ProcessResultList logs) throws IOException {
+	protected String convertToMp4(Recording r, List<String> inArgv, ProcessResultList logs) throws IOException {
 		String mp4path = r.getFile().getCanonicalPath();
-		List<String> argv = new ArrayList<>(Arrays.asList(getPathToFFMPEG(), "-y"));
-		argv.addAll(_argv);
+		List<String> argv = new ArrayList<>(List.of(getPathToFFMPEG(), "-y"));
+		argv.addAll(inArgv);
 		logs.add(ProcessHelper.executeScript("generate MP4", addMp4OutParams(r, argv, mp4path).toArray(new String[]{})));
 		return mp4path;
 	}
@@ -350,7 +354,13 @@ public abstract class BaseConverter {
 		logs.add(ProcessHelper.executeScript(String.format("generate preview PNG :: %s", f.getHash()), argv));
 	}
 
-	protected static Dimension getDimension(String txt) {
+	/**
+	 * Parse the width height from the FFMPEG output
+	 *
+	 * @param txt FFMPEG output
+	 * @return {@link Dimension} parsed
+	 */
+	protected static Dimension getDimension(String txt, Dimension def) {
 		Matcher matcher = p.matcher(txt);
 
 		if (matcher.find()) {
@@ -359,7 +369,7 @@ public abstract class BaseConverter {
 			return new Dimension(toInt(resolutions[0]), toInt(resolutions[1]));
 		}
 
-		return new Dimension(100, 100); // will return 100x100 for non-video to be able to play
+		return def;
 	}
 
 	protected void finalizeRec(Recording r, String mp4path, ProcessResultList logs) throws IOException {

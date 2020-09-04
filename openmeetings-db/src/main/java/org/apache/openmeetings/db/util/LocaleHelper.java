@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.db.util;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -35,7 +34,7 @@ public class LocaleHelper {
 	private LocaleHelper() {}
 
 	public static List<String> getCountries() {
-		return Arrays.asList(Locale.getISOCountries());
+		return List.of(Locale.getISOCountries());
 	}
 
 	public static String getCountryName(String code, Locale l) {
@@ -46,10 +45,10 @@ public class LocaleHelper {
 		return new Locale.Builder().setRegion(code).build().getDisplayCountry();
 	}
 
-	public static String validateCountry(String _code) {
+	public static String validateCountry(String inCode) {
 		List<String> list = getCountries();
 		Set<String> countries = new HashSet<>(list);
-		String code = _code == null ? "" : _code.toUpperCase(Locale.ROOT);
+		String code = inCode == null ? "" : inCode.toUpperCase(Locale.ROOT);
 		if (!countries.contains(code)) {
 			String newCountry = list.get(0);
 			log.warn("Invalid country found: {}, will be replaced with: {}", code, newCountry);

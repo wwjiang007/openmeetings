@@ -20,9 +20,12 @@ package org.apache.openmeetings.web.common.tree;
 
 import org.apache.openmeetings.db.entity.file.BaseFileItem;
 import org.apache.openmeetings.db.entity.file.BaseFileItem.Type;
+import org.apache.openmeetings.web.util.TouchPunchResourceReference;
 import org.apache.wicket.Component;
 import org.apache.wicket.extensions.markup.html.repeater.tree.DefaultNestedTree;
 import org.apache.wicket.extensions.markup.html.repeater.tree.ITreeProvider;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -53,8 +56,14 @@ public class FileItemTree extends DefaultNestedTree<BaseFileItem> {
 	@Override
 	protected Component newContentComponent(String id, IModel<BaseFileItem> lm) {
 		BaseFileItem r = lm.getObject();
-		return Type.Folder == r.getType() || r.getId() == null
+		return Type.FOLDER == r.getType() || r.getId() == null
 				? new FolderPanel(id, lm, treePanel)
 				: new FileItemPanel(id, lm, treePanel);
+	}
+
+	@Override
+	public void renderHead(IHeaderResponse response) {
+		super.renderHead(response);
+		response.render(JavaScriptHeaderItem.forReference(TouchPunchResourceReference.instance()));
 	}
 }

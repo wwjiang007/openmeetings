@@ -29,7 +29,6 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.isSipEnabled;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +49,7 @@ import org.apache.openmeetings.db.entity.room.Room.Type;
 import org.apache.openmeetings.db.entity.room.RoomFile;
 import org.apache.openmeetings.db.entity.room.RoomGroup;
 import org.apache.openmeetings.db.util.DaoHelper;
+import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,6 +81,18 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 					, "roomModerators", "roomGroups", "roomFiles"));
 		} else {
 			log.info("[get]: No room id given");
+		}
+		return r;
+	}
+
+	public Room get(String tag) {
+		Room r = null;
+		if (!Strings.isEmpty(tag)) {
+			r = single(fillLazy(em
+					, oem -> oem.createNamedQuery("getRoomByTag", Room.class).setParameter("tag", tag)
+					, "roomModerators", "roomGroups", "roomFiles"));
+		} else {
+			log.info("[get]: No room tag given");
 		}
 		return r;
 	}
@@ -178,11 +190,6 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 				.getResultList();
 	}
 
-	public long getRoomsCapacityByIds(Collection<Long> ids) {
-		return ids == null || ids.isEmpty() ? 0L
-			: em.createNamedQuery("getRoomsCapacityByIds", Long.class).setParameter("ids", ids).getSingleResult();
-	}
-
 	private String getSipNumber(long roomId) {
 		if (isSipEnabled()) {
 			return cfgDao.getString(CONFIG_SIP_ROOM_PREFIX, "400") + roomId;
@@ -235,11 +242,11 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 			room.setName(name);
 			room.setType(type);
 			room.setComment("My Rooms of ownerId " + ownerId);
-			room.setCapacity(Room.Type.conference == type ? 25L : 120L);
+			room.setCapacity(Room.Type.CONFERENCE == type ? 25L : 120L);
 			room.setAllowUserQuestions(true);
 			room.setOwnerId(ownerId);
 			room.setAllowRecording(true);
-			room.hide(RoomElement.MicrophoneStatus);
+			room.hide(RoomElement.MICROPHONE_STATUS);
 
 			room = update(room, ownerId);
 			if (room.getId() != null) {
@@ -266,7 +273,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 		Set<Long> ids = new HashSet<>();
 		//(RECENT_ROOMS_COUNT + 1) passes required to preserve the order :(
 		for (ConferenceLog l : em.createNamedQuery("getLogRecentRooms", ConferenceLog.class)
-				.setParameter("roomEnter", ConferenceLog.Type.roomEnter)
+				.setParameter("roomEnter", ConferenceLog.Type.ROOM_ENTER)
 				.setParameter(PARAM_USER_ID, userId)
 				.getResultList())
 		{
@@ -296,8 +303,8 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 
 	public List<Room> getMyRooms(Long userId, String confLbl, String restrLbl) {
 		List<Room> result = new ArrayList<>();
-		result.add(getUserRoom(userId, Room.Type.conference, confLbl));
-		result.add(getUserRoom(userId, Room.Type.presentation, restrLbl));
+		result.add(getUserRoom(userId, Room.Type.CONFERENCE, confLbl));
+		result.add(getUserRoom(userId, Room.Type.PRESENTATION, restrLbl));
 		result.addAll(getAppointedRoomsByUser(userId));
 		return result;
 	}

@@ -1,22 +1,16 @@
 /* Licensed under the Apache License, Version 2.0 (the "License") http://www.apache.org/licenses/LICENSE-2.0 */
 var Chat = function() {
-	const align = Settings.isRtl ? 'align-right' : 'align-left'
-		, alignIco = Settings.isRtl ? 'align-left' : 'align-right'
-		, msgIdPrefix = 'chat-msg-id-'
+	const msgIdPrefix = 'chat-msg-id-'
 		, closedSize = 20
 		, closedSizePx = closedSize + "px"
 		, emoticon = new CSSEmoticon()
 		, doneTypingInterval = 5000 //time in ms, 5 second for example
-		, iconOpen = 'ui-icon-caret-1-n'
-		, iconOpenRoom = 'ui-icon-caret-1-' + (Settings.isRtl ? 'e' : 'w')
-		, iconClose = 'ui-icon-caret-1-s'
-		, iconCloseRoom = 'ui-icon-caret-1-' + (Settings.isRtl ? 'w' : 'e')
 		, SEND_ENTER = 'enter', SEND_CTRL = 'ctrl'
 		;
-	let p, pp, ctrl, icon, tabs, openedHeight = "345px", openedWidth = "300px", allPrefix = "All"
+	let p, pp, ctrl, tabs, openedHeight = "345px", openedWidth = "300px", allPrefix = "All"
 		, roomPrefix = "Room ", typingTimer, audio, roomMode = false, globalWidth = 600
 		, editor = $('#chatMessage .wysiwyg-editor'), muted = false, sendOn, DEF_SEND
-		, userId;
+		, userId, inited = false
 		;
 
 	try {
@@ -75,7 +69,7 @@ var Chat = function() {
 	}
 	function doneTyping () {
 		typingTimer = null;
-		chatActivity('typing_stop', $('.room-block .container').data('room-id'));
+		chatActivity('typing_stop', $('.room-block .room-container').data('room-id'));
 	}
 	function _emtClick() {
 		_editorAppend($(this).data('emt'));
@@ -97,7 +91,7 @@ var Chat = function() {
 		}
 		const emtBtn = $('#emoticons');
 		emtBtn.html('');
-		emtBtn.append(' ' + emoticon.emoticonize(':)') + ' <b class="caret"></b>');
+		emtBtn.append(' ' + emoticon.emoticonize(':)'));
 		const a = $('#chat .audio');
 		const sbtn = $('#chat .send-btn');
 		{ //scope
@@ -105,7 +99,6 @@ var Chat = function() {
 			_updateAudioBtn(a);
 			_updateSendBtn(sbtn)
 		}
-		$('#chat .chat-btn').hover(function(){ $(this).addClass('ui-state-hover') }, function(){ $(this).removeClass('ui-state-hover') });
 		a.off().click(function() {
 			const s = _load();
 			muted = s.chat.muted = !s.chat.muted;
@@ -127,10 +120,26 @@ var Chat = function() {
 		return p.hasClass('closed');
 	}
 	function activateTab(id) {
-		tabs.tabs("option", "active", tabs.find('a[href="#' + id + '"]').parent().index());
-	}
-	function isInited() {
-		return !!$("#chatTabs").data("ui-tabs");
+		if (isClosed()) {
+			tabs.find('.nav.nav-tabs .nav-link').each(function() {
+				const self = $(this)
+					, tabId = self.attr('aria-controls')
+					, tab = $('#' + tabId);
+
+				if (tabId === id) {
+					self.addClass('active');
+					tab.addClass('active');
+					self.attr('aria-selected', true);
+				} else {
+					self.removeClass('active');
+					tab.removeClass('active');
+					self.attr('aria-selected', false);
+				}
+			});
+		} else {
+			$('#chatTabs li a[aria-controls="' + id + '"]').tab('show');
+		}
+		$('#activeChatTab').val(id).trigger('change');
 	}
 	function _reinit(opts) {
 		userId = opts.userId;
@@ -142,31 +151,23 @@ var Chat = function() {
 		clearTimeout(p.data('timeout'));
 		pp = $('#chatPanel, #chatPopup');
 		ctrl = $('#chatPopup .control.block');
-		icon = $('#chatPopup .control.block .ui-icon');
 		editor = $('#chatMessage .wysiwyg-editor');
-		icon.removeClass(function(index, className) {
-			return (className.match (/(^|\s)ui-icon-caret-\S+/g) || []).join(' ');
-		});
 		initToolbar();
-		tabs = $("#chatTabs").tabs({
-			activate: function(event, ui) {
-				const ct = ui.newPanel[0].id;
-				_scrollDown($('#' + ct));
-				$('#activeChatTab').val(ct).trigger('change');
-			}
+		tabs = $("#chatTabs");
+		tabs.off().on('shown.bs.tab', function (e) {
+			const ct = $(e.target).attr('aria-controls');
+			_scrollDown($('#' + ct));
+			$('#activeChatTab').val(ct).trigger('change');
 		});
-		// close icon: removing the tab on click
-		tabs.delegate("span.ui-icon-close", "click", function() {
-			const panelId = $(this).closest("li").remove().attr("aria-controls");
-			$("#" + panelId).remove();
-			tabs.tabs("refresh");
+		tabs.delegate(".btn.close-chat", "click", function() {
+			const panelId = $(this).closest("a").attr("aria-controls");
+			_removeTab(panelId);
+			$('#chatTabs li:last-child a').tab('show');
 		});
 		if (roomMode) {
-			icon.addClass(isClosed() ? iconOpenRoom : iconCloseRoom);
 			_removeResize();
 		} else {
 			ctrl.attr('title', '');
-			icon.addClass(iconOpen);
 			p.removeClass('room opened').addClass('closed')
 				.off('mouseenter mouseleave')
 				.resizable({
@@ -184,9 +185,9 @@ var Chat = function() {
 				});
 			__setCssHeight(closedSize);
 		}
-		ctrl.off('click').click(Chat.toggle);
+		ctrl.off().click(Chat.toggle);
 		$('#chatMessage').off().on('input propertychange paste', function () {
-			const room = $('.room-block .container');
+			const room = $('.room-block .room-container');
 			if (room.length) {
 				if (!!typingTimer) {
 					clearTimeout(typingTimer);
@@ -196,16 +197,20 @@ var Chat = function() {
 				typingTimer = setTimeout(doneTyping, doneTypingInterval);
 			}
 		});
+		$('#chat .chat-toolbar .link-field').off().on('keypress', function() {
+			if (event.keyCode === 13) {
+				$(this).parent().find('button').trigger('click');
+			};
+			return event.keyCode !== 13;
+		});
+		inited = true;
 	}
 	function _removeTab(id) {
-		$('#chat li[aria-controls="' + id + '"]').remove();
+		$('#chatTabs li a[aria-controls="' + id + '"]').parent().remove();
 		$('#' + id).remove();
-		if (isInited()) {
-			tabs.tabs("refresh");
-		}
 	}
 	function _addTab(id, label) {
-		if (!isInited()) {
+		if (!inited) {
 			_reinit({});
 		}
 		if ($('#chat').length < 1 || $('#' + id).length) {
@@ -214,14 +219,59 @@ var Chat = function() {
 		if (!label) {
 			label = id === "chatTab-all" ? allPrefix : roomPrefix + id.substr(9);
 		}
-		const li = $('<li>').append($('<a>').attr('href', '#' + id).text(label));
-		if (id.indexOf("chatTab-r") !== 0) {
-			li.append(OmUtil.tmpl('#chat-close-block'));
+		const link = $('<a class="nav-link" data-toggle="tab" role="tab">')
+			.attr('aria-controls', id)
+			.attr('href', '#' + id).text(label)
+			, li = $('<li class="nav-item">').append(link);
+		if (id.indexOf("chatTab-u") === 0) {
+			link.append(OmUtil.tmpl('#chat-close-block'));
 		}
-		tabs.find(".ui-tabs-nav").append(li);
-		tabs.append("<div class='messageArea' id='" + id + "'></div>");
-		tabs.tabs("refresh");
+		tabs.find('.nav.nav-tabs').append(li);
+		const msgArea = OmUtil.tmpl('#chat-msg-area-template', id);
+		tabs.find('.tab-content').append(msgArea);
+		msgArea.append($('<div class="clear icons actions align-left">').addClass('short')
+				.append(OmUtil.tmpl('#chat-actions-short-template')));
+		msgArea.append($('<div class="clear icons actions align-left">').addClass('short-mod')
+				.append(OmUtil.tmpl('#chat-actions-short-template'))
+				.append(OmUtil.tmpl('#chat-actions-accept-template')));
+		msgArea.append($('<div class="clear icons actions align-left">').addClass('full')
+				.append(OmUtil.tmpl('#chat-actions-short-template'))
+				.append(OmUtil.tmpl('#chat-actions-others-template').children().clone()));
+		msgArea.append($('<div class="clear icons actions align-left">').addClass('full-mod')
+				.append(OmUtil.tmpl('#chat-actions-short-template'))
+				.append(OmUtil.tmpl('#chat-actions-others-template').children().clone())
+				.append(OmUtil.tmpl('#chat-actions-accept-template')));
+		const actions = __hideActions();
+		actions.find('.user').off().click(function() {
+			const e = $(this).parent();
+			showUserInfo(e.data("userId"));
+		});
+		actions.find('.add').off().click(function() {
+			const e = $(this).parent();
+			addContact(e.data("userId"));
+		});
+		actions.find('.new-email').off().click(function() {
+			const e = $(this).parent();
+			privateMessage(e.data("userId"));
+		});
+		actions.find('.invite').off().click(function() {
+			const e = $(this).parent();
+			inviteUser(e.data("userId"));
+		});
+		actions.find('.accept').off().click(function() {
+			const e = $(this).parent()
+				, msgId = e.data('msgId');
+			chatActivity('accept', e.data('roomId'), msgId);
+			__hideActions();
+			$('#chat-msg-id-' + msgId).remove();
+		});
 		activateTab(id);
+	}
+	function __hideActions() {
+		return $('#chat .tab-content .messageArea .icons').hide();
+	}
+	function __getActions(row) {
+		return row.closest('.messageArea').find('.actions.' + row.data('actions'));
 	}
 	function _addMessage(m) {
 		if ($('#chat').length > 0 && m && m.type === "chat") {
@@ -231,21 +281,30 @@ var Chat = function() {
 				if (cm.from.id !== userId) {
 					notify = true;
 				}
+				const actions = ('full' === cm.actions ? 'full' : 'short') + (cm.needModeration ? '-mod' : '');
 				msg = OmUtil.tmpl('#chat-msg-template', msgIdPrefix + cm.id)
-				msg.find('.user-row').css('background-image', 'url(' + (!!cm.from.img ? cm.from.img : './profile/' + cm.from.id + '?anticache=' + Date.now()) + ')');
-				msg.find('.from').addClass(align).data('user-id', cm.from.id).html(cm.from.name || cm.from.displayName);
-				msg.find('.time').addClass(alignIco).html(cm.time).attr('title', cm.sent);
-				const icons = msg.find('.icons').addClass(align)
-					.append(OmUtil.tmpl('#chat-info-template').addClass(alignIco).data('user-id', cm.from.id));
-				if ('full' === cm.actions) {
-					icons.append(OmUtil.tmpl('#chat-add-template').addClass(alignIco).data('user-id', cm.from.id))
-						.append(OmUtil.tmpl('#chat-message-template').addClass(alignIco).data('user-id', cm.from.id))
-						.append(OmUtil.tmpl('#chat-invite-template').addClass(alignIco).data('user-id', cm.from.id));
-				}
+				const row = msg.find('.user-row')
+					.data('userId', cm.from.id)
+					.data('actions', actions)
+					.mouseenter(function() {
+						__hideActions();
+						__getActions($(this))
+							.data('userId', $(this).data('userId'))
+							.data('roomId', $(this).data('roomId'))
+							.data('msgId', $(this).data('msgId'))
+							.css('top', ($(this).closest('.msg-row')[0].offsetTop + 20) + 'px')
+							.show();
+					});
 				if (cm.needModeration) {
-					msg.append(OmUtil.tmpl('#chat-accept-template')
-							.data('msgid', cm.id).data('roomid', cm.scope.substring(9)).find('.tick').addClass(alignIco));
+					row.parent().addClass('need-moderation');
+					row.data('roomId', cm.scope.substring(9))
+						.data('msgId', cm.id);
 				}
+				area.mouseleave(function() {
+					__hideActions();
+				});
+				msg.find('.from').data('user-id', cm.from.id).html(cm.from.displayName || cm.from.name);
+				msg.find('.time').html(cm.time).attr('title', cm.sent);
 				if (!area.length) {
 					_addTab(cm.scope, cm.scopeName);
 					area = $('#' + cm.scope);
@@ -255,17 +314,21 @@ var Chat = function() {
 				}
 				const btm = area[0].scrollHeight - (area.scrollTop() + area.innerHeight()) < 3; //approximately equal
 				if (area.data('lastDate') !== cm.date) {
-					area.append(OmUtil.tmpl('#chat-date-template').html(cm.date));
+					area.append(OmUtil.tmpl('#chat-date-template').html(cm.date).mouseenter(function() {
+						__hideActions();
+					}));
 					area.data('lastDate', cm.date);
 				}
 				area.append(msg);
-				msg.find('.msg').addClass(align).html(emoticon.emoticonize(!!cm.message ? cm.message : ""));
+				msg.find('.user-row')[0].style.backgroundImage = 'url(' + (!!cm.from.img ? cm.from.img : './profile/' + cm.from.id + '?anticache=' + Date.now()) + ')';
+
+				msg.find('.msg').html(emoticon.emoticonize(!!cm.message ? cm.message : ""));
 				if (btm) {
 					_scrollDown(area);
 				}
 			}
 			if (notify) {
-				ctrl.addClass('ui-state-highlight');
+				ctrl.addClass('bg-warning');
 				if (p.is(':visible') && !muted) {
 					audio.play()
 						.then(function() {
@@ -297,8 +360,7 @@ var Chat = function() {
 	}
 	function _open(handler) {
 		if (isClosed()) {
-			icon.removeClass(roomMode ? iconOpenRoom : iconOpen).addClass(roomMode ? iconCloseRoom : iconClose);
-			ctrl.removeClass('ui-state-highlight');
+			ctrl.removeClass('bg-warning');
 			let opts;
 			if (roomMode) {
 				opts = {width: openedWidth};
@@ -307,6 +369,7 @@ var Chat = function() {
 				p.resizable("option", "disabled", false);
 			}
 			p.removeClass('closed').animate(opts, 1000, function() {
+				__hideActions();
 				p.removeClass('closed');
 				p.css({'height': '', 'width': ''});
 				if (typeof(handler) === 'function') {
@@ -324,7 +387,6 @@ var Chat = function() {
 	}
 	function _close(handler) {
 		if (!isClosed()) {
-			icon.removeClass(roomMode ? iconCloseRoom : iconClose).addClass(roomMode ? iconOpenRoom : iconOpen);
 			let opts;
 			if (roomMode) {
 				opts = {width: closedSizePx};
@@ -362,6 +424,11 @@ var Chat = function() {
 	}
 	function _setRoomMode(_mode) {
 		roomMode = _mode;
+		if (inited && !roomMode) {
+			// remove all private chats on room exit
+			$('li[aria-controls^="chatTab-u"]').remove();
+			$('div[id^="chatTab-u"]').remove();
+		}
 		_reinit({userId: userId, all: allPrefix, room: roomPrefix, sendOnEnter: sendOn === SEND_ENTER});
 	}
 	function _scrollDown(area) {
@@ -426,7 +493,7 @@ $(function() {
 			if (msg instanceof Blob) {
 				return; //ping
 			}
-			const m = jQuery.parseJSON(msg);
+			const m = JSON.parse(msg);
 			if (m) {
 				switch(m.type) {
 					case "chat":

@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-server</artifactId>
@@ -40,6 +40,7 @@
 		<om.webapp>webapps/openmeetings</om.webapp>
 		<root.webapp>webapps/ROOT</root.webapp>
 		<server-file.dir>web-server</server-file.dir>
+		<autoModuleName>apache.openmeetings.server</autoModuleName>
 	</properties>
 	<url>https://openmeetings.apache.org</url>
 	<scm>
@@ -117,7 +118,7 @@
 			<id>prepare-web-server</id>
 			<activation>
 				<file>
-					<missing>web-server/apache-tomcat-9.0.22.tar.gz</missing> <!-- TODO should be in-sync with global property -->
+					<missing>web-server/apache-tomcat-9.0.37.tar.gz</missing> <!-- TODO should be in-sync with global property -->
 				</file>
 			</activation>
 			<build>

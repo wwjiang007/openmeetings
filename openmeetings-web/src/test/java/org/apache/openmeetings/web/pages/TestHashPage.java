@@ -25,8 +25,7 @@ import static org.apache.openmeetings.web.pages.HashPage.INVITATION_HASH;
 import static org.apache.openmeetings.web.pages.HashPage.PANEL_MAIN;
 import static org.apache.openmeetings.web.pages.HashPage.PANEL_RECORDING;
 import static org.apache.openmeetings.web.util.OmUrlFragment.CHILD_ID;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.UUID;
@@ -53,8 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.ui.widget.dialog.MessageDialog;
+import de.agilecoders.wicket.core.markup.html.bootstrap.dialog.Modal;
 
 public class TestHashPage extends AbstractWicketTester {
 	private static final Logger log = LoggerFactory.getLogger(TestHashPage.class);
@@ -66,21 +64,23 @@ public class TestHashPage extends AbstractWicketTester {
 	@Autowired
 	protected InvitationDao inviteDao;
 
+	private void checkAccessDenied(boolean visible) {
+		@SuppressWarnings("unchecked")
+		Modal<String> dlg = (Modal<String>)tester.getComponentFromLastRenderedPage("access-denied");
+		assertTrue(tester.getLastResponseAsString().contains("$('#" + dlg.getMarkupId() + "').modal({keyboard:true, show:" + visible + "});"));
+	}
+
 	private void checkAccessDenied(PageParameters pp) {
 		tester.startPage(HashPage.class, pp);
 		tester.assertRenderedPage(HashPage.class);
-		MessageDialog dlg = (MessageDialog)tester.getComponentFromLastRenderedPage("access-denied");
-		Boolean autoOpen = ((JQueryBehavior)dlg.getBehaviors().get(0)).getOption("autoOpen");
-		assertTrue(autoOpen, "Access denied should be displayed");
+		checkAccessDenied(true);
 		tester.assertInvisible(PANEL_MAIN);
 	}
 
 	private HashPage commonCheck(PageParameters pp) {
 		HashPage page = tester.startPage(HashPage.class, pp);
 		tester.assertRenderedPage(HashPage.class);
-		MessageDialog dlg = (MessageDialog)tester.getComponentFromLastRenderedPage("access-denied");
-		Boolean autoOpen = ((JQueryBehavior)dlg.getBehaviors().get(0)).getOption("autoOpen");
-		assertFalse(autoOpen, "Access denied should NOT be displayed");
+		checkAccessDenied(false);
 		return page;
 	}
 
@@ -118,12 +118,12 @@ public class TestHashPage extends AbstractWicketTester {
 
 		// valid period of Invitation
 		switch (valid) {
-			case Period:
+			case PERIOD:
 				i.setValidFrom(new Date(from.getTime() - (5 * 60 * 1000)));
 				i.setValidTo(to);
 				break;
-			case Endless:
-			case OneTime:
+			case ENDLESS:
+			case ONE_TIME:
 			default:
 				break;
 		}
@@ -171,7 +171,7 @@ public class TestHashPage extends AbstractWicketTester {
 
 	@Test
 	public void testValidOneTimeRoom() {
-		Invitation i = get(1L, 2L, null, null, Valid.OneTime, null, null, null);
+		Invitation i = get(1L, 2L, null, null, Valid.ONE_TIME, null, null, null);
 		checkMainPanel(new PageParameters().add(INVITATION_HASH, i.getHash()), RoomPanel.class);
 	}
 
@@ -181,7 +181,7 @@ public class TestHashPage extends AbstractWicketTester {
 		Recording rec = new Recording();
 		rec.setOwnerId(1L);
 		recDao.update(rec);
-		Invitation i = get(1L, null, null, rec.getId(), Valid.OneTime, null, null, null);
+		Invitation i = get(1L, null, null, rec.getId(), Valid.ONE_TIME, null, null, null);
 		checkRecordingPanel(new PageParameters().add(INVITATION_HASH, i.getHash()), VideoInfo.class);
 	}
 }

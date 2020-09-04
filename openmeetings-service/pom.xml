@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-service</artifactId>
@@ -31,6 +31,7 @@
 	<description>Module for OpenMeetings schedulers, mail templates and managers.</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.service</autoModuleName>
 	</properties>
 	<dependencies>
 		<dependency>

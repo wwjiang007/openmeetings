@@ -144,7 +144,9 @@
 	</bean>
 
 	<!-- Kurento -->
-	<bean id="kurentoHandler" class="org.apache.openmeetings.core.remote.KurentoHandler" init-method="init" destroy-method="destroy"
+	<!-- please ensure `p:kuid` below is unique, better to regenerate it from time to time -->
+	<!-- `p:ignoredKuids` can be space and/or comma separated -->
+	<bean id="kurentoHandler" class="org.apache.openmeetings.core.remote.KurentoHandler"
 			p:kurentoWsUrl="ws://127.0.0.1:8888/kurento"
 			p:checkTimeout="10000"
 			p:watchThreadCount="10"
@@ -154,5 +156,8 @@
 			p:turnMode="rest"
 			p:turnTtl="60"
 			p:objCheckTimeout="200"
+			p:flowoutTimeout="5"
+			p:kuid="df992960-e7b0-11ea-9acd-337fb30dd93d"
+			p:ignoredKuids=""
 			/>
 </beans>

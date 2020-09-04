@@ -19,14 +19,14 @@
 package org.apache.openmeetings.web.admin.rooms;
 
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasGroupAdminLevel;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
 import static org.apache.openmeetings.web.admin.AdminUserChoiceProvider.PAGE_SIZE;
 import static org.apache.openmeetings.web.app.Application.kickUser;
 import static org.apache.openmeetings.web.app.WebSession.getRights;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelDangerConfirm;
+import static org.apache.wicket.validation.validator.StringValidator.maximumLength;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -49,10 +49,8 @@ import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.web.admin.AdminBaseForm;
 import org.apache.openmeetings.web.admin.AdminUserChoiceProvider;
 import org.apache.openmeetings.web.app.ClientManager;
-import org.apache.openmeetings.web.common.ConfirmableAjaxBorder;
 import org.apache.openmeetings.web.util.RestrictiveChoiceProvider;
 import org.apache.openmeetings.web.util.RoomTypeDropDown;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
@@ -80,12 +78,16 @@ import org.wicketstuff.select2.Response;
 import org.wicketstuff.select2.Select2Choice;
 import org.wicketstuff.select2.Select2MultiChoice;
 
-import com.googlecode.wicket.jquery.ui.JQueryIcon;
-import com.googlecode.wicket.jquery.ui.form.button.AjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.badge.BadgeBehavior;
+import de.agilecoders.wicket.core.markup.html.bootstrap.badge.BootstrapBadge;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 
 public class RoomForm extends AdminBaseForm<Room> {
 	private static final long serialVersionUID = 1L;
-	private static final List<Long> DROPDOWN_NUMBER_OF_PARTICIPANTS = Arrays.asList(2L, 4L, 6L, 8L, 10L, 12L, 14L, 16L, 20L, 25L, 32L, 50L,
+	private static final List<Long> DROPDOWN_NUMBER_OF_PARTICIPANTS = List.of(2L, 4L, 6L, 8L, 10L, 12L, 14L, 16L, 20L, 25L, 32L, 50L,
 			100L, 150L, 200L, 500L, 1000L);
 	private final WebMarkupContainer roomList;
 	private final TextField<String> pin = new TextField<>("pin");
@@ -98,17 +100,20 @@ public class RoomForm extends AdminBaseForm<Room> {
 		@Override
 		protected void populateItem(final ListItem<Client> item) {
 			Client c = item.getModelObject();
+			BootstrapAjaxLink<String> del = new BootstrapAjaxLink<>("clientDelete", Buttons.Type.Outline_Danger) {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void onClick(AjaxRequestTarget target) {
+					kickUser(item.getModelObject());
+					updateClients(target);
+				}
+			};
+			del.setIconType(FontAwesome5IconType.times_s)
+					.add(newOkCancelDangerConfirm(this, getString("833")));
 			item.add(new Label("clientId", "" + c.getUserId()))
 				.add(new Label("clientLogin", "" + c.getUser().getLogin()))
-				.add(new ConfirmableAjaxBorder("clientDelete", getString("80"), getString("833")) {
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					protected void onSubmit(AjaxRequestTarget target) {
-						kickUser(item.getModelObject());
-						updateClients(target);
-					}
-				});
+				.add(del);
 		}
 	};
 	private IModel<User> moderator2add = Model.of((User)null);
@@ -135,17 +140,23 @@ public class RoomForm extends AdminBaseForm<Room> {
 	protected void onInitialize() {
 		super.onInitialize();
 		RequiredTextField<String> name = new RequiredTextField<>("name");
-		name.setLabel(new Model<>(getString("165")));
+		name.setLabel(new ResourceModel("165"));
 		add(name);
+		TextField<String> tag = new TextField<>("tag");
+		tag.add(maximumLength(10));
+		tag.setLabel(new ResourceModel("admin.group.form.tag"));
+		add(tag);
 
 		add(new DropDownChoice<>("capacity", //
 				DROPDOWN_NUMBER_OF_PARTICIPANTS, //
 				new ChoiceRenderer<Long>() {
 					private static final long serialVersionUID = 1L;
+
 					@Override
 					public Object getDisplayValue(Long id) {
 						return id;
 					}
+
 					@Override
 					public String getIdValue(Long id, int index) {
 						return "" + id;
@@ -210,7 +221,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 		add(new CheckBox("audioOnly"));
 		add(new CheckBox("closed"));
 		add(new TextField<String>("redirectURL"));
-		add(new CheckBox("waitForRecording"));
+		add(new CheckBox("waitRecording"));
 		add(new CheckBox("allowRecording"));
 		add(new CheckBox("chatModerated"));
 
@@ -301,26 +312,28 @@ public class RoomForm extends AdminBaseForm<Room> {
 			protected void populateItem(final ListItem<RoomModerator> item) {
 				RoomModerator moderator = item.getModelObject();
 				Label name = new Label("uName", moderator.getUser().getDisplayName());
-				if (moderator.getId() == null) {
-					name.add(AttributeModifier.append(ATTR_CLASS, "newItem"));
-				}
+				BootstrapAjaxLink<String> del = new BootstrapAjaxLink<>("delete", Buttons.Type.Outline_Danger) {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void onClick(AjaxRequestTarget target) {
+						RoomForm.this.getModelObject().getModerators().remove(item.getIndex());
+						target.add(moderatorContainer);
+					}
+				};
+				del.setIconType(FontAwesome5IconType.times_s)
+						.add(newOkCancelDangerConfirm(this, getString("833")));
 				item.add(new CheckBox("superModerator", new PropertyModel<Boolean>(moderator, "superModerator")))
 					.add(new Label("userId", String.valueOf(moderator.getUser().getId())))
 					.add(name)
 					.add(new Label("email", moderator.getUser().getAddress().getEmail()))
-					.add(new ConfirmableAjaxBorder("delete", getString("80"), getString("833")) {
-						private static final long serialVersionUID = 1L;
-
-						@Override
-						protected void onSubmit(AjaxRequestTarget target) {
-							RoomForm.this.getModelObject().getModerators().remove(item.getIndex());
-							target.add(moderatorContainer);
-						}
-					});
+					.add(del)
+					.add(new BootstrapBadge("new", new ResourceModel("lbl.new"), BadgeBehavior.Type.Warning).setVisible((moderator.getId() == null)));
 			}
 		}).setOutputMarkupId(true));
 
 		add(new CheckBox("moderated"));
+		add(new CheckBox("waitModerator"));
 
 		// Files
 		Form<Void> filesForm = new Form<>("filesForm");
@@ -356,7 +369,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 					return new String[] {"number"};
 				}
 			})
-			.add(new AjaxButton("addFiles") {
+			.add(new BootstrapAjaxButton("addFiles", new ResourceModel("1261"), filesForm, Buttons.Type.Outline_Primary) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -370,11 +383,6 @@ public class RoomForm extends AdminBaseForm<Room> {
 					}
 					target.add(filesContainer, filesForm);
 				}
-
-				@Override
-				protected String getIcon() {
-					return JQueryIcon.PLUSTHICK;
-				}
 			}).setOutputMarkupId(true)
 		);
 		add(filesContainer.add(new ListView<RoomFile>("files") {
@@ -383,24 +391,27 @@ public class RoomForm extends AdminBaseForm<Room> {
 			@Override
 			protected void populateItem(final ListItem<RoomFile> item) {
 				final RoomFile rf = item.getModelObject();
+				BootstrapAjaxLink<String> del = new BootstrapAjaxLink<>("delete", Buttons.Type.Outline_Danger) {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void onClick(AjaxRequestTarget target) {
+						Room r = RoomForm.this.getModelObject();
+						for (Iterator<RoomFile> iter = r.getFiles().iterator(); iter.hasNext();) {
+							RoomFile _rf = iter.next();
+							if (_rf.getFile().getId().equals(rf.getFile().getId())) {
+								iter.remove();
+								break;
+							}
+						}
+						target.add(filesContainer);
+					}
+				};
+				del.setIconType(FontAwesome5IconType.times_s)
+						.add(newOkCancelDangerConfirm(this, getString("833")));
 				item.add(new Label("name", new PropertyModel<>(rf.getFile(), "name")))
 					.add(new Label("wbIdx", new PropertyModel<>(rf, "wbIdx")))
-					.add(new ConfirmableAjaxBorder("delete", getString("80"), getString("833")) {
-						private static final long serialVersionUID = 1L;
-
-						@Override
-						protected void onSubmit(AjaxRequestTarget target) {
-							Room r = RoomForm.this.getModelObject();
-							for (Iterator<RoomFile> iter = r.getFiles().iterator(); iter.hasNext();) {
-								RoomFile _rf = iter.next();
-								if (_rf.getFile().getId().equals(rf.getFile().getId())) {
-									iter.remove();
-									break;
-								}
-							}
-							target.add(filesContainer);
-						}
-					});
+					.add(del);
 			}
 		}).setOutputMarkupId(true));
 
@@ -448,7 +459,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 
 	private static Room newRoom() {
 		Room r = new Room();
-		r.hide(RoomElement.MicrophoneStatus);
+		r.hide(RoomElement.MICROPHONE_STATUS);
 		return r;
 	}
 

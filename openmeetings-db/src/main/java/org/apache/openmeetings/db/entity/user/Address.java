@@ -25,56 +25,58 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.openmeetings.db.entity.HistoricalEntity;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
 @Entity
 @Table(name = "address")
-@Root(name="address")
+@XmlRootElement(name = "address")
 public class Address extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
+	@XmlTransient
 	private Long id;
 
 	@Column(name = "additionalname")
-	@Element(data=true, required=false)
+	@XmlElement(name = "additionalname", required = false)
 	private String additionalname;
 
 	@Lob
-	@Column(name = "comment", length=2048)
-	@Element(data=true, required=false)
+	@Column(name = "comment", length = 2048)
+	@XmlElement(name = "comment", required = false)
 	private String comment;
 
 	@Column(name = "fax")
-	@Element(data=true, required=false)
+	@XmlElement(name = "fax", required = false)
 	private String fax;
 
 	@Column(name = "country")
-	@Element(name="country", data=true, required=false)
+	@XmlElement(name = "country", required = false)
 	private String country;
 
 	@Column(name = "street")
-	@Element(data=true, required=false)
+	@XmlElement(name = "street", required = false)
 	private String street;
 
 	@Column(name = "town")
-	@Element(data=true, required=false)
+	@XmlElement(name = "town", required = false)
 	private String town;
 
 	@Column(name = "zip")
-	@Element(data=true, required=false)
+	@XmlElement(name = "zip", required = false)
 	private String zip;
 
 	@Column(name = "email")
-	@Element(name="mail", data=true, required=false)
+	@XmlElement(name = "mail", required = false)
 	private String email;
 
 	@Column(name = "phone")
-	@Element(data=true, required=false)
+	@XmlElement(name = "phone", required = false)
 	private String phone;
 
 	public String getAdditionalname() {
@@ -161,9 +163,7 @@ public class Address extends HistoricalEntity {
 
 	@Override
 	public String toString() {
-		return "Address [id=" + id + ", country=" + country
-				+ ", street=" + street + ", town=" + town + ", zip=" + zip
-				+ ", deleted=" + isDeleted() + ", email=" + email + ", phone="
-				+ phone + "]";
+		return "Address [id=" + id + ", country=" + country + ", street=" + street + ", town=" + town + ", zip=" + zip + ", deleted="
+				+ isDeleted() + ", email=" + email + ", phone=" + phone + "]";
 	}
 }

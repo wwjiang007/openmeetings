@@ -60,14 +60,12 @@ public class NetTestPanel extends BasePanel {
 	private JSONObject getStringLabels() {
 		JSONObject o = new JSONObject();
 		for (String id : new String[] {"network.test.ms", "network.test.mb", "network.test.sec"
-				, "network.test.click.play", "network.test.copy.log"
-				, "network.test.report", "network.test.report.start", "network.test.report.error"
-				, "network.test.report.con.err"
+				, "network.test.click.play", "network.test.copy.log", "network.test.report.start"
 				, "network.test.ping", "network.test.ping.avg", "network.test.ping.rcv"
 				, "network.test.ping.lost", "network.test.ping.load"
 				, "network.test.port", "network.test.port.avail", "network.test.port.stopped"
 				, "network.test.jitter", "network.test.jitter.avg", "network.test.jitter.min"
-				, "network.test.jitter.max"
+				, "network.test.jitter.max", "network.test.jitter.avgAbbr"
 				, "network.test.dwn", "network.test.dwn.bytes", "network.test.dwn.time"
 				, "network.test.dwn.speed"
 				, "network.test.upl", "network.test.upl.bytes", "network.test.upl.time"

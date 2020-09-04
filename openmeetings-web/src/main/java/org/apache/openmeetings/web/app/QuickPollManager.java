@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.github.openjson.JSONObject;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 
 @Component
 public class QuickPollManager {
@@ -52,7 +52,7 @@ public class QuickPollManager {
 
 	public void start(Client c) {
 		Long roomId = c.getRoomId();
-		if (!c.hasRight(Room.Right.presenter) || isStarted(roomId)) {
+		if (!c.hasRight(Room.Right.PRESENTER) || isStarted(roomId)) {
 			return;
 		}
 		log.debug("Starting quick poll, room: {}", roomId);
@@ -60,7 +60,7 @@ public class QuickPollManager {
 		polls.lock(roomId);
 		polls.putIfAbsent(roomId, new ConcurrentHashMap<Long, Boolean>());
 		polls.unlock(roomId);
-		WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.quickPollUpdated, c.getUid()));
+		WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.QUICK_POLL_UPDATED, c.getUid()));
 	}
 
 	public void vote(Client c, boolean vote) {
@@ -72,7 +72,7 @@ public class QuickPollManager {
 			if (!votes.containsKey(c.getUserId())) {
 				votes.put(c.getUserId(), vote);
 				polls.put(roomId,  votes);
-				WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.quickPollUpdated, c.getUid()));
+				WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.QUICK_POLL_UPDATED, c.getUid()));
 			}
 		}
 		polls.unlock(roomId);
@@ -80,11 +80,11 @@ public class QuickPollManager {
 
 	public void close(Client c) {
 		Long roomId = c.getRoomId();
-		if (!c.hasRight(Room.Right.presenter) || !isStarted(roomId)) {
+		if (!c.hasRight(Room.Right.PRESENTER) || !isStarted(roomId)) {
 			return;
 		}
 		map().remove(roomId);
-		WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.quickPollUpdated, c.getUid()));
+		WebSocketHelper.sendRoom(new TextRoomMessage(roomId, c, Type.QUICK_POLL_UPDATED, c.getUid()));
 	}
 
 	public JSONObject toJson(Long roomId) {

@@ -75,7 +75,7 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.web.context.WebApplicationContext;
 
 public class Admin {
-	private static final Logger _log = LoggerFactory.getLogger(Admin.class);
+	private static final Logger log = LoggerFactory.getLogger(Admin.class);
 	private static final String OPTION_EMAIL = "email";
 	private static final String OPTION_GROUP = "group";
 	private static final String OPTION_PWD = "password";
@@ -110,7 +110,7 @@ public class Admin {
 		opts = buildOptions();
 		step = "Initialization";
 		if (!System.getProperties().containsKey("context")) {
-			log(String.format("System.property 'context' is not set, defaulting to %s", DEFAULT_CONTEXT_NAME));
+			doLog(String.format("System.property 'context' is not set, defaulting to %s", DEFAULT_CONTEXT_NAME));
 		}
 		String ctxName = System.getProperty("context", DEFAULT_CONTEXT_NAME);
 		setWicketApplicationName(ctxName);
@@ -120,8 +120,8 @@ public class Admin {
 		}
 	}
 
-	private static void log(CharSequence msg) {
-		_log.info(msg.toString());
+	private static void doLog(CharSequence msg) {
+		log.info(msg.toString());
 		System.out.println(msg);
 	}
 
@@ -132,7 +132,7 @@ public class Admin {
 			.addOption(new OmOption("b", 1, "b", "backup", false, "Backups OM"))
 			.addOption(new OmOption("r", 2, "r", "restore", false, "Restores OM"))
 			.addOption(new OmOption("i", 3, "i", "install", false, "Fill DB table, and make OM usable"))
-			.addOption(new OmOption("l", 3, "l", "LDAP", false, "Import LDAP users into DB"))
+			.addOption(new OmOption("l", 3, "l", "ldap", false, "Import LDAP users into DB"))
 			.addOption(new OmOption("f", 4, "f", "files", false, "File operations - statictics/cleanup"));
 		group.setRequired(true);
 		options.addOptionGroup(group);
@@ -174,12 +174,12 @@ public class Admin {
 	}
 
 	private enum Command {
-		install
-		, backup
-		, restore
-		, files
-		, ldap
-		, usage
+		INSTALL
+		, BACKUP
+		, RESTORE
+		, FILES
+		, LDAP
+		, USAGE
 	}
 
 	private void usage() {
@@ -195,31 +195,31 @@ public class Admin {
 		handleError(e, false, true);
 	}
 
-	private void handleError(Exception e, boolean printUsage, boolean _throw) {
+	private void handleError(Exception e, boolean printUsage, boolean willThrow) {
 		if (printUsage) {
 			usage();
 		}
 		if (verbose) {
 			String msg = String.format("%s failed", step);
-			_log.error(msg, e);
+			log.error(msg, e);
 		} else {
-			_log.error("{} failed: {}", step, e.getMessage());
+			log.error("{} failed: {}", step, e.getMessage());
 		}
-		if (_throw) {
+		if (willThrow) {
 			throw new ExitException();
 		}
 	}
 
 	private WebApplicationContext getApplicationContext() {
 		if (context == null) {
-			String _step = step; //preserve step
+			String curStep = step; //preserve step
 			step = "Shutdown schedulers";
 			Long lngId = (long)cfg.getDefaultLangId();
 			context = ApplicationHelper.getApplicationContext(lngId);
 			SchedulerFactoryBean sfb = context.getBean(SchedulerFactoryBean.class);
 			try {
 				sfb.getScheduler().shutdown(false);
-				step = _step; //restore
+				step = curStep; //restore
 			} catch (Exception e) {
 				handleError(e);
 			}
@@ -233,48 +233,48 @@ public class Admin {
 		try {
 			cmdl = parser.parse(opts, args);
 		} catch (ParseException e) {
-			log(e.getMessage());
+			doLog(e.getMessage());
 			usage();
 			throw new ExitException();
 		}
 		verbose = cmdl.hasOption('v');
 
-		Command cmd = Command.usage;
+		Command cmd = Command.USAGE;
 		if (cmdl.hasOption('i')) {
-			cmd = Command.install;
+			cmd = Command.INSTALL;
 		} else if (cmdl.hasOption('b')) {
-			cmd = Command.backup;
+			cmd = Command.BACKUP;
 		} else if (cmdl.hasOption('r')) {
-			cmd = Command.restore;
+			cmd = Command.RESTORE;
 		} else if (cmdl.hasOption('f')) {
-			cmd = Command.files;
+			cmd = Command.FILES;
 		} else if (cmdl.hasOption('l')) {
-			cmd = Command.ldap;
+			cmd = Command.LDAP;
 		}
 
 		String file = cmdl.getOptionValue("file", "");
 		switch(cmd) {
-			case install:
+			case INSTALL:
 				step = "Install";
 				processInstall(file);
 				break;
-			case backup:
+			case BACKUP:
 				step = "Backup";
 				processBackup(file);
 				break;
-			case restore:
+			case RESTORE:
 				step = "Restore";
 				processRestore(checkRestoreFile(file));
 				break;
-			case files:
+			case FILES:
 				step = "Files";
 				processFiles();
 				break;
-			case ldap:
+			case LDAP:
 				step = "LDAP import";
 				processLdap();
 				break;
-			case usage:
+			case USAGE:
 			default:
 				usage();
 				break;
@@ -282,8 +282,8 @@ public class Admin {
 	}
 
 	private void processInstall(String file) throws Exception {
-		if (cmdl.hasOption("file") && (cmdl.hasOption("user") || cmdl.hasOption(OPTION_EMAIL) || cmdl.hasOption(OPTION_GROUP))) {
-			log("Please specify even 'file' option or 'admin user'.");
+		if (cmdl.hasOption("file") && (cmdl.hasOption("USER") || cmdl.hasOption(OPTION_EMAIL) || cmdl.hasOption(OPTION_GROUP))) {
+			doLog("Please specify even 'file' option or 'admin USER'.");
 			throw new ExitException();
 		}
 		boolean force = cmdl.hasOption("force");
@@ -320,8 +320,8 @@ public class Admin {
 				|| cmdl.hasOption(OPTION_DB_PORT) || cmdl.hasOption(OPTION_DB_NAME) || cmdl.hasOption(OPTION_DB_USER)
 				|| cmdl.hasOption(OPTION_DB_PASS))
 		{
-			String dbType = cmdl.getOptionValue(OPTION_DB_TYPE, DbType.h2.name());
-			connectionProperties = ConnectionPropertiesPatcher.patch(dbType
+			String dbType = cmdl.getOptionValue(OPTION_DB_TYPE);
+			connectionProperties = ConnectionPropertiesPatcher.patch(DbType.of(dbType)
 					, cmdl.getOptionValue(OPTION_DB_HOST, "localhost")
 					, cmdl.getOptionValue(OPTION_DB_PORT, null)
 					, cmdl.getOptionValue(OPTION_DB_NAME, null)
@@ -353,7 +353,7 @@ public class Admin {
 		if (!cmdl.hasOption("file")) {
 			String fn = "backup_" + CalendarPatterns.getTimeForStreamId(new Date()) + ".zip";
 			f = new File(home, fn);
-			log("File name was not specified, '" + fn + "' will be used");
+			doLog("File name was not specified, '" + fn + "' will be used");
 		} else {
 			f = new File(file);
 		}
@@ -370,17 +370,17 @@ public class Admin {
 	private void processFiles() throws IOException {
 		boolean cleanup = cmdl.hasOption("cleanup");
 		if (cleanup) {
-			log("WARNING: all intermediate files will be clean up!");
+			doLog("WARNING: all intermediate files will be clean up!");
 		}
 		StringBuilder report = new StringBuilder();
 		reportUploads(report, cleanup);
 		reportStreams(report, cleanup);
-		log(report);
+		doLog(report);
 	}
 
 	private void processLdap() throws OmException {
 		if (!cmdl.hasOption("d")) {
-			log("Please specify LDAP domain Id.");
+			doLog("Please specify LDAP domain Id.");
 			throw new ExitException();
 		}
 		Long domainId = Long.valueOf(cmdl.getOptionValue('d'));
@@ -450,16 +450,16 @@ public class Admin {
 		cfg.setEmail(cmdl.getOptionValue(OPTION_EMAIL));
 		cfg.setGroup(cmdl.getOptionValue(OPTION_GROUP));
 		if (cfg.getUsername() == null || cfg.getUsername().length() < USER_LOGIN_MINIMUM_LENGTH) {
-			log("User login was not provided, or too short, should be at least " + USER_LOGIN_MINIMUM_LENGTH + " character long.");
+			doLog("User login was not provided, or too short, should be at least " + USER_LOGIN_MINIMUM_LENGTH + " character long.");
 			throw new ExitException();
 		}
 
 		if (!MailUtil.isValid(cfg.getEmail())) {
-			log(String.format("Please provide non-empty valid email: '%s' is not valid.", cfg.getEmail()));
+			doLog(String.format("Please provide non-empty valid email: '%s' is not valid.", cfg.getEmail()));
 			throw new ExitException();
 		}
 		if (Strings.isEmpty(cfg.getGroup())) {
-			log(String.format("User group was not provided, or too short, should be at least 1 character long: %s", cfg.getGroup()));
+			doLog(String.format("User group was not provided, or too short, should be at least 1 character long: %s", cfg.getGroup()));
 			throw new ExitException();
 		}
 		if (cmdl.hasOption(OPTION_PWD)) {
@@ -471,7 +471,7 @@ public class Admin {
 			passVal = new Validatable<>(cfg.getPassword());
 			passValidator.validate(passVal);
 			if (!passVal.isValid()) {
-				log(String.format("Please enter password for the user '%s':", cfg.getUsername()));
+				doLog(String.format("Please enter password for the user '%s':", cfg.getUsername()));
 				cfg.setPassword(new BufferedReader(new InputStreamReader(System.in, UTF_8)).readLine());
 			}
 		} while (!passVal.isValid());
@@ -482,10 +482,10 @@ public class Admin {
 			cfg.setTimeZone(tzMap.containsKey(tz) ? tz : null);
 		}
 		if (cfg.getTimeZone() == null) {
-			log("Please enter timezone, Possible timezones are:");
+			doLog("Please enter timezone, Possible timezones are:");
 
 			for (Map.Entry<String,String> me : tzMap.entrySet()) {
-				log(String.format("%1$-25s%2$s", "\"" + me.getKey() + "\"", me.getValue()));
+				doLog(String.format("%1$-25s%2$s", "\"" + me.getKey() + "\"", me.getValue()));
 			}
 			throw new ExitException();
 		}
@@ -543,7 +543,7 @@ public class Admin {
 	private File checkRestoreFile(String file) {
 		File backup = new File(file);
 		if (!cmdl.hasOption("file") || !backup.exists() || !backup.isFile()) {
-			log("File should be specified, and point the existent zip file");
+			doLog("File should be specified, and point the existent zip file");
 			usage();
 			throw new ExitException();
 		}
@@ -553,7 +553,7 @@ public class Admin {
 	private void processRestore(File backup) throws Exception {
 		try (InputStream is = new FileInputStream(backup)) {
 			BackupImport importCtrl = getApplicationContext().getBean(BackupImport.class);
-			importCtrl.performImport(is);
+			importCtrl.performImport(is, new ProgressHolder());
 		}
 	}
 
@@ -562,13 +562,13 @@ public class Admin {
 		try {
 			a.process(args);
 
-			log("... Done");
+			doLog("... Done");
 			System.exit(0);
 		} catch (ExitException e) {
 			a.handleError(e, false, false);
 			System.exit(1);
 		} catch (Exception e) {
-			_log.error("Unexpected error", e);
+			log.error("Unexpected error", e);
 			e.printStackTrace();
 			System.exit(1);
 		}

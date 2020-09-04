@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-webservice</artifactId>
@@ -31,6 +31,7 @@
 	<description>Module for OpenMeetings CXF based web services.</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.webservice</autoModuleName>
 	</properties>
 	<build>
 		<plugins>
@@ -46,7 +47,6 @@
 									<packages>org.apache.openmeetings.webservice</packages>
 								</group>
 							</groups>
-							<excludePackageNames>org.apache.openmeetings.webservice.cluster,org.apache.openmeetings.webservice.error</excludePackageNames>
 							<skip>${om.quick.build}</skip>
 						</configuration>
 						<goals>

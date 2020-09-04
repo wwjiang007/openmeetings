@@ -133,7 +133,7 @@ public class UserWebService extends BaseWebService {
 	@GET
 	@Path("/")
 	public List<UserDTO> get(@WebParam(name="sid") @QueryParam("sid") String sid) {
-		return performCall(sid, User.Right.Soap, sd -> UserDTO.list(userDao.getAllUsers()));
+		return performCall(sid, User.Right.SOAP, sd -> UserDTO.list(userDao.getAllUsers()));
 	}
 
 	/**
@@ -158,7 +158,7 @@ public class UserWebService extends BaseWebService {
 			, @WebParam(name="confirm") @FormParam("confirm") Boolean confirm
 			)
 	{
-		return performCall(sid, User.Right.Soap, sd -> {
+		return performCall(sid, User.Right.SOAP, sd -> {
 			if (!isAllowRegisterSoap()) {
 				throw new ServiceException("Soap register is denied in Settings");
 			}
@@ -207,11 +207,11 @@ public class UserWebService extends BaseWebService {
 
 			User u = (User)ouser;
 
-			u.getRights().add(Right.Room);
+			u.getRights().add(Right.ROOM);
 			if (Strings.isEmpty(user.getExternalId()) && Strings.isEmpty(user.getExternalType())) {
 				// activate the User
-				u.getRights().add(Right.Login);
-				u.getRights().add(Right.Dashboard);
+				u.getRights().add(Right.LOGIN);
+				u.getRights().add(Right.DASHBOARD);
 			}
 
 			u = userDao.update(u, sd.getUserId());
@@ -235,7 +235,7 @@ public class UserWebService extends BaseWebService {
 	@DELETE
 	@Path("/{id}")
 	public ServiceResult delete(@WebParam(name="sid") @QueryParam("sid") String sid, @WebParam(name="id") @PathParam("id") long id) {
-		return performCall(sid, User.Right.Admin, sd -> {
+		return performCall(sid, User.Right.ADMIN, sd -> {
 			userDao.delete(userDao.get(id), sd.getUserId());
 
 			return new ServiceResult("Deleted", Type.SUCCESS);
@@ -263,7 +263,7 @@ public class UserWebService extends BaseWebService {
 			, @WebParam(name="externalid") @PathParam("externalid") String externalId
 			)
 	{
-		return performCall(sid, User.Right.Admin, sd -> {
+		return performCall(sid, User.Right.ADMIN, sd -> {
 			User user = userDao.getExternalUser(externalId, externalType);
 
 			// Setting user deleted
@@ -296,7 +296,7 @@ public class UserWebService extends BaseWebService {
 			, @WebParam(name="options") @FormParam("options") RoomOptionsDTO options
 			)
 	{
-		return performCall(sid, User.Right.Soap, sd -> {
+		return performCall(sid, User.Right.SOAP, sd -> {
 			if (Strings.isEmpty(user.getExternalId()) || Strings.isEmpty(user.getExternalType())) {
 				return new ServiceResult("externalId and/or externalType are not set", Type.ERROR);
 			}
@@ -307,9 +307,9 @@ public class UserWebService extends BaseWebService {
 
 			log.debug(remoteSessionObject.toString());
 
-			String xmlString = remoteSessionObject.toXml();
+			String xmlString = remoteSessionObject.toString();
 
-			log.debug("xmlString {}", xmlString);
+			log.debug("jsonString {}", xmlString);
 
 			String hash = soapDao.addSOAPLogin(sid, options.getRoomId(),
 					options.isModerator(), options.isShowAudioVideoTest(), options.isAllowSameURLMultipleTimes(),

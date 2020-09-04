@@ -61,14 +61,12 @@ import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
-import com.googlecode.wicket.kendo.ui.panel.KendoFeedbackPanel;
+import de.agilecoders.wicket.core.markup.html.bootstrap.common.NotificationPanel;
 
 public abstract class InvitationForm extends Form<Invitation> {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(InvitationForm.class);
-	private final KendoFeedbackPanel feedback = new KendoFeedbackPanel("feedback", new Options("button", true));
+	private final NotificationPanel feedback = new NotificationPanel("feedback");
 	private final PasswordTextField passwd = new PasswordTextField("password");
 	private final DropDownChoice<String> timeZoneId = new DropDownChoice<>("timeZoneId", Model.of((String)null), AVAILABLE_TIMEZONES);
 	private final OmDateTimePicker from = new OmDateTimePicker("from", Model.of(LocalDateTime.now()));
@@ -85,6 +83,11 @@ public abstract class InvitationForm extends Form<Invitation> {
 	private UserDao userDao;
 	@SpringBean
 	private InvitationManager inviteManager;
+
+	public enum Action {
+		GENERATE
+		, SEND
+	};
 
 	public InvitationForm(String id) {
 		super(id, new CompoundPropertyModel<>(new Invitation()));
@@ -119,17 +122,19 @@ public abstract class InvitationForm extends Form<Invitation> {
 
 			@Override
 			protected void onUpdate(AjaxRequestTarget target) {
-				boolean dateEnabled = InvitationForm.this.getModelObject().getValid() == Valid.Period;
+				boolean dateEnabled = InvitationForm.this.getModelObject().getValid() == Valid.PERIOD;
 				target.add(from.setEnabled(dateEnabled), to.setEnabled(dateEnabled), timeZoneId.setEnabled(dateEnabled));
 			}
 		});
-		add(valid.add(new Radio<>("one", Model.of(Valid.OneTime))
-				, new Radio<>("period", Model.of(Valid.Period))
-				, new Radio<>("endless", Model.of(Valid.Endless))));
+		add(valid.add(new Radio<>("one", Model.of(Valid.ONE_TIME))
+				, new Radio<>("period", Model.of(Valid.PERIOD))
+				, new Radio<>("endless", Model.of(Valid.ENDLESS))));
 		add(passwd);
 		Invitation i = getModelObject();
 		passwd.setLabel(new ResourceModel("110")).setOutputMarkupId(true).setEnabled(i.isPasswordProtected());
-		add(from.setOutputMarkupId(true), to.setOutputMarkupId(true), timeZoneId.setOutputMarkupId(true));
+		add(from.setLabel(new ResourceModel("530")).setOutputMarkupId(true)
+				, to.setLabel(new ResourceModel("531")).setOutputMarkupId(true)
+				, timeZoneId.setOutputMarkupId(true));
 		timeZoneId.add(new AjaxFormComponentUpdatingBehavior("change") {
 			private static final long serialVersionUID = 1L;
 
@@ -139,14 +144,16 @@ public abstract class InvitationForm extends Form<Invitation> {
 			}
 		});
 		add(url.setOutputMarkupId(true));
-		add(lang, feedback);
+		add(lang, feedback.setOutputMarkupId(true));
 		super.onInitialize();
 	}
 
 	protected void updateButtons(AjaxRequestTarget target) {
 		Collection<User> recpnts = recipients.getModelObject();
-		dialog.getSend().setEnabled(!recpnts.isEmpty(), target);
-		dialog.getGenerate().setEnabled(recpnts.size() == 1, target);
+		target.add(
+				dialog.getSend().setEnabled(!recpnts.isEmpty())
+				, dialog.getGenerate().setEnabled(recpnts.size() == 1)
+				);
 	}
 
 	@Override
@@ -169,7 +176,7 @@ public abstract class InvitationForm extends Form<Invitation> {
 
 		i.setInvitee(u);
 		i.setHash(randomUUID().toString());
-		if (Type.contact == u.getType()) {
+		if (Type.CONTACT == u.getType()) {
 			u.setLanguageId(lang.getModelObject());
 		}
 		return inviteDao.update(i);
@@ -202,7 +209,7 @@ public abstract class InvitationForm extends Form<Invitation> {
 		recipients.setModelObject(new ArrayList<User>());
 		recipients.setEnabled(true);
 		passwd.setEnabled(false);
-		final boolean isPeriod = i.getValid() == Valid.Period;
+		final boolean isPeriod = i.getValid() == Valid.PERIOD;
 		from.setEnabled(isPeriod);
 		to.setEnabled(isPeriod);
 		timeZoneId.setEnabled(isPeriod);
@@ -213,21 +220,19 @@ public abstract class InvitationForm extends Form<Invitation> {
 		this.dialog = dialog;
 	}
 
-	public void onClick(AjaxRequestTarget target, DialogButton button) {
+	public void onClick(AjaxRequestTarget target, Action action) {
 		final String userbaseUrl = WebSession.get().getExtendedProperties().getBaseUrl();
-		if (button.equals(dialog.getCancel())) {
-			dialog.onSuperClick(target, button);
-		} else if (button.equals(dialog.getGenerate())) {
+		if (Action.GENERATE == action) {
 			Invitation i = create(recipients.getModelObject().iterator().next());
 			setModelObject(i);
 			url.setModelObject(getInvitationLink(i, userbaseUrl));
 			target.add(url);
-		} else if (button.equals(dialog.getSend())) {
+		} else {
 			if (Strings.isEmpty(url.getModelObject())) {
 				for (User u : recipients.getModelObject()) {
 					Invitation i = create(u);
 					try {
-						inviteManager.sendInvitationLink(i, MessageType.Create, subject.getModelObject(), message.getModelObject(), false, userbaseUrl);
+						inviteManager.sendInvitationLink(i, MessageType.CREATE, subject.getModelObject(), message.getModelObject(), false, userbaseUrl);
 					} catch (Exception e) {
 						log.error("error while sending invitation by User ", e);
 					}
@@ -235,12 +240,12 @@ public abstract class InvitationForm extends Form<Invitation> {
 			} else {
 				Invitation i = getModelObject();
 				try {
-					inviteManager.sendInvitationLink(i, MessageType.Create, subject.getModelObject(), message.getModelObject(), false, userbaseUrl);
+					inviteManager.sendInvitationLink(i, MessageType.CREATE, subject.getModelObject(), message.getModelObject(), false, userbaseUrl);
 				} catch (Exception e) {
 					log.error("error while sending invitation by URL ", e);
 				}
 			}
-			dialog.onSuperClick(target, button);
+			dialog.close(target);
 		}
 	}
 }

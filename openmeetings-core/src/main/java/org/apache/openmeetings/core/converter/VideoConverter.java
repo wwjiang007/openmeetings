@@ -26,7 +26,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
@@ -49,7 +48,7 @@ public class VideoConverter extends BaseConverter {
 	public void convertVideo(FileItem f, StoredFile sf, ProcessResultList logs, Optional<DoubleConsumer> progress) {
 		try {
 			final File mp4 = f.getFile(EXTENSION_MP4);
-			f.setType(Type.Video);
+			f.setType(Type.VIDEO);
 			final String ext = sf.getExt();
 			String input = f.getFile(ext).getCanonicalPath();
 			boolean sameExt = EXTENSION_MP4.equals(ext);
@@ -60,17 +59,19 @@ public class VideoConverter extends BaseConverter {
 				input = Files.move(mp4.toPath(), tmp, REPLACE_EXISTING).toFile().getCanonicalPath();
 			}
 			progress.ifPresent(theProgress -> theProgress.accept(STEP));
-			List<String> args = new ArrayList<>(Arrays.asList(getPathToFFMPEG(), "-y"));
+			List<String> args = new ArrayList<>(List.of(getPathToFFMPEG(), "-y"));
 			if (sf.isAudio()) {
 				// need to add background image, it should be jpg since black on transparent will be invisible
-				args.addAll(Arrays.asList("-loop", "1"//
+				args.addAll(List.of("-loop", "1"//
 						, "-framerate", "24"//
 						, "-i", new File(getCssImagesDir(), "audio.jpg").getCanonicalPath()));
 			}
-			args.addAll(Arrays.asList("-i", input //
+			args.addAll(List.of("-i", input //
 					, "-c:v", "h264" //
 					, "-c:a", "aac" //
-					, "-pix_fmt", "yuv420p"));
+					, "-pix_fmt", "yuv420p"
+					, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2"
+					));
 			if (sf.isAudio()) {
 				args.add("-shortest");
 			}
@@ -88,7 +89,7 @@ public class VideoConverter extends BaseConverter {
 			}
 			progress.ifPresent(theProgress -> theProgress.accept(STEP));
 			//Parse the width height from the FFMPEG output
-			Dimension dim = getDimension(res.getError());
+			Dimension dim = getDimension(res.getError(), new Dimension(100, 100)); // will return 100x100 for non-video to be able to play
 			progress.ifPresent(theProgress -> theProgress.accept(STEP));
 			f.setWidth(dim.getWidth());
 			f.setHeight(dim.getHeight());

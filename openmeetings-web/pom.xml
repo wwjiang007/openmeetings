@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-web</artifactId>
@@ -32,6 +32,7 @@
 	<properties>
 		<old-backups.dir>${project.build.directory}/test-data</old-backups.dir>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.web</autoModuleName>
 	</properties>
 	<profiles>
 		<profile>
@@ -66,7 +67,7 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<inherited>true</inherited>
 						<configuration>
-							<excludedGroups>org.apache.openmeetings.test.selenium.SeleniumTests,org.apache.openmeetings.test.HeavyTests,org.apache.openmeetings.test.NonJenkinsTests</excludedGroups>
+							<excludedGroups>org.apache.openmeetings.test.HeavyTests,org.apache.openmeetings.test.NonJenkinsTests</excludedGroups>
 						</configuration>
 					</plugin>
 				</plugins>
@@ -79,6 +80,13 @@
 				<groupId>com.samaxes.maven</groupId>
 				<artifactId>minify-maven-plugin</artifactId>
 				<version>${minify-maven-plugin.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.google.javascript</groupId>
+						<artifactId>closure-compiler</artifactId>
+						<version>v20170521</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<id>theme-minify</id>
@@ -193,7 +201,7 @@
 							<charset>UTF-8</charset>
 							<jsSourceDir>../java/org/apache/openmeetings/web/room</jsSourceDir>
 							<jsSourceFiles>
-								<jsSourceFile>jquery.dialogextend.js</jsSourceFile>
+								<jsSourceFile>NoSleep.js</jsSourceFile>
 								<jsSourceFile>raw-video.js</jsSourceFile>
 								<jsSourceFile>raw-video-manager.js</jsSourceFile>
 								<jsSourceFile>raw-sharer.js</jsSourceFile>
@@ -215,6 +223,7 @@
 							<jsSourceFiles>
 								<jsSourceFile>raw-video-util.js</jsSourceFile>
 								<jsSourceFile>raw-settings.js</jsSourceFile>
+								<jsSourceFile>adapter-latest.js</jsSourceFile>
 								<jsSourceFile>kurento-utils.js</jsSourceFile>
 							</jsSourceFiles>
 							<jsFinalFile>settings.js</jsFinalFile>
@@ -271,8 +280,9 @@
 						**/MathJax*.js,
 						**/fileinput.js,
 						**/fileinput.css,
-						**/jquery.dialogextend.js,
+						**/adapter-latest.js,
 						**/kurento-utils.js,
+						**/NoSleep.js,
 						**/network.js
 					</packagingExcludes>
 					<warSourceExcludes>
@@ -282,8 +292,9 @@
 						**/MathJax*.js,
 						**/fileinput.js,
 						**/fileinput.css,
-						**/jquery.dialogextend.js,
+						**/adapter-latest.js,
 						**/kurento-utils.js,
+						**/NoSleep.js,
 						**/network.js
 					</warSourceExcludes>
 					<filteringDeploymentDescriptors>true</filteringDeploymentDescriptors>
@@ -347,18 +358,6 @@
 								<artifactItem>
 									<groupId>org.apache.openmeetings</groupId>
 									<artifactId>test-backup</artifactId>
-									<version>3.1.3</version>
-									<type>zip</type>
-								</artifactItem>
-								<artifactItem>
-									<groupId>org.apache.openmeetings</groupId>
-									<artifactId>test-backup</artifactId>
-									<version>3.2.1</version>
-									<type>zip</type>
-								</artifactItem>
-								<artifactItem>
-									<groupId>org.apache.openmeetings</groupId>
-									<artifactId>test-backup</artifactId>
 									<version>3.3.0</version>
 									<type>zip</type>
 								</artifactItem>
@@ -366,6 +365,12 @@
 									<groupId>org.apache.openmeetings</groupId>
 									<artifactId>test-backup</artifactId>
 									<version>4.0.4</version>
+									<type>zip</type>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.openmeetings</groupId>
+									<artifactId>test-backup</artifactId>
+									<version>4.0.10</version>
 									<type>zip</type>
 								</artifactItem>
 							</artifactItems>
@@ -418,7 +423,7 @@
 										<exclude>**/MathJax*.js</exclude>
 										<exclude>**/fileinput.js</exclude>
 										<exclude>**/fileinput.css</exclude>
-										<exclude>**/jquery.dialogextend.js</exclude>
+										<exclude>**/adapter-latest.js</exclude>
 										<exclude>**/kurento-utils.js</exclude>
 										<exclude>**/network.js</exclude>
 									</excludes>
@@ -453,7 +458,7 @@
 										<exclude>**/MathJax*.js</exclude>
 										<exclude>**/fileinput.js</exclude>
 										<exclude>**/fileinput.css</exclude>
-										<exclude>**/jquery.dialogextend.js</exclude>
+										<exclude>**/adapter-latest.js</exclude>
 										<exclude>**/kurento-utils.js</exclude>
 										<exclude>**/network.js</exclude>
 									</excludes>
@@ -514,7 +519,7 @@
 				<inherited>true</inherited>
 				<configuration>
 					<workingDirectory>${project.build.directory}</workingDirectory>
-					<excludedGroups>org.apache.openmeetings.test.selenium.SeleniumTests,org.apache.openmeetings.test.HeavyTests</excludedGroups>
+					<excludedGroups>org.apache.openmeetings.test.HeavyTests</excludedGroups>
 					<systemPropertyVariables>
 						<om.home>${project.build.directory}/test-root</om.home>
 						<languages.home>${project.build.directory}/test-root/languages</languages.home>
@@ -630,21 +635,6 @@
 			<version>${wicketju.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>wicket-kendo-ui</artifactId>
-			<version>${wicketju.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>wicket-kendo-ui-theme-default</artifactId>
-			<version>${wicketju.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.googlecode.wicket-jquery-ui</groupId>
-			<artifactId>wicket-kendo-ui-culture</artifactId>
-			<version>${wicketju.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.wicketstuff</groupId>
 			<artifactId>wicketstuff-urlfragment</artifactId>
 			<version>${wickets.version}</version>
@@ -660,14 +650,30 @@
 			<version>${wickets.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>de.agilecoders.wicket</groupId>
+			<artifactId>wicket-bootstrap-extensions</artifactId>
+			<version>${wicket-bootstrap.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.agilecoders.wicket</groupId>
+			<artifactId>wicket-bootstrap-themes</artifactId>
+			<version>${wicket-bootstrap.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>font-awesome</artifactId>
+			<version>5.14.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
-		<!-- Test dependencies -->
 		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
+			<groupId>org.webjars</groupId>
+			<artifactId>jquery-ui-touch-punch</artifactId>
+			<version>0.2.3-2</version>
 		</dependency>
+		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.apache.openmeetings</groupId>
 			<artifactId>openmeetings-util</artifactId>
@@ -700,7 +706,7 @@
 		<dependency>
 			<groupId>org.apache.directory.server</groupId>
 			<artifactId>apacheds-test-framework</artifactId>
-			<version>2.0.0.AM25</version>
+			<version>2.0.0.AM26</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.directory.api</groupId>

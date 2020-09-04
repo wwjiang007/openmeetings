@@ -21,14 +21,13 @@ package org.apache.openmeetings.web.common;
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasAdminLevel;
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasGroupAdminLevel;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_MYROOMS_ENABLED;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.PARAM_USER_ID;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isMyRoomsEnabled;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelConfirm;
 import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getNamedFunction;
 import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getParam;
 import static org.apache.openmeetings.web.util.OmUrlFragment.CHILD_ID;
-import static org.apache.openmeetings.web.util.OmUrlFragment.PROFILE_EDIT;
-import static org.apache.openmeetings.web.util.OmUrlFragment.PROFILE_MESSAGES;
 import static org.apache.openmeetings.web.util.OmUrlFragment.getPanel;
 import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
 
@@ -63,7 +62,6 @@ import org.apache.openmeetings.web.util.ContactsHelper;
 import org.apache.openmeetings.web.util.ExtendedClientProperties;
 import org.apache.openmeetings.web.util.OmUrlFragment;
 import org.apache.openmeetings.web.util.OmUrlFragment.MenuActions;
-import org.apache.openmeetings.web.util.OmUrlFragment.MenuParams;
 import org.apache.openmeetings.web.util.ProfileImageResourceReference;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -74,6 +72,7 @@ import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.devutils.debugbar.DebugBar;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -89,13 +88,13 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.urlfragment.UrlFragment;
 
 import com.github.openjson.JSONObject;
-import com.googlecode.wicket.jquery.ui.widget.dialog.DialogButton;
-import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.navbar.INavbarComponent;
+import de.agilecoders.wicket.core.markup.html.references.BootstrapJavaScriptReference;
 
 public class MainPanel extends Panel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(MainPanel.class);
-	private static final String DELIMITER = "     ";
 	private final WebMarkupContainer EMPTY = new WebMarkupContainer(CHILD_ID);
 	private String uid = null;
 	private MenuPanel menu;
@@ -131,6 +130,7 @@ public class MainPanel extends Panel {
 
 	@Override
 	protected void onInitialize() {
+		super.onInitialize();
 		add(new OmWebSocketPanel("ws-panel") {
 			private static final long serialVersionUID = 1L;
 
@@ -177,6 +177,7 @@ public class MainPanel extends Panel {
 
 			@Override
 			protected void closeHandler(AbstractClientMessage msg) {
+				log.debug("WebSocketBehavior::closeHandler uid - {}", uid);
 				super.closeHandler(msg);
 				if (uid != null) {
 					cm.exit(getClient());
@@ -193,29 +194,13 @@ public class MainPanel extends Panel {
 		add(topControls.setOutputMarkupPlaceholderTag(true).setMarkupId("topControls"));
 		add(contents.add(getClient() == null || panel == null ? EMPTY : panel).setOutputMarkupId(true).setMarkupId("contents"));
 		topControls.add(menu.setVisible(false), topLinks.setVisible(false).setOutputMarkupPlaceholderTag(true).setMarkupId("topLinks"));
-		topLinks.add(new AjaxLink<Void>("messages") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onClick(AjaxRequestTarget target) {
-				updateContents(PROFILE_MESSAGES, target);
-			}
-		});
-		topLinks.add(new AjaxLink<Void>("profile") {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onClick(AjaxRequestTarget target) {
-				updateContents(PROFILE_EDIT, target);
-			}
-		});
 		final AboutDialog about = new AboutDialog("aboutDialog");
 		topLinks.add(new AjaxLink<Void>("about") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				about.open(target);
+				about.show(target);
 			}
 		});
 		if (getApplication().getDebugSettings().isDevelopmentUtilitiesEnabled()) {
@@ -229,9 +214,9 @@ public class MainPanel extends Panel {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			public void onClose(IPartialPageRequestHandler handler, DialogButton button) {
+			public void onSend(IPartialPageRequestHandler handler) {
 				BasePanel bp = getCurrentPanel();
-				if (send.equals(button) && bp != null) {
+				if (bp != null) {
 					bp.onNewMessageClose(handler);
 				}
 			}
@@ -242,7 +227,7 @@ public class MainPanel extends Panel {
 
 			@Override
 			protected void respond(AjaxRequestTarget target) {
-				userInfo.open(target, getParam(getComponent(), PARAM_USER_ID).toLong());
+				userInfo.show(target, getParam(getComponent(), PARAM_USER_ID).toLong());
 			}
 
 			@Override
@@ -270,7 +255,7 @@ public class MainPanel extends Panel {
 
 			@Override
 			protected void respond(AjaxRequestTarget target) {
-				newMessage.reset(true).open(target, getParam(getComponent(), PARAM_USER_ID).toOptionalLong());
+				newMessage.reset(true).show(target, getParam(getComponent(), PARAM_USER_ID).toOptionalLong());
 			}
 
 			@Override
@@ -285,7 +270,7 @@ public class MainPanel extends Panel {
 
 			@Override
 			protected void respond(AjaxRequestTarget target) {
-				inviteUser.open(target, getParam(getComponent(), PARAM_USER_ID).toLong());
+				inviteUser.show(target, getParam(getComponent(), PARAM_USER_ID).toLong());
 			}
 
 			@Override
@@ -294,20 +279,28 @@ public class MainPanel extends Panel {
 				response.render(new PriorityHeaderItem(getNamedFunction("inviteUser", this, explicit(PARAM_USER_ID))));
 			}
 		});
-		topLinks.add(new ConfirmableAjaxBorder("logout", getString("310"), getString("634")) {
+		AjaxLink<Void> logout = new AjaxLink<>("logout") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void onSubmit(AjaxRequestTarget target) {
+			public void onClick(AjaxRequestTarget target) {
 				getSession().invalidate();
 				setResponsePage(Application.get().getSignInPageClass());
 			}
-		});
-		super.onInitialize();
+
+		};
+		logout.add(newOkCancelConfirm(this, getString("634")));
+		topLinks.add(logout);
 	}
 
-	private IMenuItem getSubItem(String lbl, String title, MenuActions action, MenuParams param) {
-		return new MainMenuItem(lbl, title, action, param) {
+	@Override
+	public void renderHead(IHeaderResponse response) {
+		response.render(new PriorityHeaderItem(JavaScriptHeaderItem.forReference(BootstrapJavaScriptReference.instance()))); //this one should go before jquery-ui
+		super.renderHead(response);
+	}
+
+	private OmMenuItem getSubItem(String lbl, String title, MenuActions action) {
+		return new MainMenuItem(lbl, title, action) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -317,26 +310,26 @@ public class MainPanel extends Panel {
 		};
 	}
 
-	private List<IMenuItem> getMainMenu() {
-		List<IMenuItem> mmenu = new ArrayList<>();
+	private List<INavbarComponent> getMainMenu() {
+		List<INavbarComponent> mmenu = new ArrayList<>();
 		{
 			// Dashboard Menu Points
-			List<IMenuItem> l = new ArrayList<>();
-			l.add(getSubItem("290", "1450", MenuActions.dashboardModuleStartScreen, null));
-			l.add(getSubItem("291", "1451", MenuActions.dashboardModuleCalendar, null));
+			List<INavbarComponent> l = new ArrayList<>();
+			l.add(getSubItem("290", "1450", MenuActions.DASHBOARD_START));
+			l.add(getSubItem("291", "1451", MenuActions.DASHBOARD_CALENDAR));
 			mmenu.add(new OmMenuItem(getString("124"), l));
 		}
 		{
 			// Conference Menu Points
-			List<IMenuItem> l = new ArrayList<>();
-			l.add(getSubItem("777", "1506", MenuActions.conferenceModuleRoomList, MenuParams.publicTabButton));
-			l.add(getSubItem("779", "1507", MenuActions.conferenceModuleRoomList, MenuParams.privateTabButton));
-			if (cfgDao.getBool(CONFIG_MYROOMS_ENABLED, true)) {
-				l.add(getSubItem("781", "1508", MenuActions.conferenceModuleRoomList, MenuParams.myTabButton));
+			List<INavbarComponent> l = new ArrayList<>();
+			l.add(getSubItem("777", "1506", MenuActions.ROOMS_PUBLIC));
+			l.add(getSubItem("779", "1507", MenuActions.ROOMS_GROUP));
+			if (isMyRoomsEnabled()) {
+				l.add(getSubItem("781", "1508", MenuActions.ROOMS_MY));
 			}
 			List<Room> recent = roomDao.getRecent(getUserId());
 			if (!recent.isEmpty()) {
-				l.add(new OmMenuItem(DELIMITER, (String)null));
+				l.add(new OmMenuItem(null, (String)null));
 			}
 			for (Room r : recent) {
 				final Long roomId = r.getId();
@@ -353,28 +346,38 @@ public class MainPanel extends Panel {
 		}
 		{
 			// Recording Menu Points
-			List<IMenuItem> l = new ArrayList<>();
-			l.add(getSubItem("395", "1452", MenuActions.recordModule, null));
+			List<INavbarComponent> l = new ArrayList<>();
+			l.add(getSubItem("395", "1452", MenuActions.RECORD));
 			mmenu.add(new OmMenuItem(getString("395"), l));
+		}
+		{
+			// Settings Menu Points
+			List<INavbarComponent> l = new ArrayList<>();
+			l.add(getSubItem("1188", "1188", MenuActions.PROFILE_MESSAGE));
+			l.add(getSubItem("377", "377", MenuActions.PROFILE_EDIT));
+			l.add(getSubItem("1172", "1172", MenuActions.PROFILE_SEARCH));
+			l.add(getSubItem("profile.invitations", "profile.invitations", MenuActions.PROFILE_INVITATION));
+			l.add(getSubItem("1548", "1548", MenuActions.PROFILE_WIDGET));
+			mmenu.add(new OmMenuItem(getString("4"), l));
 		}
 		Set<Right> r = WebSession.getRights();
 		boolean isAdmin = hasAdminLevel(r);
 		if (isAdmin || hasGroupAdminLevel(r)) {
 			// Administration Menu Points
-			List<IMenuItem> l = new ArrayList<>();
-			l.add(getSubItem("125", "1454", MenuActions.adminModuleUser, null));
+			List<INavbarComponent> l = new ArrayList<>();
+			l.add(getSubItem("125", "1454", MenuActions.ADMIN_USER));
 			if (isAdmin) {
-				l.add(getSubItem("597", "1455", MenuActions.adminModuleConnections, null));
+				l.add(getSubItem("597", "1455", MenuActions.ADMIN_CONNECTION));
 			}
-			l.add(getSubItem("126", "1456", MenuActions.adminModuleOrg, null));
-			l.add(getSubItem("186", "1457", MenuActions.adminModuleRoom, null));
+			l.add(getSubItem("126", "1456", MenuActions.ADMIN_GROUP));
+			l.add(getSubItem("186", "1457", MenuActions.ADMIN_ROOM));
 			if (isAdmin) {
-				l.add(getSubItem("263", "1458", MenuActions.adminModuleConfiguration, null));
-				l.add(getSubItem("348", "1459", MenuActions.adminModuleLanguages, null));
-				l.add(getSubItem("1103", "1454", MenuActions.adminModuleLDAP, null));
-				l.add(getSubItem("1571", "1572", MenuActions.adminModuleOAuth, null));
-				l.add(getSubItem("367", "1461", MenuActions.adminModuleBackup, null));
-				l.add(getSubItem("main.menu.admin.email", "main.menu.admin.email.desc", MenuActions.adminModuleEmail, null));
+				l.add(getSubItem("263", "1458", MenuActions.ADMIN_CONFIG));
+				l.add(getSubItem("348", "1459", MenuActions.ADMIN_LABEL));
+				l.add(getSubItem("1103", "1454", MenuActions.ADMIN_LDAP));
+				l.add(getSubItem("1571", "1572", MenuActions.ADMIN_OAUTH));
+				l.add(getSubItem("367", "1461", MenuActions.ADMIN_BACKUP));
+				l.add(getSubItem("main.menu.admin.email", "main.menu.admin.email.desc", MenuActions.ADMIN_EMAIL));
 			}
 			mmenu.add(new OmMenuItem(getString("6"), l));
 		}
@@ -409,14 +412,14 @@ public class MainPanel extends Panel {
 		}
 	}
 
-	private void updateContents(BasePanel panel, IPartialPageRequestHandler handler) {
-		if (panel != null) {
+	private void updateContents(BasePanel inPanel, IPartialPageRequestHandler handler) {
+		if (inPanel != null) {
 			BasePanel prev = getCurrentPanel();
 			if (prev != null) {
 				prev.cleanup(handler);
 			}
-			handler.add(contents.replace(panel), this.add(AttributeModifier.replace(ATTR_CLASS, "main " + panel.getCssClass())));
-			panel.onMenuPanelLoad(handler);
+			handler.add(contents.replace(inPanel), this.add(AttributeModifier.replace(ATTR_CLASS, "main " + inPanel.getCssClass())));
+			inPanel.onMenuPanelLoad(handler);
 		}
 	}
 

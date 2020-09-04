@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-db</artifactId>
@@ -31,6 +31,7 @@
 	<description>OpenMeetings module for all Database/DTO related classes</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.db</autoModuleName>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -72,10 +73,6 @@
 			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.simpleframework</groupId>
-			<artifactId>simple-xml</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.asteriskjava</groupId>
 			<artifactId>asterisk-java</artifactId>
 			<version>${asterisk-java.version}</version>
@@ -110,11 +107,6 @@
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
 			<version>${mssql.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.mina</groupId>
-			<artifactId>mina-core</artifactId>
-			<version>${mina.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.openmeetings</groupId>

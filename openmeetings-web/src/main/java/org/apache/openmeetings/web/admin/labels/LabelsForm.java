@@ -18,8 +18,6 @@
  */
 package org.apache.openmeetings.web.admin.labels;
 
-import static org.apache.openmeetings.web.admin.labels.LangPanel.reinitJs;
-
 import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.entity.label.StringLabel;
 import org.apache.openmeetings.web.admin.AdminBaseForm;
@@ -28,6 +26,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.ResourceModel;
 
 
 /**
@@ -46,8 +45,12 @@ public class LabelsForm extends AdminBaseForm<StringLabel> {
 		this.panel = panel;
 		key = label.getKey();
 		value = label.getValue();
+	}
 
-		add(new RequiredTextField<String>("key"));
+	@Override
+	protected void onInitialize() {
+		super.onInitialize();
+		add(new RequiredTextField<String>("key").setLabel(new ResourceModel("165")));
 		add(new TextArea<String>("value"));
 	}
 
@@ -57,14 +60,12 @@ public class LabelsForm extends AdminBaseForm<StringLabel> {
 		value = null;
 		setModelObject(new StringLabel(key, value));
 		target.add(this);
-		reinitJs(target);
 	}
 
 	@Override
 	protected void onRefreshSubmit(AjaxRequestTarget target, Form<?> form) {
 		this.setModelObject(new StringLabel(key, value));
 		target.add(this);
-		reinitJs(target);
 	}
 
 	@Override
@@ -76,7 +77,6 @@ public class LabelsForm extends AdminBaseForm<StringLabel> {
 		}
 		setNewVisible(false);
 		target.add(panel.listContainer);
-		reinitJs(target);
 	}
 
 	@Override
@@ -87,6 +87,5 @@ public class LabelsForm extends AdminBaseForm<StringLabel> {
 			error("Unexpected error while deleting label:" + e.getMessage());
 		}
 		target.add(panel.listContainer);
-		reinitJs(target);
 	}
 }

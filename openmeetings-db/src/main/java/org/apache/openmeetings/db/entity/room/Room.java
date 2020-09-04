@@ -18,6 +18,8 @@
  */
 package org.apache.openmeetings.db.entity.room;
 
+import static org.apache.openmeetings.db.bind.Constants.ROOM_NODE;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,21 +44,25 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.openjpa.persistence.ElementDependent;
 import org.apache.openjpa.persistence.FetchAttribute;
 import org.apache.openjpa.persistence.FetchGroup;
 import org.apache.openjpa.persistence.FetchGroups;
 import org.apache.openjpa.persistence.jdbc.ForeignKey;
+import org.apache.openmeetings.db.bind.adapter.BooleanAdapter;
+import org.apache.openmeetings.db.bind.adapter.IntAdapter;
+import org.apache.openmeetings.db.bind.adapter.LongAdapter;
+import org.apache.openmeetings.db.bind.adapter.RoomElementAdapter;
+import org.apache.openmeetings.db.bind.adapter.RoomTypeAdapter;
 import org.apache.openmeetings.db.entity.HistoricalEntity;
 import org.apache.openmeetings.db.entity.user.Group;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
 
 @Entity
 @FetchGroups({
@@ -75,19 +81,17 @@ import org.simpleframework.xml.Root;
 @NamedQuery(name = "getPublicRoomsOrdered", query = "SELECT r from Room r WHERE r.ispublic= true AND r.deleted= false AND r.appointment = false ORDER BY r.name ASC")
 @NamedQuery(name = "getRoomById", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id = :id")
 @NamedQuery(name = "getRoomsByIds", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id IN :ids")
+@NamedQuery(name = "getRoomByTag", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.tag = :tag")
 @NamedQuery(name = "getSipRoomIdsByIds", query = "SELECT r.id FROM Room r WHERE r.deleted = false AND r.sipEnabled = true AND r.id IN :ids")
 @NamedQuery(name = "countRooms", query = "SELECT COUNT(r) FROM Room r WHERE r.deleted = false")
 @NamedQuery(name = "getBackupRooms", query = "SELECT r FROM Room r ORDER BY r.id")
-@NamedQuery(name = "getRoomsCapacityByIds", query = "SELECT SUM(r.capacity) FROM Room r WHERE r.deleted = false AND r.id IN :ids")
 @NamedQuery(name = "getGroupRooms", query = "SELECT DISTINCT rg.room FROM RoomGroup rg LEFT JOIN FETCH rg.room "
 		+ "WHERE rg.group.id = :groupId AND rg.room.deleted = false AND rg.room.appointment = false "
 		+ "ORDER BY rg.room.name ASC")
 @Table(name = "room", indexes = {
 		@Index(name = "room_name_idx", columnList = "name")
 })
-@Root(name = "room")
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlRootElement(name = ROOM_NODE)
 public class Room extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
 	public static final int CONFERENCE_TYPE_ID = 1;
@@ -96,36 +100,36 @@ public class Room extends HistoricalEntity {
 
 	@XmlType(namespace="org.apache.openmeetings.room.right")
 	public enum Right {
-		superModerator
-		, moderator
-		, presenter
-		, whiteBoard
-		, share
-		, remoteControl
-		, audio
-		, video
-		, muteOthers
+		SUPER_MODERATOR
+		, MODERATOR
+		, PRESENTER
+		, WHITEBOARD
+		, SHARE
+		, REMOTE_CONTROL
+		, AUDIO
+		, VIDEO
+		, MUTE_OTHERS
 	}
 
 	@XmlType(namespace="org.apache.openmeetings.room.element")
 	public enum RoomElement {
-		TopBar
-		, Chat
-		, Activities
-		, Files
-		, ActionMenu
-		, PollMenu
-		, ScreenSharing
-		, Whiteboard
-		, MicrophoneStatus
-		, UserCount
+		TOP_BAR
+		, CHAT
+		, ACTIVITIES
+		, FILES
+		, ACTION_MENU
+		, POLL_MENU
+		, SCREEN_SHARING
+		, WHITEBOARD
+		, MICROPHONE_STATUS
+		, USER_COUNT
 	}
 
 	@XmlType(namespace="org.apache.openmeetings.room.type")
 	public enum Type {
-		conference(CONFERENCE_TYPE_ID)
-		, presentation(PRESENTATION_TYPE_ID)
-		, interview(INTERVIEW_TYPE_ID);
+		CONFERENCE(CONFERENCE_TYPE_ID)
+		, PRESENTATION(PRESENTATION_TYPE_ID)
+		, INTERVIEW(INTERVIEW_TYPE_ID);
 		//, custom(5)
 		private int id;
 
@@ -146,13 +150,13 @@ public class Room extends HistoricalEntity {
 		}
 
 		public static Type get(int type) {
-			Type rt = Type.conference;
+			Type rt = Type.CONFERENCE;
 			switch (type) {
 				case PRESENTATION_TYPE_ID:
-					rt = Type.presentation;
+					rt = Type.PRESENTATION;
 					break;
 				case INTERVIEW_TYPE_ID:
-					rt = Type.interview;
+					rt = Type.INTERVIEW;
 					break;
 				default:
 					//no-op
@@ -164,41 +168,50 @@ public class Room extends HistoricalEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	@Element(data = true, required = false, name = "rooms_id")
+	@XmlElement(name = "rooms_id", required = false)
+	@XmlJavaTypeAdapter(LongAdapter.class)
 	private Long id;
 
 	@Column(name = "name")
-	@Element(data = true, required=false)
+	@XmlElement(name = "name", required = false)
 	private String name;
+
+	@Column(name = "tag", length = 10)
+	@XmlElement(name = "tag", required = false)
+	private String tag;
 
 	@Lob
 	@Column(name = "comment")
-	@Element(data = true, required = false)
+	@XmlElement(name = "comment", required = false)
 	private String comment;
 
 	@Column(name = "type")
 	@Enumerated(EnumType.STRING)
-	@Element(name = "roomtypeId", data = true, required = false)
-	private Type type = Type.conference;
+	@XmlElement(name = "roomtypeId", required = false)
+	@XmlJavaTypeAdapter(RoomTypeAdapter.class)
+	private Type type = Type.CONFERENCE;
 
 	@Column(name = "ispublic", nullable = false)
-	@Element(name = "ispublic", data = true, required = false)
+	@XmlElement(name = "ispublic", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean ispublic;
 
 	@Column(name = "capacity")
-	@Element(name = "numberOfPartizipants", data = true, required = false)
+	@XmlElement(name = "numberOfPartizipants", required = false)
+	@XmlJavaTypeAdapter(value = LongAdapter.class, type = long.class)
 	private long capacity = 4L;
 
 	@Column(name = "appointment", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "appointment", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean appointment;
 
 	// Vars to simulate external Room
 	@Column(name = "external_id")
-	@Element(data = true, required = false)
+	@XmlElement(name = "externalId", required = false)
 	private String externalId;
 
-	@Element(data = true, required = false)
+	@XmlElement(name = "externalType", required = false)
 	@Deprecated(since = "5.0")
 	@Transient
 	/**
@@ -207,50 +220,65 @@ public class Room extends HistoricalEntity {
 	private String externalType;
 
 	@Column(name = "demo_room", nullable = false)
-	@Element(name = "isDemoRoom", data = true, required = false)
+	@XmlElement(name = "isDemoRoom", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean demoRoom;
 
 	@Column(name = "demo_time")
-	@Element(data = true, required = false)
+	@XmlElement(name = "demoTime", required = false)
+	@XmlJavaTypeAdapter(IntAdapter.class)
 	private Integer demoTime; // In Seconds
+
+	// If this is true noone can automatically get additional rights
+	@Column(name = "moderated", nullable = false)
+	@XmlElement(name = "isModeratedRoom", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
+	private boolean moderated;
 
 	// If this is true all participants of a meeting have to wait for the
 	// moderator to come into the room
-	@Column(name = "ismoderatedroom", nullable = false)
-	@Element(name="isModeratedRoom", data = true, required = false)
-	private boolean moderated;
+	@Column(name = "wait_moderator", nullable = false)
+	@XmlElement(name = "waitModerator", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
+	private boolean waitModerator;
 
 	@Column(name = "allow_user_questions", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "allowUserQuestions", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean allowUserQuestions;
 
-	@Column(name = "is_audio_only", nullable = false)
-	@Element(name = "isAudioOnly", data = true, required = false)
+	@Column(name = "audio_only", nullable = false)
+	@XmlElement(name = "isAudioOnly", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean audioOnly;
 
-	@Column(name = "is_closed", nullable = false)
-	@Element(data = true, required = false)
+	@Column(name = "closed", nullable = false)
+	@XmlElement(name = "closed", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean closed;
 
 	@Column(name = "redirect_url")
-	@Element(data = true, required = false)
+	@XmlElement(name = "redirectURL", required = false)
 	private String redirectURL;
 
 	@Column(name = "owner_id")
-	@Element(name = "ownerid", data = true, required = false)
+	@XmlElement(name = "ownerid", required = false)
+	@XmlJavaTypeAdapter(LongAdapter.class)
 	private Long ownerId; // Those are the rooms from the myrooms section
 
 	@Column(name = "wait_for_recording", nullable = false)
-	@Element(data = true, required = false)
-	private boolean waitForRecording; // Show warning that user has to start
-										// recording
+	@XmlElement(name = "waitRecording", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
+	private boolean waitRecording; // Show warning that user has to start recording
 
 	@Column(name = "allow_recording", nullable = false)
-	@Element(name = "allowRecording", data = true, required = false)
+	@XmlElement(name = "allowRecording", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean allowRecording = true; // Show or show not the recording option in a conference room
 
 	@Column(name = "chat_moderated", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "chatModerated", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean chatModerated;
 
 	/**
@@ -260,45 +288,51 @@ public class Room extends HistoricalEntity {
 	@Column(name = "hide_element")
 	@CollectionTable(name = "room_hide_element", joinColumns = @JoinColumn(name = "room_id"))
 	@Enumerated(EnumType.STRING)
-	@ElementList(name="hide_element", data = true, required = false)
+	@XmlElementWrapper(name = "hide_element", required = false)
+	@XmlElement(name = "roomElement")
+	@XmlJavaTypeAdapter(RoomElementAdapter.class)
 	private Set<RoomElement> hiddenElements = new HashSet<>();
 
 	@Column(name = "chat_opened", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "chatOpened", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean chatOpened;
 
 	@Column(name = "files_opened", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "filesOpened", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean filesOpened;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "roomId")
 	@ForeignKey(enabled = true)
-	@ElementList(name = "room_moderators", required = false)
+	@XmlElementWrapper(name = "room_moderators", required = false)
+	@XmlElement(name = "room_moderator", required = false)
 	private List<RoomModerator> moderators = new ArrayList<>();
 
 	@Column(name = "sip_enabled", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "sipEnabled", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean sipEnabled;
 
 	@Column(name = "confno")
-	@Element(data = true, required = false)
+	@XmlElement(name = "confno", required = false)
 	private String confno;
 
 	@Column(name = "pin")
-	@Element(data = true, required = false)
+	@XmlElement(name = "pin", required = false)
 	private String pin;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "room_id", insertable = true, updatable = true)
 	@ElementDependent
-	@org.simpleframework.xml.Transient
+	@XmlTransient
 	private List<RoomGroup> groups = new ArrayList<>();
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "room_id", insertable = true, updatable = true, nullable = false)
 	@ElementDependent
-	@org.simpleframework.xml.Transient
+	@XmlTransient
 	private List<RoomFile> files = new ArrayList<>();
 
 	public String getComment() {
@@ -315,6 +349,14 @@ public class Room extends HistoricalEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getTag() {
+		return tag;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
 	}
 
 	@Override
@@ -381,6 +423,14 @@ public class Room extends HistoricalEntity {
 
 	public void setModerated(boolean moderated) {
 		this.moderated = moderated;
+	}
+
+	public boolean isWaitModerator() {
+		return waitModerator;
+	}
+
+	public void setWaitModerator(boolean waitModerator) {
+		this.waitModerator = waitModerator;
 	}
 
 	public String getExternalId() {
@@ -455,12 +505,12 @@ public class Room extends HistoricalEntity {
 		this.ownerId = ownerId;
 	}
 
-	public boolean isWaitForRecording() {
-		return waitForRecording;
+	public boolean isWaitRecording() {
+		return waitRecording;
 	}
 
-	public void setWaitForRecording(boolean waitForRecording) {
-		this.waitForRecording = waitForRecording;
+	public void setWaitRecording(boolean waitRecording) {
+		this.waitRecording = waitRecording;
 	}
 
 	public boolean isAllowRecording() {

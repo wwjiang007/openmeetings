@@ -21,6 +21,7 @@ package org.apache.openmeetings.web.user.chat;
 import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ALL;
 import static org.apache.openmeetings.core.util.ChatWebSocketHelper.ID_ROOM_PREFIX;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DASHBOARD_SHOW_CHAT;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isChatSendOnEnter;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.openmeetings.web.room.RoomPanel.isModerator;
 import static org.apache.openmeetings.web.util.CallbackFunctionHelper.getNamedFunction;
@@ -30,7 +31,6 @@ import static org.apache.wicket.ajax.attributes.CallbackParameter.explicit;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -43,7 +43,6 @@ import org.apache.openmeetings.db.entity.basic.ChatMessage;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.user.User;
-import org.apache.openmeetings.util.OpenmeetingsVariables;
 import org.apache.openmeetings.web.app.ClientManager;
 import org.apache.openmeetings.web.common.MainPanel;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -64,8 +63,8 @@ import com.github.openjson.JSONObject;
 public class Chat extends Panel {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(Chat.class);
-	private static final String PARAM_MSG_ID = "msgid";
-	private static final String PARAM_ROOM_ID = "roomid";
+	private static final String PARAM_MSG_ID = "msgId";
+	private static final String PARAM_ROOM_ID = "roomId";
 	private static final String PARAM_TYPE = "type";
 	private boolean showDashboardChat;
 	private final AbstractDefaultAjaxBehavior chatActivity = new AbstractDefaultAjaxBehavior() {
@@ -82,7 +81,7 @@ public class Chat extends Panel {
 					if (m.isNeedModeration() && isModerator(cm, getUserId(), roomId)) {
 						m.setNeedModeration(false);
 						chatDao.update(m);
-						ChatWebSocketHelper.sendRoom(m, getMessage(Arrays.asList(m)).put("mode",  "accept"));
+						ChatWebSocketHelper.sendRoom(m, getMessage(List.of(m)).put("mode",  "accept"));
 					} else {
 						log.error("It seems like we are being hacked!!!!");
 					}
@@ -145,7 +144,7 @@ public class Chat extends Panel {
 						.put("userId", getUserId())
 						.put("all", getString("1494"))
 						.put("room", getString("406"))
-						.put("sendOnEnter", OpenmeetingsVariables.getChatSenndOnEnter()).toString())
+						.put("sendOnEnter", isChatSendOnEnter()).toString())
 				.append("); ");
 		return processGlobal(sb);
 	}

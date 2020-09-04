@@ -18,13 +18,11 @@
  */
 package org.apache.openmeetings.web.common.tree;
 
-import com.github.openjson.JSONObject;
-import com.googlecode.wicket.jquery.core.IJQueryWidget.JQueryWidget;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.interaction.draggable.DraggableBehavior;
-import com.googlecode.wicket.jquery.ui.interaction.draggable.IDraggableListener;
-import com.googlecode.wicket.jquery.ui.interaction.droppable.DroppableBehavior;
-import com.googlecode.wicket.jquery.ui.interaction.droppable.IDroppableListener;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_TITLE;
+
+import java.util.Map.Entry;
+
 import org.apache.openmeetings.db.dao.file.FileItemDao;
 import org.apache.openmeetings.db.dao.record.RecordingDao;
 import org.apache.openmeetings.db.entity.file.BaseFileItem;
@@ -48,10 +46,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 
-import java.util.Map.Entry;
-
-import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_TITLE;
+import com.github.openjson.JSONObject;
+import com.googlecode.wicket.jquery.core.IJQueryWidget.JQueryWidget;
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.jquery.ui.interaction.draggable.DraggableBehavior;
+import com.googlecode.wicket.jquery.ui.interaction.draggable.IDraggableListener;
+import com.googlecode.wicket.jquery.ui.interaction.droppable.DroppableBehavior;
+import com.googlecode.wicket.jquery.ui.interaction.droppable.IDroppableListener;
 
 public class FolderPanel extends Panel implements IDraggableListener, IDroppableListener {
 	private static final long serialVersionUID = 1L;
@@ -78,11 +79,11 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 		final BaseFileItem f = (BaseFileItem)getDefaultModelObject();
 		boolean editable = treePanel.isEditable() && !f.isReadOnly();
 		final String selector = JQueryWidget.getSelector(this);
-		if (f.getType() == Type.Folder && editable) {
+		if (f.getType() == Type.FOLDER && editable) {
 			add(new DroppableBehavior(
 					selector
 					, new Options()
-						.set("hoverClass", Options.asString("ui-state-hover"))
+						.set("hoverClass", Options.asString("bg-light"))
 						.set("accept", Options.asString(getDefaultModelObject() instanceof Recording ? ".recorditem" : ".fileitem"))
 					, this));
 		}
@@ -90,9 +91,9 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 			add(new DraggableBehavior(
 					selector
 					, new Options()
-						.set("revert", "treeRevert")
+						.set("revert", "OmFileTree.treeRevert")
 						.set("cursor", Options.asString("move"))
-						.set("helper", "dragHelper")
+						.set("helper", "OmFileTree.dragHelper")
 						.set("cursorAt", "{left: 40, top: 18}")
 						.set("containment", Options.asString(treePanel.getContainment()))
 					, this));
@@ -137,13 +138,13 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 		});
 	}
 
-	private void moveAll(final FileTreePanel treePanel, AjaxRequestTarget target, BaseFileItem p) {
+	private void moveAll(AjaxRequestTarget target, BaseFileItem p) {
 		for (Entry<String, BaseFileItem> e : treePanel.getSelected().entrySet()) {
-			move(treePanel, target, p, e.getValue());
+			move(target, p, e.getValue());
 		}
 	}
 
-	private void move(final FileTreePanel treePanel, AjaxRequestTarget target, BaseFileItem p, BaseFileItem f) {
+	private void move(AjaxRequestTarget target, BaseFileItem p, BaseFileItem f) {
 		Long pid = p.getId();
 		if (pid != null && pid.equals(f.getId())) {
 			return;
@@ -170,7 +171,7 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 			ctrl = o.optBoolean(PARAM_CTRL);
 		}
 		treePanel.select(f, target, shift, ctrl);
-		if (Type.Folder == f.getType() && treePanel.tree.getState(f) == State.COLLAPSED) {
+		if (Type.FOLDER == f.getType() && treePanel.tree.getState(f) == State.COLLAPSED) {
 			treePanel.tree.expand(f);
 		} else {
 			treePanel.update(target, f);
@@ -184,35 +185,35 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 		if (f.getId() == null) {
 			style.append(CSS_CLASS_FILE).append(f.getHash().indexOf("my") > -1 ? "my " : "public ");
 		} else {
-			if (!f.exists()) {
+			if (BaseFileItem.Type.FOLDER != f.getType() && !f.exists()) {
 				style.append("broken ");
 			}
 			switch(f.getType()) {
-				case Folder:
+				case FOLDER:
 					style.append(CSS_CLASS_FILE).append(open ? "folder-open " : "folder ");
 					break;
-				case Image:
+				case IMAGE:
 					style.append(CSS_CLASS_FILE).append("image ");
 					break;
-				case PollChart:
+				case POLL_CHART:
 					style.append(CSS_CLASS_FILE).append("chart ");
 					break;
-				case WmlFile:
+				case WML_FILE:
 					style.append(CSS_CLASS_FILE).append("wml ");
 					break;
-				case Video:
-				case Recording:
+				case VIDEO:
+				case RECORDING:
 				{
 					style.append("recording ");
 					if (f instanceof Recording) {
 						Status st = ((Recording)f).getStatus();
 						if (Status.RECORDING == st || Status.CONVERTING == st) {
-							style.append("processing");
+							style.append("processing ");
 						}
 					}
 				}
 					break;
-				case Presentation:
+				case PRESENTATION:
 					style.append(CSS_CLASS_FILE).append("doc ");
 					break;
 				default:
@@ -220,7 +221,7 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 			}
 		}
 		if (treePanel.isSelected(f)) {
-			style.append("ui-state-active ");
+			style.append("active ");
 		}
 		String cls = f instanceof Recording ? "recorditem " : "fileitem ";
 		style.append(f.isReadOnly() ? "readonlyitem " : cls);
@@ -269,9 +270,9 @@ public class FolderPanel extends Panel implements IDraggableListener, IDroppable
 			BaseFileItem p = (BaseFileItem)getDefaultModelObject();
 			BaseFileItem f = (BaseFileItem)o;
 			if (treePanel.isSelected(f)) {
-				moveAll(treePanel, target, p);
+				moveAll(target, p);
 			} else {
-				move(treePanel, target, p, f);
+				move(target, p, f);
 			}
 			treePanel.updateNode(target, p);
 		}

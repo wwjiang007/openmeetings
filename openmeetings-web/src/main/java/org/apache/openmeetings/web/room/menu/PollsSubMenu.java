@@ -69,7 +69,7 @@ public class PollsSubMenu implements Serializable {
 		@Override
 		protected void respond(AjaxRequestTarget target) {
 			try {
-				if (room.getRoom().isHidden(RoomElement.PollMenu)) {
+				if (room.getRoom().isHidden(RoomElement.POLL_MENU)) {
 					return;
 				}
 				String action = mp.getRequest().getRequestParameters().getParameterValue(PARAM_ACTION).toString();
@@ -100,7 +100,7 @@ public class PollsSubMenu implements Serializable {
 		mp.add(createPoll = new CreatePollDialog("createPoll", room.getRoom().getId()));
 		mp.add(vote = new VoteDialog("vote"));
 		mp.add(pollResults = new PollResultsDialog("pollResults", createPoll, room.getRoom().getId()));
-		visible = !room.getRoom().isHidden(RoomElement.PollMenu);
+		visible = !room.getRoom().isHidden(RoomElement.POLL_MENU);
 	}
 
 	public void init() {
@@ -119,7 +119,7 @@ public class PollsSubMenu implements Serializable {
 			@Override
 			public void onClick(AjaxRequestTarget target) {
 				createPoll.updateModel(target);
-				createPoll.open(target);
+				createPoll.show(target);
 			}
 		};
 		pollVoteMenuItem = new RoomMenuItem(mp.getString("32"), mp.getString("1485"), false) {
@@ -130,7 +130,7 @@ public class PollsSubMenu implements Serializable {
 				RoomPoll rp = pollDao.getByRoom(room.getRoom().getId());
 				if (rp != null) {
 					vote.updateModel(target, rp);
-					vote.open(target);
+					vote.show(target);
 				}
 			}
 		};
@@ -139,19 +139,19 @@ public class PollsSubMenu implements Serializable {
 
 			@Override
 			public void onClick(AjaxRequestTarget target) {
-				pollResults.updateModel(target, room.getClient().hasRight(Room.Right.moderator));
-				pollResults.open(target);
+				pollResults.updateModel(target, room.getClient().hasRight(Room.Right.MODERATOR));
+				pollResults.show(target);
 			}
 		};
 		mp.add(quickPollAction);
 	}
 
 	RoomMenuItem getMenu() {
-		pollsMenu.setTop(true);
-		pollsMenu.getItems().add(pollQuickMenuItem);
-		pollsMenu.getItems().add(pollCreateMenuItem);
-		pollsMenu.getItems().add(pollResultMenuItem);
-		pollsMenu.getItems().add(pollVoteMenuItem);
+		pollsMenu
+			.add(pollQuickMenuItem)
+			.add(pollCreateMenuItem)
+			.add(pollResultMenuItem)
+			.add(pollVoteMenuItem);
 		return pollsMenu;
 	}
 
@@ -160,11 +160,11 @@ public class PollsSubMenu implements Serializable {
 			return;
 		}
 		boolean pollExists = pollDao.hasPoll(r.getId());
-		pollsMenu.setEnabled(moder || r.isAllowUserQuestions());
-		pollQuickMenuItem.setEnabled(room.getClient().hasRight(Room.Right.presenter) && !qpollManager.isStarted(r.getId()));
-		pollCreateMenuItem.setEnabled(moder);
-		pollVoteMenuItem.setEnabled(pollExists && notExternalUser && pollDao.notVoted(r.getId(), getUserId()));
-		pollResultMenuItem.setEnabled(pollExists || !pollDao.getArchived(r.getId()).isEmpty());
+		pollsMenu.setVisible(moder || r.isAllowUserQuestions());
+		pollQuickMenuItem.setVisible(room.getClient().hasRight(Room.Right.PRESENTER) && !qpollManager.isStarted(r.getId()));
+		pollCreateMenuItem.setVisible(moder);
+		pollVoteMenuItem.setVisible(pollExists && notExternalUser && pollDao.notVoted(r.getId(), getUserId()));
+		pollResultMenuItem.setVisible(pollExists || !pollDao.getArchived(r.getId()).isEmpty());
 	}
 
 	public void updatePoll(IPartialPageRequestHandler handler, Long createdBy) {
@@ -172,13 +172,13 @@ public class PollsSubMenu implements Serializable {
 		if (rp != null) {
 			vote.updateModel(handler, rp);
 		} else {
-			vote.close(handler, null);
+			vote.close(handler);
 		}
 		if (createdBy != null && !getUserId().equals(createdBy)) {
-			vote.open(handler);
+			vote.show(handler);
 		}
 		if (pollResults.isOpened()) {
-			pollResults.updateModel(handler, room.getClient().hasRight(Room.Right.moderator));
+			pollResults.updateModel(handler, room.getClient().hasRight(Room.Right.MODERATOR));
 		}
 	}
 

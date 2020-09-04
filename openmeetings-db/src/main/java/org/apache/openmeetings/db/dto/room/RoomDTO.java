@@ -49,6 +49,7 @@ public class RoomDTO implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private Long id;
 	private String name;
+	private String tag;
 	private String comment;
 	private Room.Type type;
 	private Long capacity = Long.valueOf(4);
@@ -62,9 +63,10 @@ public class RoomDTO implements Serializable {
 	private String externalType;
 	private String redirectUrl;
 	private boolean moderated;
+	private boolean waitModerator;
 	private boolean allowUserQuestions;
 	private boolean allowRecording;
-	private boolean waitForRecording;
+	private boolean waitRecording;
 	private boolean audioOnly;
 	private Set<RoomElement> hiddenElements = new HashSet<>();
 	private List<RoomFileDTO> files = new ArrayList<>();
@@ -76,6 +78,7 @@ public class RoomDTO implements Serializable {
 	public RoomDTO(Room r) {
 		id = r.getId();
 		name = r.getName();
+		tag = r.getTag();
 		comment = r.getComment();
 		type = r.getType();
 		capacity = r.getCapacity();
@@ -89,9 +92,10 @@ public class RoomDTO implements Serializable {
 		externalType = r.externalType();
 		redirectUrl = r.getRedirectURL();
 		moderated = r.isModerated();
+		waitModerator = r.isWaitModerator();
 		allowUserQuestions = r.isAllowUserQuestions();
 		allowRecording = r.isAllowRecording();
-		waitForRecording = r.isWaitForRecording();
+		waitRecording = r.isWaitRecording();
 		audioOnly = r.isAudioOnly();
 		hiddenElements = r.getHiddenElements();
 		files = RoomFileDTO.get(r.getFiles());
@@ -101,6 +105,7 @@ public class RoomDTO implements Serializable {
 		Room r = id == null ? new Room() : roomDao.get(id);
 		r.setId(id);
 		r.setName(name);
+		r.setTag(tag);
 		r.setComment(comment);
 		r.setType(type);
 		r.setCapacity(capacity);
@@ -108,6 +113,7 @@ public class RoomDTO implements Serializable {
 		r.setConfno(confno);
 		r.setIspublic(isPublic);
 		r.setDemoRoom(demo);
+		r.setClosed(closed);
 		r.setDemoTime(demoTime);
 		r.setExternalId(externalId);
 		if (!Strings.isEmpty(externalType)
@@ -117,9 +123,10 @@ public class RoomDTO implements Serializable {
 		}
 		r.setRedirectURL(redirectUrl);
 		r.setModerated(moderated);
+		r.setWaitModerator(waitModerator);
 		r.setAllowUserQuestions(allowUserQuestions);
 		r.setAllowRecording(allowRecording);
-		r.setWaitForRecording(waitForRecording);
+		r.setWaitRecording(waitRecording);
 		r.setAudioOnly(audioOnly);
 		r.setHiddenElements(hiddenElements);
 		r.setFiles(RoomFileDTO.get(id, files, fileDao));
@@ -140,6 +147,14 @@ public class RoomDTO implements Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getTag() {
+		return tag;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
 	}
 
 	public String getComment() {
@@ -222,12 +237,12 @@ public class RoomDTO implements Serializable {
 		this.allowRecording = allowRecording;
 	}
 
-	public boolean isWaitForRecording() {
-		return waitForRecording;
+	public boolean isWaitRecording() {
+		return waitRecording;
 	}
 
-	public void setWaitForRecording(boolean waitForRecording) {
-		this.waitForRecording = waitForRecording;
+	public void setWaitRecording(boolean waitRecording) {
+		this.waitRecording = waitRecording;
 	}
 
 	public boolean isAudioOnly() {
@@ -315,8 +330,12 @@ public class RoomDTO implements Serializable {
 		RoomDTO r = new RoomDTO();
 		r.id = optLong(o, "id");
 		r.name = o.optString("name");
+		r.tag = o.optString("tag");
 		r.comment = o.optString("comment");
 		r.type = optEnum(Room.Type.class, o, "type");
+		if (r.type == null) {
+			throw new IllegalArgumentException("Room should have valid type");
+		}
 		r.capacity = o.optLong("capacity", 4);
 		r.appointment = o.optBoolean("appointment", false);
 		r.confno = o.optString("confno");
@@ -328,9 +347,10 @@ public class RoomDTO implements Serializable {
 		r.externalType = o.optString("externalType", null);
 		r.redirectUrl = o.optString("redirectUrl");
 		r.moderated = o.optBoolean("moderated", false);
+		r.waitModerator = o.optBoolean("waitModerator", false);
 		r.allowUserQuestions = o.optBoolean("allowUserQuestions", false);
 		r.allowRecording = o.optBoolean("allowRecording", false);
-		r.waitForRecording = o.optBoolean("waitForRecording", false);
+		r.waitRecording = o.optBoolean("waitRecording", false);
 		r.audioOnly = o.optBoolean("audioOnly", false);
 		r.getHiddenElements().addAll(optEnumList(RoomElement.class, o.optJSONArray("hiddenElements")));
 		JSONArray fa = o.optJSONArray("files");

@@ -22,7 +22,11 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_TITLE;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_REDIRECT_URL_FOR_EXTERNAL;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getBaseUrl;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isMyRoomsEnabled;
+import static org.apache.openmeetings.web.app.WebSession.getUserId;
 import static org.apache.openmeetings.web.util.GroupLogoResourceReference.getUrl;
+import static org.apache.openmeetings.web.util.OmUrlFragment.ROOMS_GROUP;
+import static org.apache.openmeetings.web.util.OmUrlFragment.ROOMS_MY;
 import static org.apache.openmeetings.web.util.OmUrlFragment.ROOMS_PUBLIC;
 
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.openmeetings.core.remote.KurentoHandler;
 import org.apache.openmeetings.core.remote.StreamProcessor;
 import org.apache.openmeetings.core.util.WebSocketHelper;
+import org.apache.openmeetings.db.dao.basic.ChatDao;
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.room.Room;
@@ -44,15 +49,16 @@ import org.apache.openmeetings.db.util.ws.TextRoomMessage;
 import org.apache.openmeetings.web.app.ClientManager;
 import org.apache.openmeetings.web.app.WebSession;
 import org.apache.openmeetings.web.common.ImagePanel;
-import org.apache.openmeetings.web.common.OmButton;
 import org.apache.openmeetings.web.common.menu.MenuPanel;
 import org.apache.openmeetings.web.common.menu.RoomMenuItem;
-import org.apache.openmeetings.web.room.OmRedirectTimerBehavior;
+import org.apache.openmeetings.web.room.OmTimerBehavior;
 import org.apache.openmeetings.web.room.RoomPanel;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
@@ -61,15 +67,17 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 
 import com.github.openjson.JSONObject;
-import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
+import de.agilecoders.wicket.core.markup.html.bootstrap.navbar.INavbarComponent;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 
 public class RoomMenuPanel extends Panel {
 	private static final long serialVersionUID = 1L;
 	private MenuPanel menuPanel;
-	private final StartSharingButton shareBtn;
+	private final WebMarkupContainer shareBtn;
 	private final Label roomName;
 	private static final FastDateFormat df = FastDateFormat.getInstance("dd.MM.yyyy HH:mm");
-	private final OmButton askBtn = new OmButton("ask") {
+	private final AjaxLink<Void> askBtn = new AjaxLink<>("ask") {
 		private static final long serialVersionUID = 1L;
 
 		@Override
@@ -82,7 +90,7 @@ public class RoomMenuPanel extends Panel {
 		@Override
 		public void onClick(AjaxRequestTarget target) {
 			Client c = room.getClient();
-			WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoom().getId(), c, Type.haveQuestion, c.getUid()));
+			WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoom().getId(), c, Type.HAVE_QUESTION, c.getUid()));
 		}
 	};
 	private final RoomPanel room;
@@ -103,6 +111,8 @@ public class RoomMenuPanel extends Panel {
 	@SpringBean
 	private ConfigurationDao cfgDao;
 	@SpringBean
+	private ChatDao chatDao;
+	@SpringBean
 	private KurentoHandler kHandler;
 	@SpringBean
 	private StreamProcessor streamProcessor;
@@ -112,11 +122,12 @@ public class RoomMenuPanel extends Panel {
 		setOutputMarkupPlaceholderTag(true);
 		this.room = room;
 		Room r = room.getRoom();
-		setVisible(!r.isHidden(RoomElement.TopBar));
+		setVisible(!r.isHidden(RoomElement.TOP_BAR));
 		add((roomName = new Label("roomName", r.getName())).setOutputMarkupPlaceholderTag(true).setOutputMarkupId(true));
 		String tag = getGroup().getTag();
 		add(logo, new Label("tag", tag).setVisible(!Strings.isEmpty(tag)));
-		add(shareBtn = new StartSharingButton("share"));
+		add(shareBtn = new WebMarkupContainer("share"));
+		shareBtn.setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
 		pollsSubMenu = new PollsSubMenu(room, this);
 		actionsSubMenu = new ActionsSubMenu(room, this);
 	}
@@ -130,11 +141,12 @@ public class RoomMenuPanel extends Panel {
 
 	@Override
 	protected void onInitialize() {
-		exitMenuItem = new RoomMenuItem(getString("308"), getString("309"), "exit") {
+		exitMenuItem = new RoomMenuItem(getString("308"), getString("309"), FontAwesome5IconType.sign_out_alt_s) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick(AjaxRequestTarget target) {
+				chatDao.closeMessages(getUserId());
 				exit(target);
 			}
 		};
@@ -148,12 +160,12 @@ public class RoomMenuPanel extends Panel {
 		Room r = room.getRoom();
 		add(demo.setVisible(r.isDemoRoom() && r.getDemoTime() != null && room.getRoom().getDemoTime().intValue() > 0));
 		if (demo.isVisible()) {
-			demo.add(new OmRedirectTimerBehavior(room.getRoom().getDemoTime().intValue(), "637") {
+			demo.add(new OmTimerBehavior(room.getRoom().getDemoTime().intValue(), "637") {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				protected void onTimer(int remain) {
-					getComponent().add(AttributeModifier.replace(ATTR_TITLE, getText("639", remain)));
+					getComponent().add(AttributeModifier.replace(ATTR_TITLE, getText(getString("637"), remain)));
 				}
 
 				@Override
@@ -171,12 +183,12 @@ public class RoomMenuPanel extends Panel {
 		pollsSubMenu.renderHead(response);
 	}
 
-	private List<IMenuItem> getMenu() {
-		List<IMenuItem> menu = new ArrayList<>();
-		exitMenuItem.setEnabled(false);
-		menu.add(exitMenuItem.setTop(true));
+	private List<INavbarComponent> getMenu() {
+		List<INavbarComponent> menu = new ArrayList<>();
+		exitMenuItem.setVisible(false);
+		menu.add(exitMenuItem);
 
-		filesMenu.getItems().add(new RoomMenuItem(getString("15"), getString("1479")) {
+		filesMenu.add(new RoomMenuItem(getString("15"), getString("1479")) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -184,7 +196,7 @@ public class RoomMenuPanel extends Panel {
 				room.getSidebar().showUpload(target);
 			}
 		});
-		menu.add(filesMenu.setTop(true));
+		menu.add(filesMenu);
 
 		if (actionsSubMenu.isVisible()) {
 			menu.add(actionsSubMenu.getMenu());
@@ -200,28 +212,35 @@ public class RoomMenuPanel extends Panel {
 			return;
 		}
 		Room r = room.getRoom();
-		boolean isInterview = Room.Type.interview == r.getType();
+		boolean isInterview = Room.Type.INTERVIEW == r.getType();
 		User u = room.getClient().getUser();
-		boolean notExternalUser = u.getType() != User.Type.contact;
-		exitMenuItem.setEnabled(notExternalUser);
-		filesMenu.setEnabled(!isInterview && room.getSidebar().isShowFiles());
-		boolean moder = room.getClient().hasRight(Room.Right.moderator);
+		boolean notExternalUser = u.getType() != User.Type.CONTACT;
+		exitMenuItem.setVisible(notExternalUser);
+		filesMenu.setVisible(!isInterview && room.getSidebar().isShowFiles());
+		boolean moder = room.getClient().hasRight(Room.Right.MODERATOR);
 		actionsSubMenu.update(moder, notExternalUser);
 		pollsSubMenu.update(moder, notExternalUser, r);
 		menuPanel.update(handler);
 		StringBuilder roomClass = new StringBuilder("room name");
-		StringBuilder roomTitle = new StringBuilder();
+		String roomTitle = "";
 		if (streamProcessor.isRecording(r.getId())) {
 			JSONObject ru = kHandler.getRecordingUser(r.getId());
 			if (!Strings.isEmpty(ru.optString("login"))) {
-				roomTitle.append(String.format("%s %s %s %s %s", getString("419")
-						, ru.getString("login"), ru.getString("firstName"), ru.getString("lastName"), df.format(new Date(ru.getLong("started")))));
+				roomTitle += getString("419") + " " + ru.getString("login");
+				if (!Strings.isEmpty(ru.optString("firstName"))) {
+					roomTitle += " " + ru.getString("firstName");
+				}
+				if (!Strings.isEmpty(ru.optString("lastName"))) {
+					roomTitle += " " + ru.getString("lastName");
+				}
+				roomTitle += " " + df.format(new Date(ru.getLong("started")));
 				roomClass.append(" screen");
 			}
 		}
 		handler.add(roomName.add(AttributeModifier.replace(ATTR_CLASS, roomClass), AttributeModifier.replace(ATTR_TITLE, roomTitle)));
 		handler.add(askBtn.setVisible(!moder && r.isAllowUserQuestions()));
 		handler.add(shareBtn.setVisible(room.screenShareAllowed()));
+		handler.appendJavaScript("$('#share-dlg-btn').off().click(Sharer.open);");
 	}
 
 	public void updatePoll(IPartialPageRequestHandler handler, Long createdBy) {
@@ -231,8 +250,15 @@ public class RoomMenuPanel extends Panel {
 
 	public void exit(IPartialPageRequestHandler handler) {
 		cm.exitRoom(room.getClient());
-		if (WebSession.getRights().contains(User.Right.Dashboard)) {
-			room.getMainPanel().updateContents(ROOMS_PUBLIC, handler);
+		if (WebSession.getRights().contains(User.Right.DASHBOARD)) {
+			final Room r = room.getRoom();
+			if (isMyRoomsEnabled() && r != null && getUserId().equals(r.getOwnerId())) {
+				room.getMainPanel().updateContents(ROOMS_MY, handler);
+			} else if (r != null && !r.getIspublic()) {
+				room.getMainPanel().updateContents(ROOMS_GROUP, handler);
+			} else {
+				room.getMainPanel().updateContents(ROOMS_PUBLIC, handler);
+			}
 		} else {
 			String url = cfgDao.getString(CONFIG_REDIRECT_URL_FOR_EXTERNAL, "");
 			throw new RedirectToUrlException(Strings.isEmpty(url) ? getBaseUrl() : url);

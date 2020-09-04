@@ -21,8 +21,6 @@ package org.apache.openmeetings.cli;
 import java.io.File;
 
 import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -33,6 +31,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.openmeetings.db.util.XmlHelper;
 import org.apache.openmeetings.util.ConnectionProperties;
 import org.apache.openmeetings.util.ConnectionProperties.DbType;
 import org.apache.openmeetings.util.OmFileHelper;
@@ -51,22 +50,22 @@ public abstract class ConnectionPropertiesPatcher {
 	public static ConnectionPropertiesPatcher getPatcher(ConnectionProperties props) {
 		ConnectionPropertiesPatcher patcher;
 		switch (props.getDbType()) {
-			case db2:
+			case DB2:
 				patcher = new Db2Patcher();
 				break;
-			case mssql:
+			case MSSQL:
 				patcher = new MssqlPatcher();
 				break;
-			case mysql:
+			case MYSQL:
 				patcher = new MysqlPatcher();
 				break;
-			case oracle:
+			case ORACLE:
 				patcher = new OraclePatcher();
 				break;
-			case postgresql:
+			case POSTGRESQL:
 				patcher = new PostgresPatcher();
 				break;
-			case h2:
+			case H2:
 			default:
 				patcher = new H2Patcher();
 				break;
@@ -86,15 +85,7 @@ public abstract class ConnectionPropertiesPatcher {
 	}
 
 	private static Document getDocument(File xml) throws Exception {
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		dbFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-		dbFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-		dbFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-		dbFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-		dbFactory.setXIncludeAware(false);
-		dbFactory.setExpandEntityReferences(false);
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		return dBuilder.parse(xml);
+		return XmlHelper.createBuilder().parse(xml);
 	}
 
 	private static Attr getConnectionProperties(Document doc) throws Exception {
@@ -121,7 +112,7 @@ public abstract class ConnectionPropertiesPatcher {
 		transformer.transform(source, new StreamResult(OmFileHelper.getPersistence().getCanonicalPath())); //this constructor is used to avoid transforming path to URI
 	}
 
-	public static ConnectionProperties patch(String dbType, String host, String port, String db, String user, String pass) throws Exception {
+	public static ConnectionProperties patch(DbType dbType, String host, String port, String db, String user, String pass) throws Exception {
 		ConnectionProperties props = getConnectionProperties(OmFileHelper.getPersistence(dbType));
 		props.setLogin(user);
 		props.setPassword(pass);
@@ -174,7 +165,7 @@ public abstract class ConnectionPropertiesPatcher {
 				try {
 					//will try to "guess" dbType
 					String[] parts = prop.split(":");
-					connectionProperties.setDbType("sqlserver".equals(parts[1]) ? DbType.mssql : DbType.valueOf(parts[1]));
+					connectionProperties.setDbType(DbType.of(parts[1]));
 				} catch (Exception e) {
 					//ignore
 				}

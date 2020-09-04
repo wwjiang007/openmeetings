@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.web.pages.install;
 
-import static com.googlecode.wicket.jquery.ui.widget.dialog.AbstractDialog.SUBMIT;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static org.apache.openmeetings.AbstractJUnitDefaults.adminUsername;
 import static org.apache.openmeetings.AbstractJUnitDefaults.email;
@@ -26,7 +25,6 @@ import static org.apache.openmeetings.AbstractJUnitDefaults.group;
 import static org.apache.openmeetings.AbstractJUnitDefaults.userpass;
 import static org.apache.openmeetings.AbstractWicketTester.checkErrors;
 import static org.apache.openmeetings.AbstractWicketTester.countErrors;
-import static org.apache.openmeetings.AbstractWicketTester.getButtonBehavior;
 import static org.apache.openmeetings.AbstractWicketTester.getWicketTester;
 import static org.apache.openmeetings.cli.ConnectionPropertiesPatcher.DEFAULT_DB_NAME;
 import static org.apache.openmeetings.db.util.ApplicationHelper.ensureApplication;
@@ -34,10 +32,11 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.DEFAULT_APP_NAM
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setWicketApplicationName;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
@@ -45,10 +44,16 @@ import java.util.TimeZone;
 import org.apache.openmeetings.AbstractSpringTest;
 import org.apache.openmeetings.AbstractWicketTester;
 import org.apache.openmeetings.cli.ConnectionPropertiesPatcher;
+import org.apache.openmeetings.util.ConnectionProperties.DbType;
 import org.apache.openmeetings.util.crypt.SCryptImplementation;
 import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.app.WebSession;
+import org.apache.wicket.ajax.AjaxClientInfoBehavior;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.extensions.wizard.WizardButton;
+import org.apache.wicket.protocol.ws.WebSocketAwareCsrfPreventionRequestCycleListener;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycleListenerCollection;
 import org.apache.wicket.util.tester.FormTester;
 import org.apache.wicket.util.tester.WicketTester;
 import org.junit.jupiter.api.AfterEach;
@@ -57,11 +62,10 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.ui.widget.dialog.ButtonAjaxBehavior;
-
 public class TestInstall {
 	private static final Logger log = LoggerFactory.getLogger(TestInstall.class);
 	private static final String WIZARD_PATH = "wizard";
+	private static final String FORM_PATH = WIZARD_PATH + ":form";
 	private File tempFolder;
 	protected WicketTester tester;
 	protected Random rnd = new Random();
@@ -77,11 +81,11 @@ public class TestInstall {
 	}
 
 	public static void setH2Home(File f) throws Exception {
-		ConnectionPropertiesPatcher.patch("h2", null, null, getH2Home(f), null, null);
+		ConnectionPropertiesPatcher.patch(DbType.H2, null, null, getH2Home(f), null, null);
 	}
 
 	public static void resetH2Home() throws Exception {
-		ConnectionPropertiesPatcher.patch("h2", null, null, null, null, null);
+		ConnectionPropertiesPatcher.patch(DbType.H2, null, null, null, null, null);
 	}
 
 	@BeforeEach
@@ -92,6 +96,14 @@ public class TestInstall {
 		tempFolder = Files.createTempDirectory("omtempdb").toFile();
 		setH2Home(tempFolder);
 		tester = getWicketTester((Application)ensureApplication(-1L));
+		RequestCycleListenerCollection listeners = tester.getApplication().getRequestCycleListeners();
+		for (Iterator<IRequestCycleListener> iter = listeners.iterator(); iter.hasNext();) {
+			IRequestCycleListener l = iter.next();
+			if (l instanceof WebSocketAwareCsrfPreventionRequestCycleListener) {
+				listeners.remove(l);
+				break;
+			}
+		}
 		assertNotNull(WebSession.get(), "Web session should not be null");
 		Locale[] locales = Locale.getAvailableLocales();
 		tester.getSession().setLocale(locales[rnd.nextInt(locales.length)]);
@@ -113,47 +125,59 @@ public class TestInstall {
 		InstallWizardPage page = tester.startPage(InstallWizardPage.class);
 		tester.assertRenderedPage(InstallWizardPage.class);
 		InstallWizard wiz = (InstallWizard)page.get(WIZARD_PATH);
-		assertNull(wiz.getWizardModel().getActiveStep(), "Model should be null");
-		tester.executeBehavior((AbstractAjaxBehavior)page.getBehaviorById(0)); //welcome step
+		assertFalse(wiz.isEnabled(), "Wizard should be disabled");
+		AjaxClientInfoBehavior clientInfo = page.getBehaviors(AjaxClientInfoBehavior.class).get(0);
+		tester.executeBehavior(clientInfo);
+		assertTrue(wiz.isEnabled(), "Wizard should be enabled");
 		assertNotNull(wiz.getWizardModel().getActiveStep(), "Model should NOT be null");
 
-		ButtonAjaxBehavior prev = getButtonBehavior(tester, WIZARD_PATH, "PREV");
+		WizardButton prev = getWizardButton("previous");
 		//check enabled, add check for other buttons on other steps
-		assertFalse(prev.getButton().isEnabled(), "Prev button should be disabled");
-		ButtonAjaxBehavior next = getButtonBehavior(tester, WIZARD_PATH, "NEXT");
-		ButtonAjaxBehavior finish = getButtonBehavior(tester, WIZARD_PATH, SUBMIT);
-		tester.executeBehavior(next); //DB step
-		FormTester wizardTester = tester.newFormTester("wizard:form");
+		assertFalse(prev.isEnabled(), "Prev button should be disabled");
+		WizardButton next = getWizardButton("next");
+		AbstractAjaxBehavior finish = (AbstractAjaxBehavior)getWizardButton("finish").getBehaviorById(0);
+		FormTester wizardTester = tester.newFormTester(FORM_PATH);
+		wizardTester.submit(next);
+		wizardTester = tester.newFormTester(FORM_PATH);
 		wizardTester.select("view:form:dbType", 1);
 		checkErrors(tester, 0);
-		tester.executeBehavior(next); //user step
+		wizardTester.submit(next); //user step
 		checkErrors(tester, 0);
+		wizardTester = tester.newFormTester(FORM_PATH);
 		wizardTester.setValue("view:username", adminUsername);
 		wizardTester.setValue("view:password", userpass);
 		wizardTester.setValue("view:email", email);
 		String[] tzIds = TimeZone.getAvailableIDs();
 		wizardTester.select("view:timeZone", rnd.nextInt(tzIds.length));
 		wizardTester.setValue("view:group", group);
-		tester.executeBehavior(next); //cfg+smtp step
+		wizardTester.submit(next); //cfg+smtp step
 		checkErrors(tester, 0);
+		wizardTester = tester.newFormTester(FORM_PATH);
 		wizardTester.setValue("view:smtpPort", "25");
 		wizardTester.select("view:defaultLangId", 0);
-		tester.executeBehavior(next); //converters step
+		wizardTester.submit(next); //converters step
 		checkErrors(tester, 0);
+		wizardTester = tester.newFormTester(FORM_PATH);
 		wizardTester.setValue("view:docDpi", "150");
 		wizardTester.setValue("view:docQuality", "90");
-		tester.executeBehavior(next); //crypt step
+		wizardTester.submit(next); //crypt step
 		// not checking errors
 		if (countErrors(tester) > 0) {
 			tester.cleanupFeedbackMessages();
+			wizardTester = tester.newFormTester(FORM_PATH);
 			wizardTester.setValue("view:docDpi", "150");
 			wizardTester.setValue("view:docQuality", "90");
-			tester.executeBehavior(next); //skip errors
+			wizardTester.submit(next); //skip errors
 		}
+		wizardTester = tester.newFormTester(FORM_PATH);
 		wizardTester.setValue("view:cryptClassName", SCryptImplementation.class.getName());
-		tester.executeBehavior(next); //install step
+		wizardTester.submit(next); //install step
 		checkErrors(tester, 0);
 		tester.executeBehavior(finish);
 		checkErrors(tester, 0);
+	}
+
+	private WizardButton getWizardButton(String name) {
+		return (WizardButton)tester.getComponentFromLastRenderedPage("wizard:form:buttons:" + name);
 	}
 }

@@ -44,7 +44,7 @@ public class WbWebSocketHelper extends WebSocketHelper {
 	public static final String PARAM_OBJ = "obj";
 	private static final String PARAM__POSTER = "_poster";
 
-	public static void send(IClusterWsMessage _m) {
+	public static boolean send(IClusterWsMessage _m) {
 		if (_m instanceof WsMessageWb) {
 			WsMessageWb m = (WsMessageWb)_m;
 			if (m.getUid() == null) {
@@ -52,12 +52,13 @@ public class WbWebSocketHelper extends WebSocketHelper {
 			} else {
 				sendWbOthers(m.getRoomId(), m.getMeth(), m.getObj(), m.getUid(), false);
 			}
+			return true;
 		} else if (_m instanceof WsMessageWbFile) {
 			WsMessageWbFile m = (WsMessageWbFile)_m;
 			sendWbFile(m.getRoomId(), m.getWbId(), m.getRoomUid(), m.getFile(), m.getFileItem(), false);
-		} else {
-			WebSocketHelper.send(_m);
+			return true;
 		}
+		return false;
 	}
 
 	public static void sendWbAll(Long roomId, WbAction meth, JSONObject obj) {
@@ -108,17 +109,17 @@ public class WbWebSocketHelper extends WebSocketHelper {
 		}
 		file.put("deleted", !fi.exists());
 		switch (fi.getType()) {
-			case Video:
+			case VIDEO:
 				ref = new RoomResourceReference();
 				file.put(PARAM__SRC, urlFor(ref, pp));
 				file.put(PARAM__POSTER, urlFor(new RoomPreviewResourceReference(), pp));
 				break;
-			case Recording:
+			case RECORDING:
 				ref = new Mp4RecordingResourceReference();
 				file.put(PARAM__SRC, urlFor(ref, pp));
 				file.put(PARAM__POSTER, urlFor(new PngRecordingResourceReference(), pp));
 				break;
-			case Presentation:
+			case PRESENTATION:
 				ref = new RoomResourceReference();
 				file.put(PARAM__SRC, urlFor(ref, pp));
 				break;
@@ -142,15 +143,15 @@ public class WbWebSocketHelper extends WebSocketHelper {
 	private static JSONObject patchUrls(BaseFileItem fi, Client c, JSONObject _f) {
 		JSONObject f = new JSONObject(_f.toString()); // deep copy to ensure thread safety
 		switch (fi.getType()) {
-			case Video:
+			case VIDEO:
 				f.put(PARAM__SRC, patchUrl(f.getString(PARAM__SRC), c));
 				f.put(PARAM__POSTER, patchUrl(f.getString(PARAM__POSTER), c));
 				break;
-			case Recording:
+			case RECORDING:
 				f.put(PARAM__SRC, patchUrl(f.getString(PARAM__SRC), c));
 				f.put(PARAM__POSTER, patchUrl(f.getString(PARAM__POSTER), c));
 				break;
-			case Presentation:
+			case PRESENTATION:
 				f.put(PARAM__SRC, patchUrl(f.getString(PARAM__SRC), c));
 				break;
 			default:

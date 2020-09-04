@@ -31,7 +31,7 @@
 						<li>Git Command line client</li>
 						<li>A text editor</li>
 						<li>You need to be online! The build process actively downloads needed libraries and dependencies.</li>
-						<li>Valid certficate to be able to enter <a href="https://securesigning.websecurity.symantec.com/csportal/">https://securesigning.websecurity.symantec.com/csportal/</a>
+						<li>Valid certficate to be able to enter <a href="https://securesigning.pki.digicert.com/csportal">https://securesigning.pki.digicert.com/csportal</a>
 							Please ask INFRA in case you need one.
 						</li>
 					</ul>
@@ -104,6 +104,10 @@
 						Check site is <tt>green</tt> here <a href="https://whimsy.apache.org/site/project/openmeetings">https://whimsy.apache.org/site/project/openmeetings</a>
 					</li>
 					<li>
+						Ensure All contributed translations are imported to our codebase<br/>
+						(More info and examples <a href="https://github.com/solomax/om-poeditor">is here</a>))
+					</li>
+					<li>
 						Update following files in OM documentation:<br/>
 						<tt>openmeetings-server/src/site/xdoc/index.xml</tt><br/>
 						<tt>openmeetings-server/src/site/xdoc/NewsArchive.xml</tt><br/>
@@ -133,8 +137,8 @@
 						Create a TAG and commit it to the Git<br/>
 						<source>
 git commit -a -m "4.0.0 Release Candidate 1"
-git tag -s 4.0.0 -m "4.0.0 Release Candidate 1 tag"
-git push origin 4.0.0
+git tag -s 4.0.0-RC1 -m "4.0.0 Release Candidate 1 tag"
+git push origin 4.0.0-RC1
 						</source>
 					</li>
 					<li>
@@ -143,7 +147,7 @@ git push origin 4.0.0
 					</li>
 					<li>
 						<p>Run the command: </p>
-						<source>mvn clean &amp;&amp; mvn install -P allModules,rc</source>
+						<source>mvn clean &amp;&amp; mvn install -PallModules,rc</source>
 					</li>
 					<li>
 						<p>Test building the source on windows and OSx or Linux</p>
@@ -215,7 +219,7 @@ cd openmeetings-screenshare
 mvn clean install -Prc,release
 						</source>
 					</li>
-					<li>Go to <a href="https://securesigning.websecurity.symantec.com/csportal/">https://securesigning.websecurity.symantec.com/csportal/</a></li>
+					<li>Go to <a href="https://securesigning.pki.digicert.com/csportal">https://securesigning.pki.digicert.com/csportal</a></li>
 					<li>Select "Signing Sets"</li>
 					<li>Select "Add signing set"</li>
 					<li>Enter "Signing set name" (must include "Apache OpenMeetings" and version) for ex. "Apache OpenMeetings 4.0.0-RELEASE"</li>

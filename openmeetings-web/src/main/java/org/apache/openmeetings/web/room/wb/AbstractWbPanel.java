@@ -29,7 +29,7 @@ import com.github.openjson.JSONObject;
 
 public abstract class AbstractWbPanel extends Panel {
 	private static final long serialVersionUID = 1L;
-	protected static final String ROLE_NONE = "none";
+	protected static final String ROLE_NONE = "NONE";
 	protected final RoomPanel rp;
 	protected boolean inited = false;
 
@@ -40,9 +40,10 @@ public abstract class AbstractWbPanel extends Panel {
 	}
 
 	public CharSequence getInitScript() {
-		StringBuilder sb = new StringBuilder("WbArea.init();");
+		StringBuilder sb = new StringBuilder("WbArea.init(() => {");
 		internalWbLoad(sb);
 		inited = true;
+		sb.append("});");
 		return sb;
 	}
 

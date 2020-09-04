@@ -2,22 +2,25 @@
 if (window.hasOwnProperty('isSecureContext') === false) {
 	window.isSecureContext = window.location.protocol == 'https:' || ["localhost", "127.0.0.1"].indexOf(window.location.hostname) !== -1;
 }
-$.widget('openmeetings.iconselectmenu', $.ui.selectmenu, {
-	_renderItem: function(ul, item) {
-		ul.addClass('settings-menu');
-		const li = $('<li>'), wrapper = $('<div>', {text: item.label});
-		if (item.disabled) {
-			li.addClass('ui-state-disabled');
+var RingBuffer = (function(length) {
+	const buffer = [];
+	let pos = 0;
+
+	return {
+		get: function(key){
+			return buffer[key];
 		}
-		$('<span>', {
-			style: item.element.attr('data-style')
-			, 'class': 'ui-icon ' + (item.element.attr('data-class') || 'ui-icon-blank')
-		}).appendTo(wrapper);
-		return li.append(wrapper).appendTo(ul);
-	}
+		, push: function(item) {
+			buffer[pos] = item;
+			pos = (pos + 1) % length;
+		}
+		, min: function(){
+			return Math.min.apply(Math, buffer);
+		}
+	};
 });
 var MicLevel = (function() {
-	let ctx, mic, analyser, vol = .0;
+	let ctx, mic, analyser, vol = .0, vals = RingBuffer(100);
 
 	function _meterPeer(rtcPeer, cnvs, _micActivity, _error, connectAudio) {
 		if (!rtcPeer || ('function' !== typeof(rtcPeer.getLocalStream) && 'function' !== typeof(rtcPeer.getRemoteStream))) {
@@ -45,8 +48,9 @@ var MicLevel = (function() {
 			_error(err);
 		}
 	}
-	function _meter(analyser, cnvs, _micActivity, _error) {
+	function _meter(_analyser, cnvs, _micActivity, _error) {
 		try {
+			analyser = _analyser;
 			analyser.minDecibels = -90;
 			analyser.maxDecibels = -10;
 			analyser.fftSize = 256;
@@ -67,7 +71,9 @@ var MicLevel = (function() {
 						favg += arr[i] * arr[i];
 					}
 					vol = Math.sqrt(favg / al);
-					_micActivity(vol);
+					vals.push(vol);
+					const min = vals.min();
+					_micActivity(vol > min + 5); // magic number
 					canvasCtx.fillStyle = color;
 					if (horiz) {
 						canvasCtx.fillRect(0, 0, WIDTH * vol / 100, HEIGHT);
@@ -121,14 +127,13 @@ var VideoSettings = (function() {
 		}
 		return s;
 	}
-	function _save(refr) {
-		const _s = Settings.save(s);
-		if (typeof(avSettings) === 'function') {
-			avSettings(_s);
-		}
-		if (refr && typeof(VideoManager) === 'object' && o.uid) {
-			VideoManager.refresh(o.uid);
-		}
+	function _save() {
+		Settings.save(s);
+		OmUtil.sendMessage({
+			type: 'av'
+			, area: 'room'
+			, settings: s
+		});
 	}
 	function _clear(_ms) {
 		const ms = _ms || (vid && vid.length === 1 ? vid[0].srcObject : null);
@@ -159,95 +164,56 @@ var VideoSettings = (function() {
 	function _init(options) {
 		o = JSON.parse(JSON.stringify(options));
 		if (!!o.infoMsg) {
-			$('#jsInfo').kendoNotification({
-				autoHideAfter: 0
-				, button: true
-				, hideOnClick: false
-			}).getKendoNotification().info(o.infoMsg);
+			OmUtil.alert('info', o.infoMsg, 0);
 		}
-		OmUtil.initErrs($('#jsNotifications').kendoNotification({
-			autoHideAfter: 20000
-			, button: true
-			, hideOnClick: false
-			, stacking: 'up'
-		}));
 		vs = $('#video-settings');
 		lm = vs.find('.level-meter');
-		cam = vs.find('select.cam').iconselectmenu({
-			appendTo: '.cam-row'
-			, change: function() {
-				_readValues();
-			}
+		cam = vs.find('select.cam').change(function() {
+			_readValues();
 		});
-		mic = vs.find('select.mic').iconselectmenu({
-			appendTo: '.mic-row'
-			, change: function() {
-				_readValues();
-			}
+		mic = vs.find('select.mic').change(function() {
+			_readValues();
 		});
-		res = vs.find('select.cam-resolution').iconselectmenu({
-			appendTo: '.res-row'
-			, change: function() {
-				_readValues();
-			}
+		res = vs.find('select.cam-resolution').change(function() {
+			_readValues();
 		});
 		vidScroll = vs.find('.vid-block .video-conainer');
 		timer = vs.find('.timer');
 		vid = vidScroll.find('video');
 		recBtn = vs.find('.rec-start')
-			.button({icon: "ui-icon-bullet"})
 			.click(function() {
-				recBtn.prop('disabled', true).button('refresh');
+				recBtn.prop('disabled', true);
 				_setEnabled(true);
 				OmUtil.sendMessage({
 					id : 'wannaRecord'
 				}, MsgBase);
 			});
 		playBtn = vs.find('.play')
-			.button({icon: "ui-icon-play"})
 			.click(function() {
-				recBtn.prop('disabled', true).button('refresh');
+				recBtn.prop('disabled', true);
 				_setEnabled(true);
 				OmUtil.sendMessage({
 					id : 'wannaPlay'
 				}, MsgBase);
 			});
-		vs.dialog({
-			classes: {
-				'ui-dialog': 'ui-corner-all video'
-			}
-			, width: 640
-			, autoOpen: false
-			, buttons: [
-				{
-					text: vs.data('btn-save')
-					, icons: {
-						primary: "ui-icon-disk"
-					}
-					, click: function() {
-						_save(true);
-						_close();
-						vs.dialog("close");
-					}
-				}
-				, {
-					text: vs.data('btn-cancel')
-					, click: function() {
-						_close();
-						vs.dialog("close");
-					}
-				}
-			]
-			, close: function() {
-				_close();
-			}
+		vs.find('.btn-save').off().click(function() {
+			_save();
+			_close();
+			vs.modal("hide");
+		});
+		vs.find('.btn-cancel').off().click(function() {
+			_close();
+			vs.modal("hide");
+		});
+		vs.off().on('hidden.bs.modal', function (e) {
+			_close();
 		});
 		o.width = 300;
 		o.height = 200;
 		o.mode = 'settings';
 		o.rights = (o.rights || []).join();
 		delete o.keycode;
-		vs.find('input, button').prop('disabled', true);
+		vs.find('.modal-body input, .modal-body button').prop('disabled', true);
 		const rr = vs.find('.cam-resolution').parents('.sett-row');
 		if (!o.interview) {
 			rr.show();
@@ -258,7 +224,7 @@ var VideoSettings = (function() {
 		_save(); // trigger settings update
 	}
 	function _updateRec() {
-		recBtn.prop('disabled', !recAllowed || (s.video.cam < 0 && s.video.mic < 0)).button('refresh');
+		recBtn.prop('disabled', !recAllowed || (s.video.cam < 0 && s.video.mic < 0));
 	}
 	function _setCntsDimensions(cnts) {
 		const b = kurentoUtils.WebRtcPeer.browser;
@@ -283,7 +249,7 @@ var VideoSettings = (function() {
 	function _constraints(sd, callback) {
 		_getDevConstraints(function(devCnts){
 			const cnts = {};
-			if (devCnts.video && false === o.audioOnly && VideoUtil.hasVideo(sd) && s.video.cam > -1) {
+			if (devCnts.video && false === o.audioOnly && VideoUtil.hasCam(sd) && s.video.cam > -1) {
 				cnts.video = {
 					frameRate: o.camera.fps
 				};
@@ -292,11 +258,15 @@ var VideoSettings = (function() {
 					cnts.video.deviceId = {
 						ideal: s.video.camDevice
 					};
+				} else {
+					cnts.video.facingMode = {
+						ideal: 'user'
+					}
 				}
 			} else {
 				cnts.video = false;
 			}
-			if (devCnts.audio && VideoUtil.hasAudio(sd) && s.video.mic > -1) {
+			if (devCnts.audio && VideoUtil.hasMic(sd) && s.video.mic > -1) {
 				cnts.audio = {
 					sampleRate: o.microphone.rate
 					, echoCancellation: o.microphone.echo
@@ -337,6 +307,9 @@ var VideoSettings = (function() {
 					options
 					, function(error) {
 						if (error) {
+							if (true === this.cleaned) {
+								return;
+							}
 							return OmUtil.error(error);
 						}
 						if (cnts.audio) {
@@ -348,6 +321,9 @@ var VideoSettings = (function() {
 						}
 						rtcPeer.generateOffer(function(error, _offerSdp) {
 							if (error) {
+								if (true === this.cleaned) {
+									return;
+								}
 								return OmUtil.error('Error generating the offer');
 							}
 							if (typeof(func) === 'function') {
@@ -371,13 +347,11 @@ var VideoSettings = (function() {
 	function _setLoading(el) {
 		el.find('option').remove();
 		el.append(OmUtil.tmpl('#settings-option-loading'));
-		el.iconselectmenu('refresh');
 	}
 	function _setDisabled(els) {
 		els.forEach(function(el) {
 			el.find('option').remove();
 			el.append(OmUtil.tmpl('#settings-option-disabled'));
-			el.iconselectmenu('refresh');
 		});
 	}
 	function _setSelectedDevice(dev, devIdx) {
@@ -389,6 +363,14 @@ var VideoSettings = (function() {
 	}
 	function _getDevConstraints(callback) {
 		const devCnts = {audio: false, video: false};
+		if (window.isSecureContext === false) {
+			OmUtil.error($('#settings-https-required').text());
+			return;
+		}
+		if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+			OmUtil.error('enumerateDevices() not supported.');
+			return;
+		}
 		navigator.mediaDevices.enumerateDevices()
 			.then(function(devices) {
 				devices.forEach(function(device) {
@@ -408,6 +390,7 @@ var VideoSettings = (function() {
 	function _initDevices() {
 		if (window.isSecureContext === false) {
 			OmUtil.error($('#settings-https-required').text());
+			return;
 		}
 		if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
 			OmUtil.error('enumerateDevices() not supported.');
@@ -452,8 +435,6 @@ var VideoSettings = (function() {
 					});
 					_setSelectedDevice(cam, s.video.cam);
 					_setSelectedDevice(mic, s.video.mic);
-					cam.iconselectmenu('refresh');
-					mic.iconselectmenu('refresh');
 					res.find('option').each(function() {
 						const o = $(this).data();
 						if (o.width === s.video.width && o.height === s.video.height) {
@@ -473,13 +454,13 @@ var VideoSettings = (function() {
 		Wicket.Event.subscribe('/websocket/message', _onWsMessage);
 		recAllowed = false;
 		timer.hide();
-		playBtn.prop('disabled', true).button('refresh');
-		vs.dialog('open');
+		playBtn.prop('disabled', true);
+		vs.modal('show');
 		_load();
 		_initDevices();
 	}
 	function _setEnabled(enabled) {
-		playBtn.prop('disabled', enabled).button('refresh');
+		playBtn.prop('disabled', enabled);
 		cam.prop('disabled', enabled);
 		mic.prop('disabled', enabled);
 		res.prop('disabled', enabled);
@@ -514,11 +495,17 @@ var VideoSettings = (function() {
 					rtcPeer = new kurentoUtils.WebRtcPeer.WebRtcPeerRecvonly(
 						options
 						, function(error) {
-							if (!this.cleaned && error) {
+							if (error) {
+								if (true === this.cleaned) {
+									return;
+								}
 								return OmUtil.error(error);
 							}
 							rtcPeer.generateOffer(function(error, offerSdp) {
-								if (!this.cleaned && error) {
+								if (error) {
+									if (true === this.cleaned) {
+										return;
+									}
 									return OmUtil.error('Error generating the offer');
 								}
 								OmUtil.sendMessage({
@@ -533,6 +520,9 @@ var VideoSettings = (function() {
 				OmUtil.log('Play SDP answer received from server. Processing ...');
 				rtcPeer.processAnswer(m.sdpAnswer, function(error) {
 					if (error) {
+						if (true === this.cleaned) {
+							return;
+						}
 						return OmUtil.error(error);
 					}
 					lm.show();
@@ -544,6 +534,9 @@ var VideoSettings = (function() {
 				OmUtil.log('SDP answer received from server. Processing ...');
 				rtcPeer.processAnswer(m.sdpAnswer, function(error) {
 					if (error) {
+						if (true === this.cleaned) {
+							return;
+						}
 						return OmUtil.error(error);
 					}
 				});
@@ -551,6 +544,9 @@ var VideoSettings = (function() {
 			case 'iceCandidate':
 				rtcPeer.addIceCandidate(m.candidate, function(error) {
 					if (error) {
+						if (true === this.cleaned) {
+							return;
+						}
 						return OmUtil.error('Error adding candidate: ' + error);
 					}
 				});
@@ -560,7 +556,7 @@ var VideoSettings = (function() {
 				break;
 			case 'recStopped':
 				timer.hide();
-				_onStop()
+				_onStop();
 				break;
 			case 'playStopped':
 				_onStop();
@@ -575,7 +571,7 @@ var VideoSettings = (function() {
 			if (msg instanceof Blob) {
 				return; //ping
 			}
-			const m = jQuery.parseJSON(msg);
+			const m = JSON.parse(msg);
 			if (m && 'kurento' === m.type) {
 				if ('test' === m.mode) {
 					_onKMessage(m);
@@ -597,7 +593,7 @@ var VideoSettings = (function() {
 		, open: _open
 		, close: function() {
 			_close();
-			vs && vs.dialog('close');
+			vs && vs.modal('hide');
 		}
 		, load: _load
 		, save: _save

@@ -69,7 +69,8 @@
 				<column>Development</column>
 			</bottomNav>
 			<toc position="fixed">sidebar</toc>
-			<navbar cssClass="navbar-dark bg-primary"/>
+			<navbar theme="dark" background="primary"/>
+			<header type="banner" cssClass="text-light bg-secondary"></header>
 			<skinAttribution>false</skinAttribution>
 			<highlightJs>true</highlightJs>
 			<highlightJsTheme>github</highlightJsTheme>

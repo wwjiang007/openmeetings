@@ -25,11 +25,13 @@ import static org.apache.openmeetings.core.remote.KurentoHandler.activityAllowed
 import static org.apache.openmeetings.core.remote.KurentoHandler.newKurentoMsg;
 import static org.apache.openmeetings.core.remote.KurentoHandler.sendError;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.apache.openmeetings.core.converter.IRecordingConverter;
@@ -48,6 +50,7 @@ import org.apache.openmeetings.db.entity.room.Room.RoomElement;
 import org.apache.openmeetings.db.manager.IClientManager;
 import org.apache.openmeetings.db.util.ws.RoomMessage;
 import org.apache.openmeetings.db.util.ws.TextRoomMessage;
+import org.apache.wicket.util.string.Strings;
 import org.kurento.client.IceCandidate;
 import org.kurento.client.internal.server.KurentoServerException;
 import org.slf4j.Logger;
@@ -56,11 +59,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 
+import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
 @Component
 public class StreamProcessor implements IStreamProcessor {
 	private static final Logger log = LoggerFactory.getLogger(StreamProcessor.class);
+	/**
+	 * Holds a reference to the current streams available on the server instance
+	 */
 	private final Map<String, KStream> streamByUid = new ConcurrentHashMap<>();
 
 	@Autowired
@@ -84,14 +91,17 @@ public class StreamProcessor implements IStreamProcessor {
 		log.debug("Incoming message from user with ID '{}': {}", c.getUserId(), msg);
 		switch (cmdId) {
 			case "devicesAltered":
-				if (!msg.getBoolean("audio") && c.hasActivity(Activity.AUDIO)) {
-					c.remove(Activity.AUDIO);
+				sd = c.getStream(uid);
+				if (sd != null) {
+					if (!msg.getBoolean("audio") && c.hasActivity(Activity.AUDIO)) {
+						c.remove(Activity.AUDIO);
+					}
+					if (!msg.getBoolean("video") && c.hasActivity(Activity.VIDEO)) {
+						c.remove(Activity.VIDEO);
+					}
+					sd.setActivities();
+					WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), cm.update(c), RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
 				}
-				if (!msg.getBoolean("video") && c.hasActivity(Activity.VIDEO)) {
-					c.remove(Activity.VIDEO);
-				}
-				c.getStream(uid).setActivities();
-				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), cm.update(c), RoomMessage.Type.rightUpdated, c.getUid()));
 				break;
 			case "toggleActivity":
 				toggleActivity(c, Activity.valueOf(msg.getString("activity")));
@@ -103,11 +113,14 @@ public class StreamProcessor implements IStreamProcessor {
 				sender = getByUid(uid);
 				if (sender != null) {
 					JSONObject candidate = msg.getJSONObject(PARAM_CANDIDATE);
-					IceCandidate cand = new IceCandidate(
-							candidate.getString(PARAM_CANDIDATE)
-							, candidate.getString("sdpMid")
-							, candidate.getInt("sdpMLineIndex"));
-					sender.addCandidate(cand, msg.getString("luid"));
+					String candStr = candidate.getString(PARAM_CANDIDATE);
+					if (!Strings.isEmpty(candStr)) {
+						IceCandidate cand = new IceCandidate(
+								candStr
+								, candidate.getString("sdpMid")
+								, candidate.getInt("sdpMLineIndex"));
+						sender.addCandidate(cand, msg.getString("luid"));
+					}
 				}
 				break;
 			case "addListener":
@@ -115,6 +128,9 @@ public class StreamProcessor implements IStreamProcessor {
 				if (sender != null) {
 					Client sendClient = cm.getBySid(sender.getSid());
 					sd = sendClient.getStream(sender.getUid());
+					if (sd == null) {
+						break;
+					}
 					if (StreamType.SCREEN == sd.getType() && sd.hasActivity(Activity.RECORD) && !sd.hasActivity(Activity.SCREEN)) {
 						break;
 					}
@@ -131,7 +147,7 @@ public class StreamProcessor implements IStreamProcessor {
 				osd = c.getScreenStream();
 				if (recordingAllowed(c)) {
 					Room r = c.getRoom();
-					if (Room.Type.interview == r.getType()) {
+					if (Room.Type.INTERVIEW == r.getType()) {
 						log.warn("This shouldn't be called for interview room");
 						break;
 					}
@@ -158,14 +174,17 @@ public class StreamProcessor implements IStreamProcessor {
 	}
 
 	private void handleBroadcastStarted(Client c, final String uid, JSONObject msg) {
+		if (!kHandler.isConnected()) {
+			return;
+		}
 		StreamDesc sd = c.getStream(uid);
-		KStream sender= getByUid(uid);
+		KStream sender = getByUid(uid);
 		try {
 			if (sender == null) {
 				KRoom room = kHandler.getRoom(c.getRoomId());
 				sender = room.join(sd);
 			}
-			sender.startBroadcast(this, sd, msg.getString("sdpOffer"));
+			startBroadcast(sender, sd, msg.getString("sdpOffer"));
 			if (StreamType.SCREEN == sd.getType() && sd.hasActivity(Activity.RECORD) && !isRecording(c.getRoomId())) {
 				startRecording(c);
 			}
@@ -180,21 +199,44 @@ public class StreamProcessor implements IStreamProcessor {
 		}
 	}
 
+	/**
+	 *  Method to start broadcasting.  Externalised for mocking purpose to be able to
+	 *  prevent calling webRTC methods.
+	 *
+	 * @param stream Stream to start
+	 * @param sd StreamDesc to start
+	 * @param sdpOffer the sdpOffer
+	 * @return the current KStream
+	 */
+	KStream startBroadcast(KStream stream, StreamDesc sd, String sdpOffer) {
+		return stream.startBroadcast(this, sd, sdpOffer);
+	}
+
 	private static boolean isBroadcasting(final Client c) {
 		return c.hasAnyActivity(Activity.AUDIO, Activity.VIDEO);
 	}
 
+	private Set<String> cleanWebCams(Client c, List<StreamDesc> streams) {
+		Set<String> closed = new HashSet<>();
+		streams.stream()
+			.filter(lsd -> StreamType.WEBCAM == lsd.getType())
+			.forEach(lsd -> {
+				KStream s = getByUid(lsd.getUid());
+				if (s != null) {
+					s.stopBroadcast();
+				}
+				c.removeStream(lsd.getUid());
+				closed.add(lsd.getUid());
+			});
+		return closed;
+	}
+
 	public void toggleActivity(Client c, Activity a) {
 		log.info("PARTICIPANT {}: trying to toggle activity {}", c, a);
-
-		if (!activityAllowed(c, a, c.getRoom())) {
-			if (a == Activity.AUDIO || a == Activity.AUDIO_VIDEO) {
-				c.allow(Room.Right.audio);
-			}
-			if (!c.getRoom().isAudioOnly() && (a == Activity.VIDEO || a == Activity.AUDIO_VIDEO)) {
-				c.allow(Room.Right.video);
-			}
+		if (!kHandler.isConnected()) {
+			return;
 		}
+
 		if (activityAllowed(c, a, c.getRoom())) {
 			boolean wasBroadcasting = isBroadcasting(c);
 			if (a == Activity.AUDIO && !c.isMicEnabled()) {
@@ -207,36 +249,24 @@ public class StreamProcessor implements IStreamProcessor {
 				return;
 			}
 			c.toggle(a);
+			List<StreamDesc> streams = c.getStreams();
 			if (!isBroadcasting(c)) {
-				//close
-				AtomicBoolean changed = new AtomicBoolean(false);
-				c.getStreams().stream()
-					.filter(sd -> StreamType.WEBCAM == sd.getType())
-					.forEach(sd -> {
-						KStream s = getByUid(sd.getUid());
-						if (s != null) {
-							s.stopBroadcast(this);
-						}
-						c.removeStream(sd.getUid());
-						changed.set(true);
-					});
-				if (changed.get()) {
+				Set<String> closed = cleanWebCams(c, streams);
+				if (!closed.isEmpty()) {
 					cm.update(c);
 					checkStreams(c.getRoomId());
+					WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
 				}
-				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.rightUpdated, c.getUid()));
-			} else if (!wasBroadcasting) {
-				//join
+			} else {
 				StreamDesc sd = c.addStream(StreamType.WEBCAM);
-				cm.update(c);
+				Set<String> closed = wasBroadcasting ? cleanWebCams(c, streams) : Set.of();
+				cm.update(c.restoreActivities(sd));
 				log.debug("User {}: has started broadcast", sd.getUid());
 				kHandler.sendClient(sd.getSid(), newKurentoMsg()
 						.put("id", "broadcast")
 						.put("stream", sd.toJson())
-						.put(PARAM_ICE, kHandler.getTurnServers(false)));
-			} else {
-				constraintsChanged(c);
-				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.rightUpdated, c.getUid()));
+						.put("cleanup", new JSONArray(closed))
+						.put(PARAM_ICE, kHandler.getTurnServers(c, false)));
 			}
 		}
 	}
@@ -266,11 +296,11 @@ public class StreamProcessor implements IStreamProcessor {
 					KStream stream = streamByUid.get(sd.getUid());
 					if (stream != null) {
 						KRoom room = kHandler.getRoom(c.getRoomId());
-						room.onStopBroadcast(stream, this);
+						room.onStopBroadcast(stream);
 					}
 				});
 		}
-		WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.rightUpdated, c.getUid()));
+		WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
 	}
 
 	private void checkStreams(Long roomId) {
@@ -285,9 +315,9 @@ public class StreamProcessor implements IStreamProcessor {
 			if (streams.isEmpty()) {
 				log.info("No more screen streams in the room, stopping sharing");
 				room.stopSharing();
-				if (Room.Type.interview != room.getType() && room.isRecording()) {
+				if (Room.Type.INTERVIEW != room.getType() && room.isRecording()) {
 					log.info("No more screen streams in the non-interview room, stopping recording");
-					room.stopRecording(this, null);
+					room.stopRecording(null);
 				}
 			}
 		}
@@ -297,24 +327,23 @@ public class StreamProcessor implements IStreamProcessor {
 					.collect(Collectors.toList());
 			if (streams.isEmpty()) {
 				log.info("No more streams in the room, stopping recording");
-				room.stopRecording(this, null);
+				room.stopRecording(null);
 			}
 		}
 	}
 
 	// Sharing
 	public boolean hasRightsToShare(Client c) {
-		Room r = c.getRoom();
-		return r != null && Room.Type.interview != r.getType()
-				&& !r.isHidden(RoomElement.ScreenSharing)
-				&& r.isAllowRecording()
-				&& c.hasRight(Right.share);
-	}
-
-	public boolean screenShareAllowed(Client c) {
 		if (!kHandler.isConnected()) {
 			return false;
 		}
+		Room r = c.getRoom();
+		return r != null && Room.Type.INTERVIEW != r.getType()
+				&& !r.isHidden(RoomElement.SCREEN_SHARING)
+				&& c.hasRight(Right.SHARE);
+	}
+
+	public boolean screenShareAllowed(Client c) {
 		Room r = c.getRoom();
 		return hasRightsToShare(c) && !isSharing(r.getId());
 	}
@@ -342,7 +371,15 @@ public class StreamProcessor implements IStreamProcessor {
 		}
 	}
 
-	private void pauseSharing(Client c, String uid) {
+	/**
+	 * Execute Pausing of sharing.
+	 *
+	 * Invoked and overwritten by Mock, hance package private.
+	 *
+	 * @param c client
+	 * @param uid the uid
+	 */
+	void pauseSharing(Client c, String uid) {
 		if (!hasRightsToShare(c)) {
 			return;
 		}
@@ -369,7 +406,9 @@ public class StreamProcessor implements IStreamProcessor {
 		KStream sender = getByUid(uid);
 		StreamDesc sd = doStopSharing(c.getSid(), uid);
 		if (sender != null && sd != null) {
-			sender.stopBroadcast(this);
+			sender.stopBroadcast();
+		} else {
+			log.warn("Could not stop broadcast - could be a KStream leak and lead to ghost KStream, client: {}, uid: {} ", c, uid);
 		}
 	}
 
@@ -385,7 +424,7 @@ public class StreamProcessor implements IStreamProcessor {
 				c.removeStream(uid);
 				cm.update(c);
 				checkStreams(c.getRoomId());
-				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.rightUpdated, c.getUid()));
+				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
 				kHandler.sendShareUpdated(sd
 						.removeActivity(Activity.SCREEN)
 						.removeActivity(Activity.RECORD));
@@ -405,7 +444,7 @@ public class StreamProcessor implements IStreamProcessor {
 
 	public boolean hasRightsToRecord(Client c) {
 		Room r = c.getRoom();
-		return r != null && r.isAllowRecording() && c.hasRight(Right.moderator);
+		return r != null && r.isAllowRecording() && c.hasRight(Right.MODERATOR);
 	}
 
 	public boolean recordingAllowed(Client c) {
@@ -420,19 +459,33 @@ public class StreamProcessor implements IStreamProcessor {
 		if (!kHandler.isConnected() || !hasRightsToRecord(c)) {
 			return;
 		}
-		kHandler.getRoom(c.getRoomId()).startRecording(this, c);
+		kHandler.getRoom(c.getRoomId()).startRecording(c);
 	}
 
 	public void stopRecording(Client c) {
 		if (!kHandler.isConnected() || !hasRightsToRecord(c)) {
 			return;
 		}
-		kHandler.getRoom(c.getRoomId()).stopRecording(this, c);
+		kHandler.getRoom(c.getRoomId()).stopRecording(c);
+
+		// In case this user wasn't shareing his screen we also need to close that one
+		c.getScreenStream().ifPresent(sd -> {
+			if (!sd.hasActivity(Activity.SCREEN)) {
+				pauseSharing(c, sd.getUid());
+			}
+		});
 	}
 
-	void startConvertion(Recording rec) {
+	/**
+	 * Used for mocking. Requires a return value in order to be mocked.
+	 *
+	 * @param rec
+	 * @return
+	 */
+	boolean startConvertion(Recording rec) {
 		IRecordingConverter conv = rec.isInterview() ? interviewConverter : recordingConverter;
 		taskExecutor.execute(() -> conv.startConversion(rec));
+		return true;
 	}
 
 	public boolean isRecording(Long roomId) {
@@ -453,8 +506,7 @@ public class StreamProcessor implements IStreamProcessor {
 			}
 		}
 		if (c.getRoomId() != null) {
-			KRoom room = kHandler.getRoom(c.getRoomId());
-			room.leave(this, c);
+			getByRoom(c.getRoomId()).stream().forEach(stream -> stream.remove(c)); // listeners of existing streams should be cleaned-up
 			checkStreams(c.getRoomId());
 		}
 	}
@@ -463,8 +515,22 @@ public class StreamProcessor implements IStreamProcessor {
 		streamByUid.put(stream.getUid(), stream);
 	}
 
+	public Collection<KStream> getStreams() {
+		return streamByUid.values();
+	}
+
+	Collection<KStream> getByRoom(Long roomId) {
+		return streamByUid.values().stream()
+				.filter(stream -> stream.getRoom() != null && stream.getRoom().getRoomId().equals(roomId))
+				.collect(Collectors.toList());
+	}
+
 	Client getBySid(String sid) {
 		return cm.getBySid(sid);
+	}
+
+	public boolean hasStream(String uid) {
+		return streamByUid.get(uid) != null;
 	}
 
 	KStream getByUid(String uid) {
@@ -484,18 +550,32 @@ public class StreamProcessor implements IStreamProcessor {
 	}
 
 	@Override
-	public void release(AbstractStream stream) {
+	public void release(AbstractStream stream, boolean releaseStream) {
 		final String uid = stream.getUid();
+		if (releaseStream) {
+			stream.release(this);
+		}
 		Client c = cm.getBySid(stream.getSid());
 		if (c != null) {
-			c.removeStream(uid);
-			cm.update(c);
+			StreamDesc sd = c.getStream(uid);
+			if (sd != null) {
+				c.removeStream(uid);
+				if (StreamType.WEBCAM == sd.getType()) {
+					for (Activity a : sd.getActivities()) {
+						c.remove(a);
+					}
+				}
+				cm.update(c);
+				WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
+			}
 		}
 		streamByUid.remove(uid);
 	}
 
 	@Override
 	public void destroy() {
-		streamByUid.clear();
+		for (Map.Entry<String, KStream> e : streamByUid.entrySet()) {
+			release(e.getValue(), true);
+		}
 	}
 }

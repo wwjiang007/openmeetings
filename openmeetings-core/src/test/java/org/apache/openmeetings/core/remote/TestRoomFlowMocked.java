@@ -43,8 +43,6 @@ import org.kurento.client.MediaPipeline;
 import org.kurento.client.Transaction;
 import org.mockito.BDDMockito;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 
@@ -66,21 +64,18 @@ public class TestRoomFlowMocked extends BaseMockedTest {
 	@Override
 	public void setup() {
 		super.setup();
-		when(client.createMediaPipeline(any(Transaction.class))).thenReturn(mock(MediaPipeline.class));
+		doReturn(mock(MediaPipeline.class)).when(client).createMediaPipeline(any(Transaction.class));
 		User u = new User();
 		u.setId(USER_ID);
 		u.setFirstname("firstname");
 		u.setLastname("lastname");
-		when(userDao.get(USER_ID)).thenReturn(u);
+		doReturn(u).when(userDao).get(USER_ID);
 		doReturn(true).when(handler).isConnected();
-		when(recDao.update(any(Recording.class))).thenAnswer(new Answer<Recording>() {
-			@Override
-			public Recording answer(InvocationOnMock invocation) throws Throwable {
-				Object[] args = invocation.getArguments();
-				Recording r = (Recording) args[0];
-				r.setId(1L);
-				return r;
-			}
+		when(recDao.update(any(Recording.class))).thenAnswer((invocation) ->  {
+			Object[] args = invocation.getArguments();
+			Recording r = (Recording) args[0];
+			r.setId(1L);
+			return r;
 		});
 	}
 
@@ -107,8 +102,8 @@ public class TestRoomFlowMocked extends BaseMockedTest {
 		c.getRoom().setId(ROOM_ID);
 		c.getRoom().setAllowRecording(true);
 		assertFalse(streamProcessor.recordingAllowed(c));
-		c.allow(Room.Right.moderator);
-		when(roomDao.get(ROOM_ID)).thenReturn(c.getRoom());
+		c.allow(Room.Right.MODERATOR);
+		doReturn(c.getRoom()).when(roomDao).get(ROOM_ID);
 		assertTrue(streamProcessor.recordingAllowed(c));
 	}
 
@@ -128,7 +123,7 @@ public class TestRoomFlowMocked extends BaseMockedTest {
 	private Client getClientFull() {
 		Client c = getClientWithRoom();
 		c.getRoom().setAllowRecording(true);
-		c.allow(Room.Right.moderator);
+		c.allow(Room.Right.MODERATOR);
 		return c;
 	}
 
@@ -136,8 +131,8 @@ public class TestRoomFlowMocked extends BaseMockedTest {
 	public void testWannaRecord2() throws Exception {
 		JSONObject msg = new JSONObject(MSG_BASE.toString()).put("id", "wannaRecord");
 		Client c = getClientFull();
-		c.getRoom().setType(Room.Type.interview);
-		when(roomDao.get(ROOM_ID)).thenReturn(c.getRoom());
+		c.getRoom().setType(Room.Type.INTERVIEW);
+		doReturn(c.getRoom()).when(roomDao).get(ROOM_ID);
 		handler.onMessage(c, msg);
 	}
 
@@ -153,7 +148,7 @@ public class TestRoomFlowMocked extends BaseMockedTest {
 				.put("fps", "fps")
 				;
 		Client c = getClientFull();
-		when(roomDao.get(ROOM_ID)).thenReturn(c.getRoom());
+		doReturn(c.getRoom()).when(roomDao).get(ROOM_ID);
 		handler.onMessage(c, msg);
 		assertTrue(streamProcessor.isSharing(ROOM_ID));
 		handler.onMessage(c, msg);

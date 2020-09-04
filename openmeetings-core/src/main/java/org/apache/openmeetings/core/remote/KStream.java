@@ -22,15 +22,21 @@
 package org.apache.openmeetings.core.remote;
 
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
 import static org.apache.openmeetings.core.remote.KurentoHandler.PARAM_CANDIDATE;
 import static org.apache.openmeetings.core.remote.KurentoHandler.PARAM_ICE;
+import static org.apache.openmeetings.core.remote.KurentoHandler.getFlowoutTimeout;
 import static org.apache.openmeetings.core.remote.KurentoHandler.newKurentoMsg;
 import static org.apache.openmeetings.util.OmFileHelper.getRecUri;
 import static org.apache.openmeetings.util.OmFileHelper.getRecordingChunk;
 
+import java.util.Date;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.entity.basic.Client;
@@ -42,7 +48,6 @@ import org.apache.openmeetings.db.util.ws.RoomMessage;
 import org.apache.openmeetings.db.util.ws.TextRoomMessage;
 import org.kurento.client.Continuation;
 import org.kurento.client.IceCandidate;
-import org.kurento.client.MediaFlowState;
 import org.kurento.client.MediaProfileSpecType;
 import org.kurento.client.MediaType;
 import org.kurento.client.RecorderEndpoint;
@@ -57,11 +62,13 @@ public class KStream extends AbstractStream {
 	private static final Logger log = LoggerFactory.getLogger(KStream.class);
 
 	private final KRoom room;
+	private final Date connectedSince;
 	private final StreamType streamType;
 	private MediaProfileSpecType profile;
 	private RecorderEndpoint recorder;
 	private WebRtcEndpoint outgoingMedia = null;
 	private final ConcurrentMap<String, WebRtcEndpoint> listeners = new ConcurrentHashMap<>();
+	private Optional<CompletableFuture<Object>> flowoutFuture = Optional.empty();
 	private Long chunkId;
 	private Type type;
 
@@ -69,6 +76,7 @@ public class KStream extends AbstractStream {
 		super(sd.getSid(), sd.getUid());
 		this.room = room;
 		streamType = sd.getType();
+		this.connectedSince = new Date();
 		//TODO Min/MaxVideoSendBandwidth
 		//TODO Min/Max Audio/Video RecvBandwidth
 	}
@@ -111,28 +119,41 @@ public class KStream extends AbstractStream {
 				break;
 		}
 		outgoingMedia = createEndpoint(processor, sd.getSid(), sd.getUid());
-		outgoingMedia.addMediaSessionTerminatedListener(evt -> log.warn("Media stream terminated"));
+		outgoingMedia.addMediaSessionTerminatedListener(evt -> log.warn("Media stream terminated {}", sd));
 		outgoingMedia.addMediaFlowOutStateChangeListener(evt -> {
-			if (MediaFlowState.NOT_FLOWING == evt.getState()) {
-				log.warn("Media FlowOut :: {}", evt.getState());
-				if (StreamType.SCREEN == streamType) {
-					processor.doStopSharing(sid, uid);
-				}
-				stopBroadcast(processor);
+			log.info("Media Flow STATE :: {}, type {}, evt {}", evt.getState(), evt.getType(), evt.getMediaType());
+			switch (evt.getState()) {
+				case NOT_FLOWING:
+					log.warn("FlowOut Future is created");
+					flowoutFuture = Optional.of(new CompletableFuture<>().completeAsync(() -> {
+						log.warn("KStream will be dropped {}", sd);
+						if (StreamType.SCREEN == streamType) {
+							processor.doStopSharing(sid, uid);
+						}
+						stopBroadcast();
+						return null;
+					}, delayedExecutor(getFlowoutTimeout(), TimeUnit.SECONDS)));
+					break;
+				case FLOWING:
+					flowoutFuture.ifPresent(f -> {
+						log.warn("FlowOut Future is canceled");
+						f.cancel(true);
+						flowoutFuture = Optional.empty();
+					});
+					break;
 			}
 		});
 		outgoingMedia.addMediaFlowInStateChangeListener(evt -> log.warn("Media FlowIn :: {}", evt));
-		processor.addStream(this);
 		addListener(processor, sd.getSid(), sd.getUid(), sdpOffer);
 		if (room.isRecording()) {
 			startRecord(processor);
 		}
 		Client c = sd.getClient();
-		WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.rightUpdated, c.getUid()));
+		WebSocketHelper.sendRoom(new TextRoomMessage(c.getRoomId(), c, RoomMessage.Type.RIGHT_UPDATED, c.getUid()));
 		if (hasAudio || hasVideo || hasScreen) {
 			WebSocketHelper.sendRoomOthers(room.getRoomId(), c.getUid(), newKurentoMsg()
 					.put("id", "newStream")
-					.put(PARAM_ICE, processor.getHandler().getTurnServers())
+					.put(PARAM_ICE, processor.getHandler().getTurnServers(c))
 					.put("stream", sd.toJson()));
 		}
 		return this;
@@ -249,7 +270,7 @@ public class KStream extends AbstractStream {
 	}
 
 	public void stopRecord() {
-		releaseRecorder();
+		releaseRecorder(true);
 		chunkId = null;
 	}
 
@@ -260,8 +281,8 @@ public class KStream extends AbstractStream {
 		}
 	}
 
-	public void stopBroadcast(final StreamProcessor processor) {
-		room.onStopBroadcast(this, processor);
+	public void stopBroadcast() {
+		room.onStopBroadcast(this);
 	}
 
 	public void pauseSharing() {
@@ -275,6 +296,17 @@ public class KStream extends AbstractStream {
 			log.trace("PARTICIPANT {}: Released incoming EP for {}", uid, inUid);
 
 			final WebRtcEndpoint ep = entry.getValue();
+			outgoingMedia.disconnect(ep, new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace("PARTICIPANT {}: Disconnected successfully incoming EP for {}", KStream.this.uid, inUid);
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("PARTICIPANT {}: Could not disconnect incoming EP for {}", KStream.this.uid, inUid);
+				}
+			});
 			ep.release(new Continuation<Void>() {
 				@Override
 				public void onSuccess(Void result) throws Exception {
@@ -294,19 +326,64 @@ public class KStream extends AbstractStream {
 	public void release(IStreamProcessor processor, boolean remove) {
 		if (outgoingMedia != null) {
 			releaseListeners();
-			outgoingMedia.release();
+			outgoingMedia.release(new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace("PARTICIPANT {}: Released successfully", KStream.this.uid);
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("PARTICIPANT {}: Could not release", KStream.this.uid, cause);
+				}
+			});
+			releaseRecorder(false);
 			outgoingMedia = null;
 		}
-		releaseRecorder();
 		if (remove) {
-			processor.release(this);
+			processor.release(this, false);
 		}
 	}
 
-	private void releaseRecorder() {
+	private void releaseRecorder(boolean wait) {
 		if (recorder != null) {
-			recorder.stopAndWait();
-			recorder.release();
+			if (wait) {
+				recorder.stopAndWait();
+			} else {
+				recorder.stop(new Continuation<Void>() {
+					@Override
+					public void onSuccess(Void result) throws Exception {
+						log.trace("PARTICIPANT {}: Recording stopped", KStream.this.uid);
+					}
+
+					@Override
+					public void onError(Throwable cause) throws Exception {
+						log.warn("PARTICIPANT {}: Could not stop recording", KStream.this.uid, cause);
+					}
+				});
+			}
+			outgoingMedia.disconnect(recorder, new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace("PARTICIPANT {}: Recorder disconnected successfully", KStream.this.uid);
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("PARTICIPANT {}: Could not disconnect recorder", KStream.this.uid, cause);
+				}
+			});
+			recorder.release(new Continuation<Void>() {
+				@Override
+				public void onSuccess(Void result) throws Exception {
+					log.trace("PARTICIPANT {}: Recorder released successfully", KStream.this.uid);
+				}
+
+				@Override
+				public void onError(Throwable cause) throws Exception {
+					log.warn("PARTICIPANT {}: Could not release recorder", KStream.this.uid, cause);
+				}
+			});
 			recorder = null;
 		}
 	}
@@ -337,7 +414,46 @@ public class KStream extends AbstractStream {
 		return uid;
 	}
 
+	public Date getConnectedSince() {
+		return connectedSince;
+	}
+
+	public KRoom getRoom() {
+		return room;
+	}
+
+	public StreamType getStreamType() {
+		return streamType;
+	}
+
+	public MediaProfileSpecType getProfile() {
+		return profile;
+	}
+
+	public RecorderEndpoint getRecorder() {
+		return recorder;
+	}
+
+	public WebRtcEndpoint getOutgoingMedia() {
+		return outgoingMedia;
+	}
+
+	public Long getChunkId() {
+		return chunkId;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
 	public boolean contains(String uid) {
 		return this.uid.equals(uid) || listeners.containsKey(uid);
+	}
+
+	@Override
+	public String toString() {
+		return "KStream [room=" + room + ", streamType=" + streamType + ", profile=" + profile + ", recorder="
+				+ recorder + ", outgoingMedia=" + outgoingMedia + ", listeners=" + listeners + ", flowoutFuture="
+				+ flowoutFuture + ", chunkId=" + chunkId + ", type=" + type + ", sid=" + sid + ", uid=" + uid + "]";
 	}
 }

@@ -55,16 +55,16 @@ public class Whiteboard implements Serializable {
 	public static final String ATTR_HEIGHT = "height";
 	public static final String ATTR_ZOOM = "zoom";
 	public enum ZoomMode {
-		fullFit
-		, pageWidth
-		, zoom
+		FULL_FIT
+		, PAGE_WIDTH
+		, ZOOM
 	}
 	public static final String ITEMS_KEY = "roomItems";
 	private static final int DEFAULT_WIDTH = 1920;
 	private static final int DEFAULT_HEIGHT = 1080;
 	private long id;
 	private double zoom = 1.;
-	private ZoomMode zoomMode = ZoomMode.pageWidth;
+	private ZoomMode zoomMode = ZoomMode.PAGE_WIDTH;
 	private int width = DEFAULT_WIDTH;
 	private int height = DEFAULT_HEIGHT;
 	private Map<String, String> roomItems = Collections.synchronizedMap(new LinkedHashMap<>());
@@ -137,7 +137,7 @@ public class Whiteboard implements Serializable {
 		JSONArray arr = new JSONArray();
 		roomItems.entrySet().removeIf(e -> {
 				JSONObject o = new JSONObject(e.getValue());
-				boolean match = !FileItem.Type.Presentation.name().equals(o.optString(ATTR_FILE_TYPE)) && o.optInt(ATTR_SLIDE, -1) == slide;
+				boolean match = !FileItem.Type.PRESENTATION.name().equals(o.optString(ATTR_FILE_TYPE)) && o.optInt(ATTR_SLIDE, -1) == slide;
 				if (match) {
 					arr.put(e);
 				}
@@ -196,6 +196,15 @@ public class Whiteboard implements Serializable {
 		this.height = height;
 	}
 
+	public JSONObject getAddJson() {
+		return new JSONObject().put("wbId", getId())
+				.put("name", getName())
+				.put(ATTR_WIDTH, getWidth())
+				.put(ATTR_HEIGHT, getHeight())
+				.put(ATTR_ZOOM, getZoom())
+				.put("zoomMode", getZoomMode().name());
+	}
+
 	public JSONObject toJson() {
 		//deep-copy
 		JSONObject json = new JSONObject(new JSONObject(this).toString(new NullStringer()));
@@ -205,7 +214,7 @@ public class Whiteboard implements Serializable {
 		for (Entry<String, String> e : roomItems.entrySet()) {
 			JSONObject o = new JSONObject(e.getValue());
 			//filtering
-			if ("Clipart".equals(o.opt("omType"))) {
+			if ("Clipart".equals(o.opt(ATTR_OMTYPE))) {
 				if (o.has(PARAM__SRC)) {
 					o.put(PARAM_SRC, o.get(PARAM__SRC));
 				}

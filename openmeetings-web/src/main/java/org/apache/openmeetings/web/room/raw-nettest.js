@@ -8,42 +8,18 @@ var NetTest = (function() {
 	function _init(_lbls) {
 		lbls = _lbls;
 		output = $('.nettest output');
-		$('.nettest .test-container').each(function() {
-			const cont = $(this)
-				, d = cont.find('.test');
-			d.dialog({
-				closeOnEscape: false
-				, classes: {
-					'ui-dialog': 'ui-corner-all nettest-dialog'
-					, 'ui-dialog-titlebar': 'ui-corner-all no-close'
-				}
-				, autoOpen: true
-				, resizable: false
-				, draggable: false
-				, modal: false
-				, appendTo: '#' + cont.attr('id')
-				, position: {my: "left top", at: "left top", of: cont}
-				, minWidth: 190
-				, width: 190
-				, maxWidth: 190
-				, height: 100
-			});
-			d.parent().find('.ui-dialog-titlebar .ui-dialog-title')
-				.prepend($('<span class="ui-icon"></span>').addClass(d.data('icon')));
-		});
 		$('.nettest button')
-			.button()
 			.click(function() {
 				const btn = $(this);
 				btn.removeClass('complete').removeClass('not-started').addClass('started');
 				testLabel = btn.data('lbl');
 				testName = btn.data('measure');
 				tests[testName].start();
-				btn.find('.value').html('');
+				btn.parent().find('.value').html('');
 			});
 
 		net = new Network();
-		_initTests()
+		_initTests();
 		// progress can be added
 		net.upload
 			.on('start', _start)
@@ -152,13 +128,15 @@ var NetTest = (function() {
 		_log($('<span></span>').append(lbls['jitter'])
 				.append(':').append(_value(max - avg, lbls['ms']))
 				.append(';').append(_value(min - avg, lbls['ms'])));
-		_setResult('')
+		_setResult($('<div></div>')
+				.append($('<div class="line"></div>').append(lbls['jitter.avgAbbr'] + '&nbsp;').append(_value(avg, lbls['ms'])))
+				.append($('<div class="line"></div>').append(lbls['jitter'] + '&nbsp;').append(_value(max - avg, lbls['ms']))));
 	}
 	function _pingEnd(avg, _all) {
 		_log($('<span></span>').append(lbls['ping.avg']).append(_value(avg, lbls['ms'])));
 		_log($('<span></span>').append(lbls['ping.rcv']).append(_value(_all.length, '')));
 		_log($('<span></span>').append(lbls['ping.lost']).append(_value(PINGS - _all.length, '')));
-		_setResult(_value(avg, lbls['ms']))
+		_setResult(_value(avg, lbls['ms']));
 	}
 	function _restart(size) {
 		__start(size, false);
@@ -172,7 +150,7 @@ var NetTest = (function() {
 	function _setResult(val) {
 		const btn = _btn();
 		btn.addClass('complete').removeClass('started');
-		btn.find('.value').html(val);
+		btn.parent().find('.value').html(val);
 		testNext = btn.data('next');
 		if (!testNext) {
 			bulk = false;
@@ -189,7 +167,7 @@ var NetTest = (function() {
 				.append(lbls[testName === 'upload' ? 'upl.speed' : 'dwn.speed'])
 				.append(val);
 		_log(msg);
-		_setResult(val)
+		_setResult(val);
 	}
 	function _delimiter(text) {
 		return $('<span class="delim"></span>').html(text);
@@ -203,11 +181,7 @@ var NetTest = (function() {
 		output.find('span').last()[0].scrollIntoView(false);
 	}
 	function _value(value, unit) {
-		if (value != null) {
-			return $('<span class="value">' + value.toFixed(3) + ' ' + unit + '</span>');
-		} else {
-			return $('<span class="value">null</span>');
-		}
+		return $('<span class="value"></span>').append(value == null ? 'null' : value.toFixed(1) + ' ' + unit);
 	}
 
 	self.init = _init;

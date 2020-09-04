@@ -18,8 +18,10 @@
  */
 package org.apache.openmeetings.web.app;
 
+import static org.apache.openmeetings.db.dto.room.Whiteboard.ATTR_SLIDE;
 import static org.apache.openmeetings.db.util.ApplicationHelper.ensureApplication;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getDefaultLang;
+import static org.apache.openmeetings.web.room.wb.WbWebSocketHelper.sendWbAll;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +32,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.dao.label.LabelDao;
@@ -43,17 +45,19 @@ import org.apache.openmeetings.db.entity.room.RoomFile;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.manager.IWhiteboardManager;
 import org.apache.openmeetings.db.util.ws.RoomMessage;
+import org.apache.openmeetings.web.room.wb.WbAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.github.openjson.JSONArray;
+import com.github.openjson.JSONObject;
 import com.hazelcast.core.EntryEvent;
-import com.hazelcast.core.IMap;
+import com.hazelcast.map.IMap;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryRemovedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
-import com.hazelcast.util.function.Consumer;
 
 /**
  * Hazelcast based Whiteboard manager
@@ -74,9 +78,9 @@ public class WhiteboardManager implements IWhiteboardManager {
 		return app.hazelcast.getMap(WBS_KEY);
 	}
 
-	@PostConstruct
 	void init() {
 		map().addEntryListener(new WbListener(), true);
+		map().entrySet().forEach(e -> onlineWbs.put(e.getKey(), e.getValue()));
 	}
 
 	private static String getDefaultName(Long langId, int num) {
@@ -92,7 +96,7 @@ public class WhiteboardManager implements IWhiteboardManager {
 	}
 
 	@Override
-	public void clean(Long roomId, Long userId) {
+	public void reset(Long roomId, Long userId) {
 		if (roomId == null) {
 			return;
 		}
@@ -109,10 +113,11 @@ public class WhiteboardManager implements IWhiteboardManager {
 				ensureApplication();
 				User u = new User();
 				u.setId(userId);
-				WebSocketHelper.sendRoom(new RoomMessage(roomId, u, RoomMessage.Type.wbReload));
+				WebSocketHelper.sendRoom(new RoomMessage(roomId, u, RoomMessage.Type.WB_RELOAD));
 			}).start();
 		} catch (InterruptedException e) {
 			log.warn("Unexpected exception while map clean-up", e);
+			Thread.currentThread().interrupt();
 		}
 	}
 
@@ -204,6 +209,35 @@ public class WhiteboardManager implements IWhiteboardManager {
 			update(wbs);
 		}
 		return wb;
+	}
+
+	@Override
+	public void clearAll(Long roomId, long wbId, Consumer<Whiteboard> consumer) {
+		Whiteboard wb = get(roomId).get(wbId);
+		if (wb == null) {
+			return;
+		}
+		if (consumer != null) {
+			consumer.accept(wb);
+		}
+		wb = clear(roomId, wbId);
+		sendWbAll(roomId, WbAction.clearAll, new JSONObject().put("wbId", wbId));
+		sendWbAll(roomId, WbAction.setSize, wb.getAddJson());
+	}
+
+	@Override
+	public void cleanSlide(Long roomId, long wbId, int slide, BiConsumer<Whiteboard, JSONArray> consumer) {
+		Whiteboard wb = get(roomId).get(wbId);
+		JSONArray arr = wb.clearSlide(slide);
+		if (arr.length() != 0) {
+			update(roomId, wb);
+			if (consumer != null) {
+				consumer.accept(wb, arr);
+			}
+			sendWbAll(roomId, WbAction.clearSlide, new JSONObject()
+					.put("wbId", wbId)
+					.put(ATTR_SLIDE, slide));
+		}
 	}
 
 	public Whiteboard remove(long roomId, Long wbId) {

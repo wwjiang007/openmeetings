@@ -73,7 +73,7 @@ public class ChatWebSocketHelper extends WebSocketHelper {
 					.put("id", m.getId())
 					.put("message", smsg)
 					.put("from", from)
-					.put("actions", curUser.getId() == m.getFromUser().getId() ? "short" : "full")
+					.put("actions", curUser.getId().equals(m.getFromUser().getId()) ? "short" : "full")
 				, m, curUser, true));
 		}
 		return new JSONObject()
@@ -81,7 +81,7 @@ public class ChatWebSocketHelper extends WebSocketHelper {
 			.put("msg", arr);
 	}
 
-	public static void send(IClusterWsMessage msg) {
+	public static boolean send(IClusterWsMessage msg) {
 		if (msg instanceof WsMessageChat) {
 			if (msg instanceof WsMessageChat2User) {
 				WsMessageChat2User m = (WsMessageChat2User)msg;
@@ -93,9 +93,9 @@ public class ChatWebSocketHelper extends WebSocketHelper {
 				WsMessageChat m = (WsMessageChat)msg;
 				sendRoom(m.getChatMessage(), m.getMsg(), false);
 			}
-		} else {
-			WebSocketHelper.send(msg);
+			return true;
 		}
+		return false;
 	}
 
 	public static void sendRoom(ChatMessage m, JSONObject msg) {
@@ -118,7 +118,7 @@ public class ChatWebSocketHelper extends WebSocketHelper {
 			publish(new WsMessageChat(m, msg));
 		}
 		sendRoom(m.getToRoom().getId(), msg
-				, c -> !m.isNeedModeration() || (m.isNeedModeration() && c.hasRight(Right.moderator))
+				, c -> !m.isNeedModeration() || (m.isNeedModeration() && c.hasRight(Right.MODERATOR))
 				, (o, c) -> setDates(o, m, c.getUser(), false));
 	}
 

@@ -19,11 +19,12 @@
 package org.apache.openmeetings.web.admin.oauth;
 
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelDangerConfirm;
 import static org.apache.openmeetings.web.pages.auth.SignInPage.getRedirectUri;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,7 +33,6 @@ import org.apache.openmeetings.db.entity.server.OAuthServer;
 import org.apache.openmeetings.db.entity.server.OAuthServer.RequestInfoMethod;
 import org.apache.openmeetings.db.entity.server.OAuthServer.RequestTokenMethod;
 import org.apache.openmeetings.web.admin.AdminBaseForm;
-import org.apache.openmeetings.web.common.ConfirmableAjaxBorder;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -52,8 +52,10 @@ import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 
-import com.googlecode.wicket.jquery.ui.JQueryIcon;
-import com.googlecode.wicket.jquery.ui.form.button.AjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 
 public class OAuthForm extends AdminBaseForm<OAuthServer> {
 	private static final long serialVersionUID = 1L;
@@ -66,19 +68,22 @@ public class OAuthForm extends AdminBaseForm<OAuthServer> {
 		@Override
 		protected void populateItem(final ListItem<Map.Entry<String, String>> item) {
 			final Map.Entry<String, String> entry = item.getModelObject();
+			BootstrapAjaxLink<String> del = new BootstrapAjaxLink<>("delete", Buttons.Type.Outline_Danger) {
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void onClick(AjaxRequestTarget target) {
+					OAuthServer s = OAuthForm.this.getModelObject();
+					s.getMapping().remove(entry.getKey());
+					updateMapping();
+					target.add(attrsContainer);
+				}
+			};
+			del.setIconType(FontAwesome5IconType.times_s)
+					.add(newOkCancelDangerConfirm(this, getString("833")));
 			item.add(new Label("key", Model.of(entry.getKey())))
 				.add(new Label("value", Model.of(entry.getValue())))
-				.add(new ConfirmableAjaxBorder("delete", getString("80"), getString("833")) {
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					protected void onSubmit(AjaxRequestTarget target) {
-						OAuthServer s = OAuthForm.this.getModelObject();
-						s.getMapping().remove(entry.getKey());
-						updateMapping();
-						target.add(attrsContainer);
-					}
-				});
+				.add(del);
 		}
 	};
 
@@ -96,20 +101,20 @@ public class OAuthForm extends AdminBaseForm<OAuthServer> {
 		add(new CheckBox("isEnabled"));
 		add(new RequiredTextField<String>("name").setLabel(new ResourceModel("165")));
 		add(new TextField<String>("iconUrl").setLabel(new ResourceModel("1575")));
-		add(new RequiredTextField<String>("clientId").setLabel(new ResourceModel("1576")));
-		add(new RequiredTextField<String>("clientSecret").setLabel(new ResourceModel("1577")));
+		add(new RequiredTextField<String>("clientId").setLabel(Model.of("client_id")));
+		add(new RequiredTextField<String>("clientSecret").setLabel(Model.of("client_secret")));
 		add(redirectUriText = (TextField<String>) new TextField<>("redirectUri", Model.of("")).setLabel(new ResourceModel("1587")));
 		add(new RequiredTextField<String>("requestKeyUrl").setLabel(new ResourceModel("1578")));
-		add(new DropDownChoice<>("requestTokenMethod", Arrays.asList(RequestTokenMethod.values()), new ChoiceRenderer<RequestTokenMethod>("name", "name")));
+		add(new DropDownChoice<>("requestTokenMethod", List.of(RequestTokenMethod.values()), new ChoiceRenderer<RequestTokenMethod>("name", "name")));
 		add(new RequiredTextField<String>("requestTokenUrl").setLabel(new ResourceModel("1579")));
 		add(new RequiredTextField<String>("requestTokenAttributes").setLabel(new ResourceModel("1586")));
 		add(new RequiredTextField<String>("requestInfoUrl").setLabel(new ResourceModel("1580")));
-		add(new DropDownChoice<>("requestInfoMethod", Arrays.asList(RequestInfoMethod.values()), new ChoiceRenderer<RequestInfoMethod>("name", "name")));
+		add(new DropDownChoice<>("requestInfoMethod", List.of(RequestInfoMethod.values()), new ChoiceRenderer<RequestInfoMethod>("name", "name")));
 		Form<Void> mappingForm = new Form<>("mappingForm");
 		final TextField<String> omAttr = new TextField<>("omAttr", Model.of(""));
 		final TextField<String> oauthAttr = new TextField<>("oauthAttr", Model.of(""));
 		add(mappingForm.add(omAttr, oauthAttr
-				, new AjaxButton("addMapping") {
+				, new BootstrapAjaxButton("addMapping", new ResourceModel("1261"), mappingForm, Buttons.Type.Outline_Primary) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -121,11 +126,6 @@ public class OAuthForm extends AdminBaseForm<OAuthServer> {
 						s.addMapping(omAttr.getModelObject(), oauthAttr.getModelObject());
 						updateMapping();
 						target.add(attrsContainer, mappingForm);
-					}
-
-					@Override
-					protected String getIcon() {
-						return JQueryIcon.PLUSTHICK;
 					}
 				}).setOutputMarkupId(true));
 		add(attrsContainer.add(updateMapping()).setOutputMarkupId(true));

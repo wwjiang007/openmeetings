@@ -18,6 +18,9 @@
  */
 package org.apache.openmeetings.util;
 
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.SELF;
+import static org.apache.wicket.csp.CSPDirectiveSrcValue.STRICT_DYNAMIC;
+
 import com.github.openjson.JSONObject;
 
 public class OpenmeetingsVariables {
@@ -63,6 +66,7 @@ public class OpenmeetingsVariables {
 	public static final String CONFIG_SMTP_PASS = "mail.smtp.pass";
 	public static final String CONFIG_SMTP_SYSTEM_EMAIL = "mail.smtp.system.email";
 	public static final String CONFIG_SMTP_TLS = "mail.smtp.starttls.enable";
+	public static final String CONFIG_SMTP_SSL = "mail.smtp.ssl.enable";
 	public static final String CONFIG_SMTP_TIMEOUT_CON = "mail.smtp.connection.timeout";
 	public static final String CONFIG_SMTP_TIMEOUT = "mail.smtp.timeout";
 	public static final String CONFIG_PATH_IMAGEMAGIC = "path.imagemagick";
@@ -75,9 +79,7 @@ public class OpenmeetingsVariables {
 	public static final String CONFIG_MIC_RATE = "mic.rate";
 	public static final String CONFIG_MIC_ECHO = "mic.echo.cancellation";
 	public static final String CONFIG_MIC_NOISE = "mic.noise.suppression";
-	public static final String CONFIG_CSP_XFRAME = "header.csp.frame.options";
 	public static final String CONFIG_EXT_PROCESS_TTL = "external.process.ttl";
-	public static final String CONFIG_HEADER_CSP = "header.content.security.policy";
 	public static final String CONFIG_EMAIL_AT_REGISTER = "send.email.at.register";
 	public static final String CONFIG_EMAIL_VERIFICATION = "send.email.with.verfication";
 	public static final String CONFIG_CALENDAR_ROOM_CAPACITY = "calendar.conference.rooms.default.size";
@@ -96,9 +98,16 @@ public class OpenmeetingsVariables {
 	public static final String CONFIG_CHAT_SEND_ON_ENTER = "chat.send.on.enter";
 	public static final String CONFIG_DISPLAY_NAME_EDITABLE = "display.name.editable";
 	public static final String CONFIG_KEYCODE_QUICKPOLL = "start.quickpoll.keycode";
+	public static final String CONFIG_AUTO_OPEN_SHARING = "auto.open.sharing";
+	public static final String CONFIG_KEYCODE_ARRANGE_RESIZE = "video.arrange.resize.keycode";
+	public static final String CONFIG_CSP_FONT = "header.csp.font";
+	public static final String CONFIG_CSP_FRAME = "header.csp.frame";
+	public static final String CONFIG_CSP_IMAGE = "header.csp.image";
+	public static final String CONFIG_CSP_MEDIA = "header.csp.media";
+	public static final String CONFIG_CSP_SCRIPT = "header.csp.script";
+	public static final String CONFIG_CSP_STYLE = "header.csp.style";
+	public static final String CONFIG_CSP_ENABLED = "header.csp.enabled";
 
-	public static final String HEADER_XFRAME_SELF = "'self'";
-	public static final String HEADER_CSP_SELF = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data:; media-src 'self' blob:;";
 	public static final int RECENT_ROOMS_COUNT = 5;
 	public static final int USER_LOGIN_MINIMUM_LENGTH = 4;
 	public static final int USER_PASSWORD_MINIMUM_LENGTH = 8;
@@ -108,6 +117,9 @@ public class OpenmeetingsVariables {
 	public static final int DEFAULT_MINUTES_REMINDER_SEND = 15;
 	public static final String DEFAULT_BASE_URL = "http://localhost:5080/openmeetings/";
 	public static final String DEFAULT_SIP_CONTEXT = "rooms";
+	public static final String DEFAULT_CSP_FONT = "https://fonts.gstatic.com";
+	public static final String DEFAULT_CSP_STYLE = "https://fonts.googleapis.com/css";
+	public static final String DEFAULT_CSP_DATA = SELF.getValue() + ",data:";
 
 	private static String cryptClassName = null;
 	private static String wicketApplicationName = null;
@@ -138,9 +150,24 @@ public class OpenmeetingsVariables {
 	private static boolean allowRegisterOauth = false;
 	private static boolean sendVerificationEmail = false;
 	private static boolean sendRegisterEmail = false;
-	private static String contentSecurityPolicy = HEADER_CSP_SELF;
-	private static String xFrameOptions = HEADER_XFRAME_SELF;
 	private static boolean displayNameEditable = false;
+	private static boolean myRoomsEnabled = true;
+	private static String cspFontSrc = DEFAULT_CSP_FONT;
+	private static String cspFrameSrc = SELF.getValue();
+	private static String cspImageSrc = DEFAULT_CSP_DATA;
+	private static String cspMediaSrc = DEFAULT_CSP_DATA;
+	private static String cspScriptSrc = STRICT_DYNAMIC.getValue();
+	private static String cspStyleSrc = DEFAULT_CSP_STYLE;
+	private static String smtpServer;
+	private static int smtpPort;
+	private static boolean smtpUseTls;
+	private static boolean smtpUseSsl;
+	private static String smtpUser;
+	private static String smtpPass;
+	private static int smtpTimeOut;
+	private static int smtpConnectionTimeOut;
+	private static String mailFrom;
+	private static boolean mailAddReplyTo;
 
 	private OpenmeetingsVariables() {}
 
@@ -332,11 +359,11 @@ public class OpenmeetingsVariables {
 		minLnameLength = length;
 	}
 
-	public static boolean getChatSenndOnEnter() {
+	public static boolean isChatSendOnEnter() {
 		return chatSendOnEnter;
 	}
 
-	public static void setChatSenndOnEnter(boolean sendOnEnter) {
+	public static void setChatSendOnEnter(boolean sendOnEnter) {
 		chatSendOnEnter = sendOnEnter;
 	}
 
@@ -380,27 +407,148 @@ public class OpenmeetingsVariables {
 		sendRegisterEmail = send;
 	}
 
-	public static String getxFrameOptions() {
-		return xFrameOptions;
-	}
-
-	public static void setxFrameOptions(String options) {
-		xFrameOptions = options;
-	}
-
-	public static String getContentSecurityPolicy() {
-		return contentSecurityPolicy;
-	}
-
-	public static void setContentSecurityPolicy(String policy) {
-		contentSecurityPolicy = policy;
-	}
-
 	public static boolean isDisplayNameEditable() {
 		return displayNameEditable;
 	}
 
 	public static void setDisplayNameEditable(boolean editable) {
 		displayNameEditable = editable;
+	}
+
+	public static boolean isMyRoomsEnabled() {
+		return myRoomsEnabled;
+	}
+
+	public static void setMyRoomsEnabled(boolean enabled) {
+		myRoomsEnabled = enabled;
+	}
+
+	public static String getCspFontSrc() {
+		return cspFontSrc;
+	}
+
+	public static void setCspFontSrc(String src) {
+		cspFontSrc = src;
+	}
+
+	public static String getCspFrameSrc() {
+		return cspFrameSrc;
+	}
+
+	public static void setCspFrameSrc(String src) {
+		cspFrameSrc = src;
+	}
+
+	public static String getCspImageSrc() {
+		return cspImageSrc;
+	}
+
+	public static void setCspImageSrc(String src) {
+		cspImageSrc = src;
+	}
+
+	public static String getCspMediaSrc() {
+		return cspMediaSrc;
+	}
+
+	public static void setCspMediaSrc(String src) {
+		cspMediaSrc = src;
+	}
+
+	public static String getCspScriptSrc() {
+		return cspScriptSrc;
+	}
+
+	public static void setCspScriptSrc(String src) {
+		cspScriptSrc = src;
+	}
+
+	public static String getCspStyleSrc() {
+		return cspStyleSrc;
+	}
+
+	public static void setCspStyleSrc(String src) {
+		cspStyleSrc = src;
+	}
+
+
+	public static String getSmtpServer() {
+		return smtpServer;
+	}
+
+	public static void setSmtpServer(String server) {
+		smtpServer = server;
+	}
+
+	public static int getSmtpPort() {
+		return smtpPort;
+	}
+
+	public static void setSmtpPort(int port) {
+		smtpPort = port;
+	}
+
+	public static boolean isSmtpUseTls() {
+		return smtpUseTls;
+	}
+
+	public static void setSmtpUseTls(boolean useTls) {
+		smtpUseTls = useTls;
+	}
+
+	public static boolean isSmtpUseSsl() {
+		return smtpUseSsl;
+	}
+
+	public static void setSmtpUseSsl(boolean useSsl) {
+		smtpUseSsl = useSsl;
+	}
+
+	public static String getSmtpUser() {
+		return smtpUser;
+	}
+
+	public static void setSmtpUser(String user) {
+		smtpUser = user;
+	}
+
+	public static String getSmtpPass() {
+		return smtpPass;
+	}
+
+	public static void setSmtpPass(String pass) {
+		smtpPass = pass;
+	}
+
+	public static int getSmtpTimeOut() {
+		return smtpTimeOut;
+	}
+
+	public static void setSmtpTimeOut(int timeOut) {
+		smtpTimeOut = timeOut;
+	}
+
+	public static int getSmtpConnectionTimeOut() {
+		return smtpConnectionTimeOut;
+	}
+
+	public static void setSmtpConnectionTimeOut(int timeOut) {
+		smtpConnectionTimeOut = timeOut;
+	}
+
+	public static String getMailFrom() {
+		return mailFrom;
+	}
+
+	public static void setMailFrom(String from) {
+		mailFrom = from;
+	}
+
+	public static boolean isMailAddReplyTo() {
+		return mailAddReplyTo;
+	}
+
+	public static void setMailAddReplyTo(boolean addReplyTo) {
+		mailAddReplyTo = addReplyTo;
 	}
 }

@@ -4,6 +4,7 @@ body {
 	--menu-height: 36px;
 	--level-color: #ADFF2F;
 	--rooms-header-height: 70px;
+	--sidebar-width: 315px;
 	--tabs-height: 45px;
 	--buffer-size: 4px;
 	--menu-zindex: 10000000;
@@ -34,16 +35,15 @@ body.no-menu {
 	--actions-height: 40px;
 }
 .recording-panel {
-	--info-height: 115px;
+	--info-height: 90px;
 }
-.file.tree {
+.file-tree {
 	--tree-header-height: 36px;
-	--tree-footer-height: 40px;
+	--tree-footer-height: 50px;
 }
 .main.room {
 	--header-height: 0px;
-	--room-menu-height: 34px;
-	--room-sidebar-width: 315px;
+	--room-menu-height: calc(22px + 1rem);
 	--room-wb-tabs-height: 45px;
 	--room-sidebar-header-height: 37px;
 	--chat-width: 20px;
@@ -51,8 +51,10 @@ body.no-menu {
 	--activities-height: 20px;
 	--vdialog-titlebar-height: 27px;
 	--vdialog-footer-height: 0px;
+	--wb-zoom-height: 33px;
+	--menu-height: 0px;
 }
-.main.room.interview {
+.main.room.INTERVIEW {
 	--rec-btn-height: 40px;
 }
 .main.room.no-menu {
@@ -69,6 +71,6 @@ body.no-menu {
 }
 @media screen and (max-width: 1280px) {
 	.main.room {
-		--room-sidebar-width: 155px;
+		--sidebar-width: 155px;
 	}
 }

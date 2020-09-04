@@ -18,6 +18,7 @@
  */
 package org.apache.openmeetings.db.entity.user;
 
+import static org.apache.openmeetings.db.bind.Constants.USER_NODE;
 import static org.apache.openmeetings.db.dao.user.UserDao.FETCH_GROUP_BACKUP;
 import static org.apache.openmeetings.db.dao.user.UserDao.FETCH_GROUP_GROUP;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getSipContext;
@@ -25,6 +26,7 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.isSipEnabled;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -52,7 +54,12 @@ import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.openjpa.persistence.ElementDependent;
 import org.apache.openjpa.persistence.FetchAttribute;
@@ -60,16 +67,20 @@ import org.apache.openjpa.persistence.FetchGroup;
 import org.apache.openjpa.persistence.FetchGroups;
 import org.apache.openjpa.persistence.LoadFetchGroup;
 import org.apache.openjpa.persistence.jdbc.ForeignKey;
+import org.apache.openmeetings.db.bind.adapter.BooleanAdapter;
+import org.apache.openmeetings.db.bind.adapter.DateAdapter;
+import org.apache.openmeetings.db.bind.adapter.LocalDateAdapter;
+import org.apache.openmeetings.db.bind.adapter.LongAdapter;
+import org.apache.openmeetings.db.bind.adapter.SalutationAdapter;
+import org.apache.openmeetings.db.bind.adapter.UserRightAdapter;
+import org.apache.openmeetings.db.bind.adapter.UserTypeAdapter;
 import org.apache.openmeetings.db.dao.label.LabelDao;
 import org.apache.openmeetings.db.entity.HistoricalEntity;
 import org.apache.openmeetings.db.entity.label.OmLanguage;
 import org.apache.openmeetings.db.entity.server.Sessiondata;
+import org.apache.openmeetings.db.util.MD5;
 import org.apache.openmeetings.util.crypt.CryptProvider;
-import org.apache.openmeetings.util.crypt.MD5;
 import org.apache.wicket.util.string.Strings;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Root;
 
 /**
  * Entity to store user data, password field is {@link FetchType#LAZY}, so that
@@ -110,9 +121,10 @@ import org.simpleframework.xml.Root;
 		, @Index(name = "lastname_idx", columnList = "lastname")
 		, @Index(name = "firstname_idx", columnList = "firstname")
 })
-@Root(name = "user")
+@XmlRootElement(name = USER_NODE)
 public class User extends HistoricalEntity {
 	private static final long serialVersionUID = 1L;
+	public static final String DISPLAY_NAME_NA = "N/A";
 	public static final int SALUTATION_MR_ID = 1;
 	public static final int SALUTATION_MS_ID = 2;
 	public static final int SALUTATION_MRS_ID = 3;
@@ -121,29 +133,29 @@ public class User extends HistoricalEntity {
 
 	@XmlType(namespace="org.apache.openmeetings.user.right")
 	public enum Right {
-		Admin			// access to Admin module
-		, GroupAdmin	// partial access to Admin module (should not be directly assigned)
-		, Room			// enter the room
-		, Dashboard		// access the dashboard
-		, Login			// login to Om internal DB
-		, Soap			// use rest/soap calls
+		ADMIN			// access to Admin module
+		, GROUP_ADMIN	// partial access to Admin module (should not be directly assigned)
+		, ROOM			// enter the room
+		, DASHBOARD		// access the dashboard
+		, LOGIN			// login to Om internal DB
+		, SOAP			// use rest/soap calls
 	}
 
 	@XmlType(namespace="org.apache.openmeetings.user.type")
 	public enum Type {
-		user
-		, ldap
-		, oauth
-		, external
-		, contact
+		USER
+		, LDAP
+		, OAUTH
+		, EXTERNAL
+		, CONTACT
 	}
 	@XmlType(namespace="org.apache.openmeetings.user.salutation")
 	public enum Salutation {
-		mr(SALUTATION_MR_ID)
-		, ms(SALUTATION_MS_ID)
-		, mrs(SALUTATION_MRS_ID)
-		, dr(SALUTATION_DR_ID)
-		, prof(SALUTATION_PROF_ID);
+		MR(SALUTATION_MR_ID)
+		, MS(SALUTATION_MS_ID)
+		, MRS(SALUTATION_MRS_ID)
+		, DR(SALUTATION_DR_ID)
+		, PROF(SALUTATION_PROF_ID);
 		private int id;
 
 		Salutation(int id) {
@@ -163,19 +175,19 @@ public class User extends HistoricalEntity {
 		}
 
 		public static Salutation get(int type) {
-			Salutation rt = Salutation.mr;
+			Salutation rt = Salutation.MR;
 			switch (type) {
 				case SALUTATION_MS_ID:
-					rt = Salutation.ms;
+					rt = Salutation.MS;
 					break;
 				case SALUTATION_MRS_ID:
-					rt = Salutation.mrs;
+					rt = Salutation.MRS;
 					break;
 				case SALUTATION_DR_ID:
-					rt = Salutation.dr;
+					rt = Salutation.DR;
 					break;
 				case SALUTATION_PROF_ID:
-					rt = Salutation.prof;
+					rt = Salutation.PROF;
 					break;
 				default:
 					//no-op
@@ -187,90 +199,98 @@ public class User extends HistoricalEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
-	@Element(data = true, name = "user_id")
+	@XmlElement(name = "user_id", required = false)
+	@XmlJavaTypeAdapter(LongAdapter.class)
 	private Long id;
 
 	@Column(name = "age")
-	@Element(data = true, required = false)
-	private Date age;
+	@XmlElement(name = "age", required = false)
+	@XmlJavaTypeAdapter(LocalDateAdapter.class)
+	private LocalDate age;
 
 	@Column(name = "firstname")
-	@Element(data = true, required = false)
+	@XmlElement(name = "firstname", required = false)
 	private String firstname;
 
 	@Column(name = "lastlogin")
+	@XmlTransient
 	private Date lastlogin;
 
 	@Column(name = "lastname")
-	@Element(data = true, required = false)
+	@XmlElement(name = "lastname", required = false)
 	private String lastname;
 
 	@Column(name = "displayName")
-	@Element(data = true, required = false)
+	@XmlElement(name = "displayName", required = false)
 	private String displayName;
 
 	@Column(name = "login")
-	@Element(data = true, required = false)
+	@XmlElement(name = "login", required = false)
 	private String login;
 
 	@Basic(fetch = FetchType.LAZY)
 	@Column(name = "password", length = 1024)
-	@LoadFetchGroup("backupexport")
-	@Element(name = "pass", data = true, required = false)
+	@LoadFetchGroup(FETCH_GROUP_BACKUP)
+	@XmlElement(name = "pass", required = false)
 	private String password;
 
 	@Column(name = "regdate")
-	@Element(data = true, required = false)
+	@XmlElement(name = "regdate", required = false)
+	@XmlJavaTypeAdapter(DateAdapter.class)
 	private Date regdate;
 
 	@Column(name = "salutation")
 	@Enumerated(EnumType.STRING)
-	@Element(name = "title_id", data = true, required = false)
+	@XmlElement(name = "title_id", required = false)
+	@XmlJavaTypeAdapter(SalutationAdapter.class)
 	private Salutation salutation;
 
 	@Column(name = "pictureuri")
-	@Element(data = true, required = false)
+	@XmlElement(name = "pictureUri", required = false)
 	private String pictureUri;
 
 	@Column(name = "language_id")
-	@Element(name = "language_id", data = true, required = false)
+	@XmlElement(name = "language_id", required = false)
+	@XmlJavaTypeAdapter(value = LongAdapter.class, type = long.class)
 	private long languageId;
 
 	@Column(name = "resethash")
-	@Element(data = true, required = false)
+	@XmlElement(name = "resethash", required = false)
 	private String resethash;
 
 	@Column(name = "resetdate")
-	@Element(data = true, required = false)
+	@XmlElement(name = "resetDate", required = false)
+	@XmlJavaTypeAdapter(DateAdapter.class)
 	private Date resetDate;
 
 	@Column(name = "activatehash")
-	@Element(data = true, required = false)
+	@XmlElement(name = "activatehash", required = false)
 	private String activatehash;
 
 	@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "address_id", insertable = true, updatable = true)
 	@ForeignKey(enabled = true)
-	@Element(name = "address", required = false)
+	@XmlElement(name = "address", required = false)
 	private Address address;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "user_id", insertable = true, updatable = true, nullable = false)
-	@ElementList(name = "organisations", required = false)
 	@ElementDependent
+	@XmlElementWrapper(name = "organisations", required = false)
+	@XmlElement(name = "user_organisation", required = false)
 	private List<GroupUser> groupUsers = new ArrayList<>();
 
 	@OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 	@PrimaryKeyJoinColumn(name="sip_user_id", referencedColumnName="id")
-	@Element(name = "sipUser", required = false)
+	@XmlElement(name = "sipUser", required = false)
 	private AsteriskSipUser sipUser;
 
 	// Vars to simulate external Users
 	@Column(name = "external_id")
-	@Element(name = "externalUserId", data = true, required = false)
+	@XmlElement(name = "externalUserId", required = false)
 	private String externalId;
 
-	@Element(name = "externalUserType", data = true, required = false)
+	@XmlElement(name = "externalUserType", required = false)
 	@Deprecated(since = "5.0")
 	@Transient
 	/**
@@ -282,50 +302,54 @@ public class User extends HistoricalEntity {
 	 * java.util.TimeZone Id
 	 */
 	@Column(name = "time_zone_id")
-	@Element(data = true, required = false)
+	@XmlElement(name = "timeZoneId", required = false)
 	private String timeZoneId;
 
 	@Transient
+	@XmlTransient
 	private Sessiondata sessionData;
 
-	@Column(name = "forceTimeZoneCheck", nullable = false)
-	@Element(data = true, required = false)
-	private boolean forceTimeZoneCheck;
-
 	@Column(name = "user_offers")
-	@Element(data = true, required = false)
+	@XmlElement(name = "userOffers", required = false)
 	private String userOffers;
 
 	@Column(name = "user_searchs")
-	@Element(data = true, required = false)
+	@XmlElement(name = "userSearchs", required = false)
 	private String userSearchs;
 
 	@Column(name = "show_contact_data", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "showContactData", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean showContactData;
 
 	@Column(name = "show_contact_data_to_contacts", nullable = false)
-	@Element(data = true, required = false)
+	@XmlElement(name = "showContactDataToContacts", required = false)
+	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean showContactDataToContacts;
 
 	@Column(name = "type")
-	@Element(data = true, required = false)
 	@Enumerated(EnumType.STRING)
-	private Type type = Type.user;
+	@XmlElement(name = "type", required = false)
+	@XmlJavaTypeAdapter(UserTypeAdapter.class)
+	private Type type = Type.USER;
 
 	@Column(name = "owner_id")
-	@Element(data = true, required = false)
+	@XmlElement(name = "ownerId", required = false)
+	@XmlJavaTypeAdapter(LongAdapter.class)
 	private Long ownerId;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@Column(name = "om_right")
 	@CollectionTable(name = "om_user_right", joinColumns = @JoinColumn(name = "user_id"))
 	@Enumerated(EnumType.STRING)
-	@ElementList(name="rights", data = true, required = false)
+	@XmlElementWrapper(name = "rights", required = false)
+	@XmlElement(name = "right", required = false)
+	@XmlJavaTypeAdapter(UserRightAdapter.class)
 	private Set<Right> rights = new HashSet<>();
 
 	@Column(name = "domain_id")
-	@Element(data = true, required = false)
+	@XmlElement(name = "domainId", required = false)
+	@XmlJavaTypeAdapter(LongAdapter.class)
 	private Long domainId; // LDAP config id for LDAP, OAuth server id for OAuth
 
 	@Override
@@ -346,12 +370,12 @@ public class User extends HistoricalEntity {
 		this.address = address;
 	}
 
-	public Date getAge() {
+	public LocalDate getAge() {
 		return age;
 	}
 
-	public void setAge(Date age) {
-		this.age = age == null ? new Date() :age;
+	public void setAge(LocalDate age) {
+		this.age = age == null ? LocalDate.now() : age;
 	}
 
 	public String getFirstname() {
@@ -389,6 +413,10 @@ public class User extends HistoricalEntity {
 			this.displayName = escapeMarkup(displayName).toString();
 		}
 		return this;
+	}
+
+	public void resetDisplayName() {
+		displayName = generateDisplayName();
 	}
 
 	public String getLogin() {
@@ -559,14 +587,6 @@ public class User extends HistoricalEntity {
 		this.timeZoneId = timeZoneId;
 	}
 
-	public boolean getForceTimeZoneCheck() {
-		return forceTimeZoneCheck;
-	}
-
-	public void setForceTimeZoneCheck(boolean forceTimeZoneCheck) {
-		this.forceTimeZoneCheck = forceTimeZoneCheck;
-	}
-
 	public String getUserOffers() {
 		return userOffers;
 	}
@@ -657,7 +677,7 @@ public class User extends HistoricalEntity {
 			sb.append(delim).append(address.getEmail());
 		}
 		if (Strings.isEmpty(sb)) {
-			sb.append("N/A");
+			sb.append(DISPLAY_NAME_NA);
 		}
 		return escapeMarkup(sb).toString();
 	}

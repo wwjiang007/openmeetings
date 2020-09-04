@@ -6,6 +6,256 @@ See https://issues.apache.org/jira/browse/OPENMEETINGS-* (where * is the number 
 See https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-* (where * is the number of CVE below)
 
 
+Release Notes - Openmeetings - Version 5.0.0
+================================================================================================================
+
+* Sub-task
+    * [OPENMEETINGS-2291] - Mobile Touch
+
+* Bug
+    * [OPENMEETINGS-2265] - Uncaught TypeError
+    * [OPENMEETINGS-2266] - Owner ID for administration
+    * [OPENMEETINGS-2273] - Fix download of original of fileType PDF
+    * [OPENMEETINGS-2275] - Update whiteboard panel with proposal
+    * [OPENMEETINGS-2276] - Remove red5 references in pom and red5 components no more used
+    * [OPENMEETINGS-2278] - Recording will not start or stop again if you record a second time in the same room
+    * [OPENMEETINGS-2279] - Presentation conference room sometimes in screen recording just captures the video not the screen
+    * [OPENMEETINGS-2281] - Android Media Stream gets interrupted and cannot playback remote audio/video
+    * [OPENMEETINGS-2282] - Reset WB menu  item not  working
+    * [OPENMEETINGS-2286] - Hide user accounts to new users
+    * [OPENMEETINGS-2294] - OAuth/LDAP users can be duplicated during import
+    * [OPENMEETINGS-2295] - Multiple Users with same Username and Email
+    * [OPENMEETINGS-2301] - Sporadic internal error on room entering
+    * [OPENMEETINGS-2305] - Can't save date of birth
+    * [OPENMEETINGS-2308] - Android bootstrap touch event doesn't work
+    * [OPENMEETINGS-2311] - Issues with UI
+    * [OPENMEETINGS-2316] - KRoom holds a reference to KStream after person has left the room
+    * [OPENMEETINGS-2319] - User requested screen sharing perm. send quest. for whiteboard, received perm. for whiteboard
+    * [OPENMEETINGS-2320] - Camera resolution is not taken over immediatly
+    * [OPENMEETINGS-2325] - Room File Upload
+    * [OPENMEETINGS-2327] - Error while opening encoder for output stream #0:0
+    * [OPENMEETINGS-2328] - Sending messages through an external mailbox
+    * [OPENMEETINGS-2331] - KMS connectivity isn't auto-recovering
+    * [OPENMEETINGS-2334] - DateTimeLocal invalid start/end error caused by Canadian am/pm format
+    * [OPENMEETINGS-2335] - Save as PDF Error
+    * [OPENMEETINGS-2336] - Checkstyle - Java file should end with line break
+    * [OPENMEETINGS-2337] - UI in room entered via invitation link generates different JS in modal close icon
+    * [OPENMEETINGS-2338] - Can't restart sharing if starting to share and then leave and re-enter the room
+    * [OPENMEETINGS-2339] - Close icons on Android/Mobile view doesn't work
+    * [OPENMEETINGS-2349] - New Edge Browser / Chrome based - Screen Sharing not working
+    * [OPENMEETINGS-2355] - Growing list of stream connection in admin->connections
+    * [OPENMEETINGS-2356] - Close icons on Android/Mobile view doesn't work - DOwnload as PNG window
+    * [OPENMEETINGS-2357] - Android/Mobile view doesn't work - Math formula dialog
+    * [OPENMEETINGS-2359] - Occasional spam with unavailable getPeer
+    * [OPENMEETINGS-2360] - Android/Mobile view doesn't work - Settings dialog does not work
+    * [OPENMEETINGS-2370] - Errors in CSP values leads to page crash
+    * [OPENMEETINGS-2374] - An HTTP error response in websocket communication would not be processed by the browser.
+    * [OPENMEETINGS-2376] - OM looks ugly in RTL locale
+    * [OPENMEETINGS-2378] - Video window resizing from android tablet
+    * [OPENMEETINGS-2382] - email addresses shown - follow up to 2286
+    * [OPENMEETINGS-2383] - for guests: in the chat area apears guest's email instead of First name/Last name
+    * [OPENMEETINGS-2389] - Installation - minimum version Java and error messages in Apache Tomcat vs OpenMeetings webapp
+    * [OPENMEETINGS-2395] - Media Server and sdp error on activating audio-video
+    * [OPENMEETINGS-2404] - Math formula dialog can be improperly resized
+    * [OPENMEETINGS-2411] - Exception on startup in Jetty mode
+
+* New Feature
+    * [OPENMEETINGS-2298] - Add KStream to Admin>Connections
+    * [OPENMEETINGS-2380] - User avatar should be editable from Admin->Users
+
+* Improvement
+    * [OPENMEETINGS-2217] - UI improvement: Download Screen Recordings Menu Options
+    * [OPENMEETINGS-2236] - direct link for room-entering for user with room-name
+    * [OPENMEETINGS-2255] - Usability - Consistent behaviour of button on confirmation dialogs and modals
+    * [OPENMEETINGS-2284] - Make User Profile accessible thrgough Home Menu and default.landing.zone
+    * [OPENMEETINGS-2285] - Concat profile and edit profile page into one page with edit capabilities
+    * [OPENMEETINGS-2287] - not interpreted HTML-Tags in event description dialog
+    * [OPENMEETINGS-2289] - Admin Window Connection
+    * [OPENMEETINGS-2299] - Add more functional unit tests for Recording in room
+    * [OPENMEETINGS-2307] - Enable Maven-checkstyle-plugin
+    * [OPENMEETINGS-2315] - Refactor KStream to single place
+    * [OPENMEETINGS-2332] - Room exit always redirects to public room list
+    * [OPENMEETINGS-2343] - Slight user and files menu header change
+    * [OPENMEETINGS-2344] - File explorer - resize text to fill up whitespace
+    * [OPENMEETINGS-2346] - Screen-sharing should be supported in new M$ Edge
+    * [OPENMEETINGS-2347] - Recording Page - File explorer - resize text - does not resize
+    * [OPENMEETINGS-2364] - Android/Mobile view doesn't work - Download as PNG window - can not right click
+    * [OPENMEETINGS-2365] - Android/iOS/Mobile view prevent screen from sleep
+    * [OPENMEETINGS-2366] - Config to disable CSP can be added
+    * [OPENMEETINGS-2368] - It might be useful to add client UID to turn user
+    * [OPENMEETINGS-2369] - Prioritize camera facing the user by default
+
+* Test
+    * [OPENMEETINGS-2342] - whiteboard at the moment of loading for the first time the classroom remains the background of the modalbox 
+    * [OPENMEETINGS-2351] - Does not allow to deselect the option "Include uploaded files and recordings in the backup"
+    * [OPENMEETINGS-2372] -  when many tabs are created the new tabs are downloaded to a new line
+
+* Task
+    * [OPENMEETINGS-2292] - (M5) Label contributions from https://poeditor.com should be merged back
+    * [OPENMEETINGS-2296] - Library versions need to be updated (5.0.0)
+    * [OPENMEETINGS-2304] - Verify string
+
+
+Release Notes - Openmeetings - Version 4.0.11
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-2154] - Export of OM Calendars is broken
+    * [OPENMEETINGS-2160] - 'closed' room attribute is not being mapped to entity
+    * [OPENMEETINGS-2202] - NPE while invalidating session
+    * [OPENMEETINGS-2286] - Hide user accounts to new users
+    * [OPENMEETINGS-2328] - Sending messages through an external mailbox
+    * [OPENMEETINGS-2382] - email addresses shown - follow up to 2286
+    * [OPENMEETINGS-2383] - for guests: in the chat area apears guest's email instead of First name/Last name
+
+* Improvement
+    * [OPENMEETINGS-2010] - Private chats will not be removed
+    * [OPENMEETINGS-2021] - Widget in Chat Log
+    * [OPENMEETINGS-2188] - OAuth works with 2 level mappings only
+
+* Task
+    * [OPENMEETINGS-2152] - Library versions need to be updated (4.0.11)
+
+
+Release Notes - Openmeetings - Version 5.0.0-M4
+================================================================================================================
+
+* Sub-task
+    * [OPENMEETINGS-2187] - WB content should be synced on server start
+    * [OPENMEETINGS-2203] - Invitation/Secure room hashes should be opened at correct node
+    * [OPENMEETINGS-2241] - Complex scenario
+
+* Bug
+    * [OPENMEETINGS-816] - Create Sign Up UI tests using Selenium
+    * [OPENMEETINGS-2154] - Export of OM Calendars is broken
+    * [OPENMEETINGS-2156] - cross links in services javadocs need to be fixed
+    * [OPENMEETINGS-2160] - 'closed' room attribute is not being mapped to entity
+    * [OPENMEETINGS-2177] - Backup import is broken
+    * [OPENMEETINGS-2186] - Clustering does nothing in version 5.0-M3
+    * [OPENMEETINGS-2189] - Audio/Video is broken in Safari
+    * [OPENMEETINGS-2195] - mic not enabled in audio-only room in chrome, other errors
+    * [OPENMEETINGS-2196] - Australian date-time failed to parse
+    * [OPENMEETINGS-2202] - NPE while invalidating session
+    * [OPENMEETINGS-2206] - Recording Stops alone after some minutes
+    * [OPENMEETINGS-2207] - CAM AND AUDIO WINDOW CLOSING
+    * [OPENMEETINGS-2208] - Login-screen "registration" unvsible when in configuration this feature is disabled
+    * [OPENMEETINGS-2219] - Backup and Import
+    * [OPENMEETINGS-2221] - invitation only with email-address -> no OK button and icorrect window
+    * [OPENMEETINGS-2223] - Can't import language file. (Internal error message)
+    * [OPENMEETINGS-2225] - UI issue in Mobile view - Navigation bar hidden behind room
+    * [OPENMEETINGS-2226] - Final recording dimensions should be stored in DB
+    * [OPENMEETINGS-2240] - sort user list is missing in current master-branch
+    * [OPENMEETINGS-2250] - Moderated Chat is broken
+    * [OPENMEETINGS-2252] - Does not work hotkeys mute.keycode and mute.others.keycode.
+    * [OPENMEETINGS-2254] - Connection overview - overlapping characters if username too long
+    * [OPENMEETINGS-2263] - Disallow Recording but allow Screen Sharing
+    * [OPENMEETINGS-2269] - Administration app hungs after add / change user - F5 refresh helps
+    * [OPENMEETINGS-2272] - Wrong type with mp4.video.preset
+
+* Improvement
+    * [OPENMEETINGS-2010] - Private chats will not be removed
+    * [OPENMEETINGS-2021] - Widget in Chat Log
+    * [OPENMEETINGS-2072] - "wait-picture" before moderator enter room
+    * [OPENMEETINGS-2153] - Multimedia connection shouldn't be immediately dropped
+    * [OPENMEETINGS-2155] - Managment avatars in whiteboard
+    * [OPENMEETINGS-2157] - MD5 crypt mechanism should be dropped
+    * [OPENMEETINGS-2165] - OM should be more mobile friendly
+    * [OPENMEETINGS-2167] - arrange automatically video-pictures
+    * [OPENMEETINGS-2188] - OAuth works with 2 level mappings only
+    * [OPENMEETINGS-2197] - rooms side panel undock button doesn't works
+    * [OPENMEETINGS-2209] - Connection state changes should be handled
+    * [OPENMEETINGS-2230] - Developer Experience - Adding some more quick build options
+    * [OPENMEETINGS-2245] - navigator.mediaDevices can be null
+    * [OPENMEETINGS-2248] - Fix up some parts of website
+    * [OPENMEETINGS-2251] - Whiteboard tab menu right click and edit does not work and focus on wrong html element
+    * [OPENMEETINGS-2256] - Some PDFs have wrong width in generated images
+    * [OPENMEETINGS-2257] - Order of Countries in list box
+    * [OPENMEETINGS-2258] - LDAP documentation is incomplete
+    * [OPENMEETINGS-2261] - Screen Sharing - Windows for Width and Height to small for 4 digit values
+    * [OPENMEETINGS-2262] - LDAP attribute mapping for ldap_user_attr_picture doesn't'work with Active Directory
+    * [OPENMEETINGS-2268] - Confusing Icons
+    * [OPENMEETINGS-2271] - Link to privacy statement should be added to sign-in dialog
+
+* Test
+    * [OPENMEETINGS-2183] - How to upgrade the newer tomcat version  9.0.31
+    * [OPENMEETINGS-2259] - Can't run OM-5 M4 build #3122
+    * [OPENMEETINGS-2270] - REcording and changing size or fps
+
+* Task
+    * [OPENMEETINGS-2151] - Library versions need to be updated (5.0.0-M4)
+    * [OPENMEETINGS-2176] - Sonar issues need to be addressed (M4)
+    * [OPENMEETINGS-2247] - CSP should be re-worked
+
+
+Release Notes - Openmeetings - Version 4.0.10
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-2088] - Internal error on clicking start upload button without selecting file in file uploading
+    * [OPENMEETINGS-2098] - New Whiteboard each time admin logs in
+    * [OPENMEETINGS-2110] - Restore of backup failed
+    * [OPENMEETINGS-2113] - messed up documents in folder after backup/import
+
+* Improvement
+    * [OPENMEETINGS-2078] - Shortcut for quick poll is needed
+    * [OPENMEETINGS-2089] - Additional ImageMagic parameter should be added
+    * [OPENMEETINGS-2143] - Polish translation need to be improved
+    * [OPENMEETINGS-2144] - sort user list
+
+* Task
+    * [OPENMEETINGS-2094] - Library versions need to be updated (4.0.10)
+    * [OPENMEETINGS-2123] - FB API should be updated to use v4.0
+    * [OPENMEETINGS-2146] - Hash of file/recording shouldn't be changed on every import
+
+
+Release Notes - Openmeetings - Version 5.0.0-M3
+================================================================================================================
+
+* Bug
+    * [OPENMEETINGS-2048] - WB performance need to be improved
+    * [OPENMEETINGS-2087] - Audio and screen sharing not working in Chrome
+    * [OPENMEETINGS-2088] - Internal error on clicking start upload button without selecting file in file uploading
+    * [OPENMEETINGS-2098] - New Whiteboard each time admin logs in
+    * [OPENMEETINGS-2099] - Video window is not removed
+    * [OPENMEETINGS-2100] - JS error prevents screen-sharing from being started
+    * [OPENMEETINGS-2101] - Audio+Video doesn't work together
+    * [OPENMEETINGS-2102] - User display name is N/A for new users created via Admin
+    * [OPENMEETINGS-2105] -  Incorrect date output in the date of birth.
+    * [OPENMEETINGS-2106] - At Public Conference Room, when try to drop a right video recording from the tree to whiteboard, nothing hapens.
+    * [OPENMEETINGS-2108] - icon for opening "little sharing-window" not appears when closing this window
+    * [OPENMEETINGS-2110] - Restore of backup failed
+    * [OPENMEETINGS-2111] - Empty Ice candidate should be skipped
+    * [OPENMEETINGS-2113] - messed up documents in folder after backup/import
+    * [OPENMEETINGS-2115] - Activities are not cleaned up on Media flow stop
+    * [OPENMEETINGS-2127] - Problems recording when I change the camara default resolution
+    * [OPENMEETINGS-2132] - Turn on/off video is not properly working
+    * [OPENMEETINGS-2134] - Null data when calling getExternal on Room Soap Service
+    * [OPENMEETINGS-2135] - Failed to share screen in latest nightly version #2954
+    * [OPENMEETINGS-2142] - Wrong information in meeting invitation mail
+
+* Improvement
+    * [OPENMEETINGS-2045] - JS code need to be simplified
+    * [OPENMEETINGS-2078] - Shortcut for quick poll is needed
+    * [OPENMEETINGS-2089] - Additional ImageMagic parameter should be added
+    * [OPENMEETINGS-2091] - picture small/invisible when only audio is on
+    * [OPENMEETINGS-2107] - sharing programs/desktop
+    * [OPENMEETINGS-2112] - Minimal mic level should be calculated dynamically
+    * [OPENMEETINGS-2130] - Web  backup needs  confirmation of  import
+    * [OPENMEETINGS-2131] - Need  positive  feedback  during checks  at  converters  stage
+    * [OPENMEETINGS-2137] - new WB REST service should be created
+    * [OPENMEETINGS-2143] - Polish translation need to be improved
+    * [OPENMEETINGS-2144] - sort user list
+
+* Test
+    * [OPENMEETINGS-2095] - Build on Windows fails because of tests
+
+* Task
+    * [OPENMEETINGS-2082] - Sonar issues need to be addressed (M3)
+    * [OPENMEETINGS-2093] - Library versions need to be updated (5.0.0-M3)
+    * [OPENMEETINGS-2123] - FB API should be updated to use v4.0
+    * [OPENMEETINGS-2146] - Hash of file/recording shouldn't be changed on every import
+
+
 Release Notes - Openmeetings - Version 5.0.0-M2
 ================================================================================================================
 

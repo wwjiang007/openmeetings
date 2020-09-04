@@ -18,7 +18,6 @@
  */
 package org.apache.openmeetings.web.admin.configurations;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
@@ -29,6 +28,8 @@ import org.apache.openmeetings.web.app.WebSession;
 import org.apache.openmeetings.web.util.DateLabel;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -41,6 +42,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -55,6 +57,10 @@ import org.apache.wicket.validation.ValidationError;
 public class ConfigForm extends AdminBaseForm<Configuration> {
 	private static final long serialVersionUID = 1L;
 	private final WebMarkupContainer listContainer;
+	private final WebMarkupContainer stringBox = new WebMarkupContainer("string-box");
+	private final WebMarkupContainer numberBox = new WebMarkupContainer("number-box");
+	private final WebMarkupContainer booleanBox = new WebMarkupContainer("boolean-box");
+	private final WebMarkupContainer hotkeyBox = new WebMarkupContainer("hotkey-box");
 	private final TextArea<String> valueS = new TextArea<>("valueS");
 	private final TextField<Long> valueN = new TextField<>("valueN") {
 		private static final long serialVersionUID = 1L;
@@ -81,12 +87,15 @@ public class ConfigForm extends AdminBaseForm<Configuration> {
 
 	private void update(AjaxRequestTarget target) {
 		Configuration c = getModelObject();
-		valueS.setVisible(Type.STRING == c.getType());
-		valueN.setVisible(Type.NUMBER == c.getType());
-		valueB.setVisible(Type.BOOL == c.getType());
-		valueH.setVisible(Type.HOTKEY == c.getType());
+		stringBox.setVisible(Type.STRING == c.getType());
+		numberBox.setVisible(Type.NUMBER == c.getType());
+		booleanBox.setVisible(Type.BOOL == c.getType());
+		hotkeyBox.setVisible(Type.HOTKEY == c.getType());
 		if (target != null) {
-			target.add(valueS, valueN, valueB, valueH);
+			target.add(stringBox, numberBox, booleanBox, hotkeyBox);
+			if (Type.HOTKEY == c.getType()) {
+				target.appendJavaScript("addOmAdminConfigHandlers()");
+			}
 		}
 	}
 
@@ -104,7 +113,7 @@ public class ConfigForm extends AdminBaseForm<Configuration> {
 		add(new TextArea<String>("comment"));
 		update(null);
 
-		add(new DropDownChoice<>("type", Arrays.asList(Type.values()), new IChoiceRenderer<Type>() {
+		add(new DropDownChoice<>("type", List.of(Type.values()), new IChoiceRenderer<Type>() {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -145,10 +154,11 @@ public class ConfigForm extends AdminBaseForm<Configuration> {
 				}
 			}
 		}));
-		add(valueS.setLabel(new ResourceModel("271")).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true));
-		add(valueN.setLabel(new ResourceModel("271")).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true));
-		add(valueB.setLabel(new ResourceModel("271")).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true));
-		add(valueH.setLabel(new ResourceModel("271")).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true));
+		stringBox.add(valueS.setLabel(new ResourceModel("271"))).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		numberBox.add(valueN.setLabel(new ResourceModel("271"))).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		booleanBox.add(valueB.setLabel(new ResourceModel("271"))).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		hotkeyBox.add(valueH.setLabel(new ResourceModel("271"))).setOutputMarkupId(true).setOutputMarkupPlaceholderTag(true);
+		add(stringBox, numberBox, booleanBox, hotkeyBox);
 	}
 
 	@Override
@@ -187,5 +197,11 @@ public class ConfigForm extends AdminBaseForm<Configuration> {
 		setModelObject(new Configuration());
 		target.add(listContainer);
 		refresh(target);
+	}
+
+	@Override
+	public void renderHead(IHeaderResponse response) {
+		super.renderHead(response);
+		response.render(JavaScriptHeaderItem.forReference(new JavaScriptResourceReference(ConfigForm.class, "admin-config.js")));
 	}
 }

@@ -21,10 +21,8 @@ package org.apache.openmeetings.web.user.profile;
 import static org.apache.openmeetings.db.util.TimezoneUtil.getTimeZone;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
-import static org.apache.openmeetings.web.util.CallbackFunctionHelper.addOnClick;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,13 +45,15 @@ import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import com.googlecode.wicket.jquery.ui.form.button.AjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 
 public class UserSearchPanel extends UserBasePanel {
 	private static final long serialVersionUID = 1L;
-	private static final List<Integer> itemsPerPage = Arrays.asList(10, 25, 50, 75, 100, 200, 500, 1000, 2500, 5000);
+	private static final List<Integer> itemsPerPage = List.of(10, 25, 50, 75, 100, 200, 500, 1000, 2500, 5000);
 	private final TextField<String> text = new TextField<>("text", Model.of(""));
 	private final TextField<String> search = new TextField<>("search", Model.of(""));
 	private final TextField<String> offer = new TextField<>("offer", Model.of(""));
@@ -78,7 +78,7 @@ public class UserSearchPanel extends UserBasePanel {
 			protected void onInitialize() {
 				super.onInitialize();
 				add(text, offer, search);
-				add(new AjaxButton("submit") {
+				add(new BootstrapAjaxButton("submit", new ResourceModel("714"), Buttons.Type.Outline_Primary) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -121,11 +121,11 @@ public class UserSearchPanel extends UserBasePanel {
 				item.add(new Label("tz", getTimeZone(u).getID()));
 				item.add(new Label("offer", u.getUserOffers()));
 				item.add(new Label("search", u.getUserSearchs()));
-				item.add(new WebMarkupContainer("view").add(addOnClick(String.format("showUserInfo(%s);", userId))));
+				item.add(new WebMarkupContainer("view").add(AttributeModifier.append("data-user-id", userId)));
 				item.add(new WebMarkupContainer("add").setVisible(userId != getUserId() && !contactDao.isContact(userId, getUserId()))
-						.add(addOnClick(String.format("addContact(%s);", userId))));
-				item.add(new WebMarkupContainer("message").setVisible(userId != getUserId()).add(addOnClick(String.format("privateMessage(%s);", userId))));
-				item.add(new WebMarkupContainer("invite").setVisible(userId != getUserId()).add(addOnClick(String.format("inviteUser(%s);", userId))));
+						.add(AttributeModifier.append("data-user-id", userId)));
+				item.add(new WebMarkupContainer("message").setVisible(userId != getUserId()).add(AttributeModifier.append("data-user-id", userId)));
+				item.add(new WebMarkupContainer("invite").setVisible(userId != getUserId()).add(AttributeModifier.append("data-user-id", userId)));
 			}
 		};
 
@@ -141,6 +141,10 @@ public class UserSearchPanel extends UserBasePanel {
 
 	private void refresh(IPartialPageRequestHandler handler) {
 		handler.add(container);
+		handler.appendJavaScript("$('#searchUsersTable .contact-add.om-icon.clickable').off().click(function() {addContact($(this).data('user-id'));});");
+		handler.appendJavaScript("$('#searchUsersTable .new-msg.om-icon.clickable').off().click(function() {privateMessage($(this).data('user-id'));});");
+		handler.appendJavaScript("$('#searchUsersTable .profile.om-icon.clickable').off().click(function() {showUserInfo($(this).data('user-id'));});");
+		handler.appendJavaScript("$('#searchUsersTable .invite.om-icon.clickable').off().click(function() {inviteUser($(this).data('user-id'));});");
 	}
 
 	private static String getName(User u) {

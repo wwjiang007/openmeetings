@@ -7,24 +7,24 @@
  - [x] **collaborative document editing**
  - [x] **other groupware tools**
 
-It uses API functions of Media Server for Remoting and Streaming ([Red5](http://red5.org/) or [Kurento](https://www.kurento.org)).
+It uses API functions of Media Server for Remoting and Streaming [Kurento](https://www.kurento.org)).
 
 Getting Started
 ===============
 Please visit the project website for the latest information:
   - https://openmeetings.apache.org/
-    
+
 Documentation for Installation and Upgrade:
   - https://openmeetings.apache.org/installation.html
   - https://openmeetings.apache.org/Upgrade.html
 
 Along with the developer mailing list archive:
   - https://openmeetings.apache.org/mail-lists.html
-    
-    
+
+
 System Requirements
 ===================
-You need a platform that supports [Oracle Java SE 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
+You need a platform that supports [Java SE 11](https://www.oracle.com/java/technologies/javase-downloads.html).
 
 
 Building and running
@@ -43,17 +43,127 @@ To build from source code:
 For a detailed documentation on how to build from source and options see:
     https://openmeetings.apache.org/BuildInstructions.html
 
+Builds and CI
+====================
+
+| Description | Jenkins CI |
+| :--- | :---: |
+| Master nightly | [![Build Status](https://ci-builds.apache.org/job/OpenMeetings/job/openmeetings//badge/icon)](https://builds.apache.org/view/M-R/view/OpenMeetings/job/openmeetings/) |
+| Master Pull Request | [![Build Status](https://ci-builds.apache.org/job/OpenMeetings/job/openmeetings-pr-build/badge/icon)](https://builds.apache.org/view/M-R/view/OpenMeetings/job/openmeetings-pr-build/) |
+
 Release Notes 
 =============
 
 see [CHANGELOG.md](/CHANGELOG.md) file for detailed log
+
+5.0.0
+-----
+[Release 5.0.0](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0), provides following improvements:
+
+This release provides WebRTC audio/video/screen-sharing in the Room
+
+IMPORTANT: Java 11 is required
+
+Flash plugin is no longer required in the browser
+
+Security:
+* Libraries are updated to latest versions
+* More strict CSP is implemented
+* User accounts are hidden for regular users
+* User email addresses are hidden
+
+UI:
+* Support for touch events is added (mobiles, tablets)
+* Better support for new MS Edge browser
+* Direct link for entering the room with room name (not ID)
+* Front camera is used by default
+* User avatar is editable at Admin->Users
+
+Audio/Video:
+* Stability is improved
+* Connection to KMS is auto-recovering
+* Camera resolution changes take effect immediately
+* Multiple client-side JS errors are fixed
+
+Some other fixes and improvements, 74 issues were addressed
+
+
+5.0.0-M4
+-----
+[Release 5.0.0-M4](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0-M4), provides following improvements:
+
+This release provides WebRTC audio/video/screen-sharing in the Room
+
+IMPORTANT: Java 11 is required
+
+Flash plugin is no more required in the browser
+
+UI:
+* Main UI library has been changed Jquery-UI -> Bootstrap
+* Hotkey to resize&arrage "video" windows is added
+* Camera/Microphone on/off icons are less confusing
+* The room can be blocked until moderator will enter
+* Room sidebar dock button works as expected
+* Right-click menu for WB tab is fixed
+* Link to privacy statement is added to sign-in dialog
+
+Audio/Video:
+* Audio-only clients doesn't create "video" windows
+* Audio/Video stream tries to re-connect in case of any issue
+
+Backup/Restore:
+* Backup/restore was re-worked and better covered with tests
+* Multiple other issues are addressed
+
+Integration:
+* OAuth: user attributes retrieval is improved
+* LDAP documentation is improved
+* User picture can be retrieved from LDAP
+
+Please NOTE: this version might be not production ready
+
+Some other fixes and improvements, 56 issues were addressed
+
+
+5.0.0-M3
+-----
+[Release 5.0.0-M3](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0-M3), provides following improvements:
+
+This release provides WebRTC audio/video/screen-sharing in the Room
+
+IMPORTANT: Java 11 is required
+
+Flash plugin is no more required in the browser
+
+Backup/Restore:
+* Multiple issues with restore were fixed
+* Confirmation of backup import was added
+* File/recording hashes are preserved when possible
+
+White board:
+* Document upload/conversion is improved
+* Whiteboards are not auto-created on room enter
+* Keyboard shortcut for quick poll is added
+
+Room:
+* User list is now sorted
+
+Audio/Video:
+* Multiple issues with audio/video/screen sharing are fixed
+
+Please NOTE: this version might be not production ready
+
+Some other fixes and improvements, 36 issues were addressed
+
 
 5.0.0-M2
 -----
 [Release 5.0.0-M2](https://www.apache.org/dyn/closer.lua/openmeetings/5.0.0-M2), provides following improvements:
 
 This release provides WebRTC audio/video/screen-sharing in the Room
+
 IMPORTANT: Java 11 is required
+
 Flash plugin is no more required in the browser
 
 Backup/Restore:
@@ -99,6 +209,7 @@ Other fixes and improvements, 19 issues were addressed
 [Release 5.0.0-M1](https://archive.apache.org/dist/openmeetings/5.0.0-M1), provides following improvements:
 
 This release provides WebRTC audio/video/screen-sharing in the Room
+
 Flash plugin is no more required in the browser
 
 Please NOTE: this version might be not production ready

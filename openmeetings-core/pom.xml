@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-core</artifactId>
@@ -31,6 +31,7 @@
 	<description>Module for OpenMeetings core classes and services</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.core</autoModuleName>
 	</properties>
 	<build>
 		<plugins>
@@ -92,9 +93,8 @@
 			<version>${javax.mail.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.artofsolving.jodconverter</groupId>
-			<artifactId>jodconverter-core</artifactId>
-			<version>3.0.1-om</version>
+			<groupId>org.jodconverter</groupId>
+			<artifactId>jodconverter-local</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -104,7 +104,6 @@
 		<dependency>
 			<groupId>org.kurento</groupId>
 			<artifactId>kurento-client</artifactId>
-			<version>6.11.0</version>
 		</dependency>
 		<!-- Test dependencies -->
 		<dependency>
@@ -112,27 +111,6 @@
 			<artifactId>openmeetings-util</artifactId>
 			<version>${project.version}</version>
 			<type>test-jar</type>
-			<scope>test</scope>
-		</dependency>
-		<dependency> <!-- temporary, powermock doesn't support junit5 -->
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-module-junit4</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito2</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

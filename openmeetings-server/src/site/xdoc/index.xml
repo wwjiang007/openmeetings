@@ -21,7 +21,7 @@
 
 	<body>
 		<section name="Audio/Video Conferencing">
-			<img src="images/cut_conference_room.png" alt="Conference Room" />
+			<img src="images/cut_conference_room_om5.png" alt="Conference Room" />
 			<p>OpenMeetings enables you to make Audio/Video conferencing.</p>
 		</section>
 		<section name="Calendar">
@@ -59,7 +59,7 @@
 			<p>Openmeetings provides video conferencing, instant messaging,
 				white board, collaborative document editing and other groupware
 				tools. It uses API functions of Media Server for Remoting
-				and Streaming (Red5 or Kurento).
+				and Streaming Kurento.
 			</p>
 			<p>
 				OpenMeetings is a project of the Apache, the old project
@@ -69,63 +69,56 @@
 		</section>
 		<section name="News">
 			<div class="bd-callout bd-callout-danger">
-				<h4>Version 5.0.0-M2 released!</h4>
-				<div>Release 5.0.0-M2, provides following improvements:<br/>
+				<h4>Version 5.0.0 released!</h4>
+				<div>Release 5.0.0, provides following improvements:<br/>
 					This release provides WebRTC audio/video/screen-sharing in the Room
-					<div class="bd-callout bd-callout-info">Flash plugin is no more required in the browser<br/>
-						<br/>
-						Please NOTE: this version might be not production ready<br/>
+					<div class="bd-callout bd-callout-info">Flash plugin is no longer required in the browser<br/>
 						<br/>
 						IMPORTANT: Java 11 is required
 					</div>
-					Backup/Restore:
+					Security:
 					<ul>
-						<li>OAuth configs were not properly backup</li>
+						<li>Libraries are updated to latest versions</li>
+						<li>More strict CSP is implemented</li>
+						<li>User accounts are hidden for regular users</li>
+						<li>User email addresses are hidden</li>
 					</ul>
-					White board:
+					UI:
 					<ul>
-						<li>Math formula is improved</li>
-						<li>Room files are improved</li>
-						<li>Clean WB REST method perform real-time clean</li>
+						<li>Support for touch events is added (mobiles, tablets)</li>
+						<li>Better support for new MS Edge browser</li>
+						<li>Direct link for entering the room with room name (not ID)</li>
+						<li>Front camera is used by default</li>
+						<li>User avatar is editable at Admin-&gt;Users</li>
 					</ul>
-					Room:
+					Audio/Video:
 					<ul>
-						<li>Rooms can be customized on group basis</li>
-						<li>"Ghost" users are not displayed in the room</li>
-						<li>External user name is displayed as expected</li>
+						<li>Stability is improved</li>
+						<li>Connection to KMS is auto-recovering</li>
+						<li>Camera resolution changes take effect immediately</li>
+						<li>Multiple client-side JS errors are fixed</li>
 					</ul>
-
 					<br/>
 					Other fixes and improvements
 				</div>
 				<br/>
 
 				<span>
-					18 issues are fixed please check <br/>
-					<a href="https://www.apache.org/dist/openmeetings/5.0.0-M2/CHANGELOG.md">CHANGELOG</a> and
-					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12345199">Detailed list</a>
+					74 issues are fixed please check <br/>
+					<a href="https://www.apache.org/dist/openmeetings/5.0.0/CHANGELOG.md">CHANGELOG</a> and
+					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12348040">Detailed list</a>
 				</span>
 				<span> See <a href="downloads.html">Downloads page</a>.</span>
-				<span class="date">(2019-07-15)</span>
+				<span class="date">(2020-08-21)</span>
 			</div>
 			<div class="bd-callout bd-callout-danger">
-				<h4>Version 4.0.9 released!</h4>
-				<div>Release 4.0.9, provides following improvements:<br/>
-					Backup/Restore:
+				<h4>Version 4.0.11 released!</h4>
+				<div>Release 4.0.11, provides following improvements:<br/>
+					Security:
 					<ul>
-						<li>Recordings of deleted users were restored as public</li>
-						<li>OAuth configs were not properly backup</li>
-					</ul>
-					White board:
-					<ul>
-						<li>Math formula is improved</li>
-						<li>Room files are improved</li>
-						<li>Clean WB REST method perform real-time clean</li>
-					</ul>
-					Room User list:
-					<ul>
-						<li>"Ghost" users are not displayed in the room</li>
-						<li>External user name is displayed as expected</li>
+						<li>3rd-party libraries are updated to latest versions</li>
+						<li>Email sending via SSL is added</li>
+						<li>User email addresses are hidden</li>
 					</ul>
 					<br/>
 					Other fixes and improvements
@@ -134,12 +127,15 @@
 				<br/>
 
 				<span>
-					19 issues are fixed please check <br/>
-					<a href="https://www.apache.org/dist/openmeetings/4.0.9/CHANGELOG.md">CHANGELOG</a> and
-					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12344942">Detailed list</a>
+					11 issues are fixed please check <br/>
+					<a href="https://www.apache.org/dist/openmeetings/4.0.11/CHANGELOG.md">CHANGELOG</a> and
+					<a href="https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12312720&amp;version=12346607">Detailed list</a>
 				</span>
 				<span> See <a href="downloads.html">Downloads page</a>.</span>
-				<span class="date">(2019-07-15)</span>
+				<span class="date">(2020-09-02)</span>
+			</div>
+			<div class="bd-callout bd-callout-info">
+				<span class="date"><a href="NewsArchive.html">You can find older news here</a></span>
 			</div>
 			<div class="bd-callout bd-callout-info">
 				<span class="date"><a href="NewsArchive.html">You can find older news here</a></span>

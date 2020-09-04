@@ -22,7 +22,7 @@
 	<parent>
 		<groupId>org.apache.openmeetings</groupId>
 		<artifactId>openmeetings-parent</artifactId>
-		<version>5.0.0-M3-SNAPSHOT</version>
+		<version>5.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>openmeetings-install</artifactId>
@@ -31,6 +31,7 @@
 	<description>Module for OpenMeetings command line admin and classes necessary for installer.</description>
 	<properties>
 		<site.basedir>${project.parent.basedir}</site.basedir>
+		<autoModuleName>apache.openmeetings.install</autoModuleName>
 	</properties>
 	<dependencies>
 		<dependency>

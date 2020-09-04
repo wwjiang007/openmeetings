@@ -21,10 +21,8 @@ package org.apache.openmeetings.web.app;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_EXT_PROCESS_TTL;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getApplicationName;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getBaseUrl;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.getContentSecurityPolicy;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getExtProcessTtl;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.getWicketApplicationName;
-import static org.apache.openmeetings.util.OpenmeetingsVariables.getxFrameOptions;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.isInitComplete;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setExtProcessTtl;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.setInitComplete;
@@ -37,8 +35,6 @@ import static org.wicketstuff.dashboard.DashboardContextInitializer.DASHBOARD_CO
 import java.io.File;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -48,6 +44,7 @@ import java.util.Set;
 import javax.websocket.WebSocketContainer;
 
 import org.apache.openmeetings.IApplication;
+import org.apache.openmeetings.core.util.ChatWebSocketHelper;
 import org.apache.openmeetings.core.util.WebSocketHelper;
 import org.apache.openmeetings.db.dao.basic.ConfigurationDao;
 import org.apache.openmeetings.db.dao.calendar.AppointmentDao;
@@ -81,6 +78,7 @@ import org.apache.openmeetings.web.pages.install.InstallWizardPage;
 import org.apache.openmeetings.web.room.GroupCustomCssResourceReference;
 import org.apache.openmeetings.web.room.RoomPreviewResourceReference;
 import org.apache.openmeetings.web.room.RoomResourceReference;
+import org.apache.openmeetings.web.room.sidebar.RoomFileUploadResourceReference;
 import org.apache.openmeetings.web.room.wb.WbWebSocketHelper;
 import org.apache.openmeetings.web.user.dashboard.MyRoomsWidgetDescriptor;
 import org.apache.openmeetings.web.user.dashboard.RecentRoomsWidgetDescriptor;
@@ -105,11 +103,13 @@ import org.apache.wicket.authroles.authentication.AuthenticatedWebApplication;
 import org.apache.wicket.core.request.handler.BookmarkableListenerRequestHandler;
 import org.apache.wicket.core.request.handler.ListenerRequestHandler;
 import org.apache.wicket.core.request.mapper.MountedMapper;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.filter.FilteringHeaderResponse;
+import org.apache.wicket.markup.html.IHeaderResponseDecorator;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.pageStore.IPageStore;
 import org.apache.wicket.pageStore.SerializingPageStore;
 import org.apache.wicket.protocol.ws.WebSocketAwareCsrfPreventionRequestCycleListener;
-import org.apache.wicket.protocol.ws.api.WebSocketResponse;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.Url;
@@ -132,14 +132,21 @@ import org.wicketstuff.dashboard.web.DashboardContext;
 import org.wicketstuff.dashboard.web.DashboardSettings;
 import org.wicketstuff.datastores.hazelcast.HazelcastDataStore;
 
+import com.googlecode.wicket.jquery.ui.plugins.wysiwyg.settings.WysiwygLibrarySettings;
+import com.hazelcast.cluster.Member;
+import com.hazelcast.cluster.MembershipEvent;
+import com.hazelcast.cluster.MembershipListener;
+import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Member;
-import com.hazelcast.core.MemberAttributeEvent;
-import com.hazelcast.core.MembershipEvent;
-import com.hazelcast.core.MembershipListener;
+import com.hazelcast.topic.ITopic;
+
+import de.agilecoders.wicket.core.Bootstrap;
+import de.agilecoders.wicket.core.settings.BootstrapSettings;
+import de.agilecoders.wicket.core.settings.IBootstrapSettings;
+import de.agilecoders.wicket.themes.markup.html.bootswatch.BootswatchTheme;
+import de.agilecoders.wicket.themes.markup.html.bootswatch.BootswatchThemeProvider;
 
 @Component
 public class Application extends AuthenticatedWebApplication implements IApplication {
@@ -148,18 +155,21 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 	private static final String INVALID_SESSIONS_KEY = "INVALID_SESSIONS_KEY";
 	private static final String SERVER_CONTAINER_SERVLET_CONTEXT_ATTRIBUTE = "javax.websocket.server.ServerContainer";
 	public static final String NAME_ATTR_KEY = "name";
+	public static final String SERVER_URL_ATTR_KEY = "server.url";
 	//additional maps for faster searching should be created
 	private static final Set<String> STRINGS_WITH_APP = new HashSet<>();
 	private static String appName;
 	static {
-		STRINGS_WITH_APP.addAll(Arrays.asList("499", "500", "506", "511", "512", "513", "517", "532", "622", "widget.start.desc"
+		STRINGS_WITH_APP.addAll(List.of("499", "500", "506", "511", "512", "513", "517", "532", "622", "widget.start.desc"
 				, "909", "952", "978", "981", "984", "989", "990", "999", "1151", "1155", "1157", "1158", "1194"));
 	}
 	public static final String HASH_MAPPING = "/hash";
 	public static final String SIGNIN_MAPPING = "/signin";
 	public static final String NOTINIT_MAPPING = "/notinited";
-	final HazelcastInstance hazelcast = Hazelcast.getOrCreateHazelcastInstance(new XmlConfigBuilder().build());
+	HazelcastInstance hazelcast;
 	private ITopic<IClusterWsMessage> hazelWsTopic;
+	private String serverId;
+	private String wsUrl;
 
 	@Autowired
 	private ApplicationContext ctx;
@@ -172,6 +182,8 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 	@Autowired
 	private ClientManager cm;
 	@Autowired
+	private WhiteboardManager wbManager;
+	@Autowired
 	private AppointmentDao appointmentDao;
 
 	@Override
@@ -181,31 +193,40 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		getApplicationSettings().setAccessDeniedPage(AccessDeniedPage.class);
 		getComponentInstantiationListeners().add(new SpringComponentInjector(this, ctx, true));
 
-		hazelcast.getCluster().getLocalMember().setStringAttribute(NAME_ATTR_KEY, hazelcast.getName());
+		Config cfg = new XmlConfigBuilder().build();
+		cfg.setClassLoader(getClass().getClassLoader());
+		hazelcast = Hazelcast.getOrCreateHazelcastInstance(cfg);
+		serverId = hazelcast.getName();
+		hazelcast.getCluster().getMembers().forEach(m -> {
+			cm.serverAdded(m.getAttribute(NAME_ATTR_KEY), m.getAttribute(SERVER_URL_ATTR_KEY));
+		});
 		hazelWsTopic = hazelcast.getTopic("default");
 		hazelWsTopic.addMessageListener(msg -> {
-			String serverId = msg.getPublishingMember().getStringAttribute(NAME_ATTR_KEY);
-			if (serverId.equals(hazelcast.getName())) {
+			String mServerId = msg.getPublishingMember().getAttribute(NAME_ATTR_KEY);
+			if (mServerId.equals(serverId)) {
 				return;
 			}
-			WbWebSocketHelper.send(msg.getMessageObject());
+			IClusterWsMessage wsMsg = msg.getMessageObject();
+			if (WbWebSocketHelper.send(wsMsg)) {
+				return;
+			}
+			if (ChatWebSocketHelper.send(msg.getMessageObject())) {
+				return;
+			}
+			WebSocketHelper.send(msg.getMessageObject());
 		});
 		hazelcast.getCluster().addMembershipListener(new MembershipListener() {
 			@Override
 			public void memberRemoved(MembershipEvent evt) {
 				//server down, need to remove all online clients, process persistent addresses
-				String serverId = evt.getMember().getStringAttribute(NAME_ATTR_KEY);
-				cm.clean(serverId);
+				String serverId = evt.getMember().getAttribute(NAME_ATTR_KEY);
+				cm.serverRemoved(serverId);
 				updateJpaAddresses();
 			}
 
 			@Override
-			public void memberAttributeChanged(MemberAttributeEvent evt) {
-				//no-op
-			}
-
-			@Override
 			public void memberAdded(MembershipEvent evt) {
+				//no-op
 				//server added, need to process persistent addresses
 				updateJpaAddresses();
 				//check for duplicate instance-names
@@ -214,12 +235,14 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 					if (evt.getMember().getUuid().equals(m.getUuid())) {
 						continue;
 					}
-					String serverId = m.getStringAttribute(NAME_ATTR_KEY);
+					String serverId = m.getAttribute(NAME_ATTR_KEY);
 					names.add(serverId);
 				}
-				String serverId = evt.getMember().getStringAttribute(NAME_ATTR_KEY);
-				if (names.contains(serverId)) {
-					log.warn("Duplicate cluster instance with name {} found {}", serverId, evt.getMember());
+				String newServerId = evt.getMember().getAttribute(NAME_ATTR_KEY);
+				log.warn("Name added: {}", newServerId);
+				cm.serverAdded(newServerId, evt.getMember().getAttribute(SERVER_URL_ATTR_KEY));
+				if (names.contains(newServerId)) {
+					log.warn("Duplicate cluster instance with name {} found {}", newServerId, evt.getMember());
 				}
 			}
 		});
@@ -239,17 +262,19 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 			@Override
 			public void onEndRequest(RequestCycle cycle) {
 				Response resp = cycle.getResponse();
-				if (resp instanceof WebResponse && !(resp instanceof WebSocketResponse)) {
+				if (resp instanceof WebResponse) {
 					WebResponse wresp = (WebResponse)resp;
-					wresp.setHeader("X-XSS-Protection", "1; mode=block");
-					wresp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
-					wresp.setHeader("X-Content-Type-Options", "nosniff");
-					Url reqUrl = cycle.getRequest().getUrl();
-					wresp.setHeader("Content-Security-Policy"
-							, String.format("%s; connect-src 'self' %s; frame-src %s;"
-									, getContentSecurityPolicy(), getWsUrl(reqUrl)
-									, getxFrameOptions()
-							));
+					if (wresp.isHeaderSupported()) {
+						wresp.setHeader("X-XSS-Protection", "1; mode=block");
+						wresp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+						wresp.setHeader("X-Content-Type-Options", "nosniff");
+						if (wsUrl == null) {
+							wsUrl = getWsUrl(cycle.getRequest().getUrl());
+							if (wsUrl != null) {
+								cfgDao.updateCsp();
+							}
+						}
+					}
 				}
 			}
 		});
@@ -257,7 +282,18 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		if (sc != null) {
 			sc.setDefaultMaxSessionIdleTimeout(60 * 1000L); // should be enough, should it be configurable?
 		}
+		getHeaderResponseDecorators().add(new IHeaderResponseDecorator() {
+			@Override
+			public IHeaderResponse decorate(IHeaderResponse response) {
+				return new FilteringHeaderResponse(response);
+			}
+		});
 		super.init();
+		final IBootstrapSettings settings = new BootstrapSettings();
+		settings.setThemeProvider(new BootswatchThemeProvider(BootswatchTheme.Sandstone));//FIXME TODO new SingleThemeProvider(new MaterialDesignTheme())
+		Bootstrap.builder().withBootstrapSettings(settings).install(this);
+		WysiwygLibrarySettings.get().setBootstrapCssReference(null);
+		WysiwygLibrarySettings.get().setBootstrapDropDownJavaScriptReference(null);
 
 		// register some widgets
 		final DashboardContext dashboardContext = getDashboardContext();
@@ -286,6 +322,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		mountResource("/recordings/png/${id}", new PngRecordingResourceReference()); //should be in sync with VideoPlayer
 		mountResource("/room/file/${id}", new RoomResourceReference());
 		mountResource("/room/preview/${id}", new RoomPreviewResourceReference());
+		mountResource("/room/file/upload", new RoomFileUploadResourceReference());
 		mountResource("/profile/${id}", new ProfileImageResourceReference());
 		mountResource("/group/${id}", new GroupLogoResourceReference());
 		mountResource("/group/customcss/${id}", new GroupCustomCssResourceReference());
@@ -301,13 +338,14 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 
 			// Init all global config properties
 			cfgDao.reinit();
+			wbManager.init();
+			cm.init();
 
 			// Init properties
 			updateJpaAddresses();
 			setExtProcessTtl(cfgDao.getInt(CONFIG_EXT_PROCESS_TTL, getExtProcessTtl()));
 			Version.logOMStarted();
 			recordingDao.resetProcessingStatus(); //we are starting so all processing recordings are now errors
-
 			setInitComplete(true);
 		} catch (Exception err) {
 			log.error("[appStart]", err);
@@ -377,7 +415,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 
 	public static void kickUser(Client client) {
 		if (client != null) {
-			WebSocketHelper.sendRoom(new TextRoomMessage(client.getRoom().getId(), client, RoomMessage.Type.kick, client.getUid()));
+			WebSocketHelper.sendRoom(new TextRoomMessage(client.getRoom().getId(), client, RoomMessage.Type.KICK, client.getUid()));
 			get().cm.exitRoom(client);
 		}
 	}
@@ -469,7 +507,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 			if (r.isAppointment() && i.getInvitedBy().getId().equals(u.getId())) {
 				link = getRoomUrlFragment(r.getId()).getLink();
 			} else {
-				boolean allowed = Type.contact != u.getType() && Type.external != u.getType();
+				boolean allowed = Type.CONTACT != u.getType() && Type.EXTERNAL != u.getType();
 				if (allowed) {
 					allowed = get().isRoomAllowedToUser(r, u);
 				}
@@ -546,6 +584,9 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		RequestCycle rc = RequestCycle.get();
 		String baseUrl = isUrlValid(inBaseUrl) ? inBaseUrl
 				: (isUrlValid(getBaseUrl()) ? getBaseUrl() : "");
+		if (!Strings.isEmpty(baseUrl) && !baseUrl.endsWith("/")) {
+			baseUrl += "/";
+		}
 		return rc.getUrlRenderer().renderFullUrl(Url.parse(baseUrl + rc.mapUrlFor(clazz, pp)));
 	}
 
@@ -566,11 +607,7 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 
 	@Override
 	public String getServerId() {
-		return hazelcast.getName();
-	}
-
-	public List<Member> getServers() {
-		return new ArrayList<>(hazelcast.getCluster().getMembers());
+		return serverId;
 	}
 
 	@Override
@@ -597,7 +634,15 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		hazelWsTopic.publish(msg);
 	}
 
+	@Override
+	public String getWsUrl() {
+		return wsUrl;
+	}
+
 	private static String getWsUrl(Url reqUrl) {
+		if (!reqUrl.isFull()) {
+			return null;
+		}
 		final boolean insecure = "http".equalsIgnoreCase(reqUrl.getProtocol());
 		String delim = ":";
 		String port = reqUrl.getPort() == null || reqUrl.getPort() < 0 ? "" : String.valueOf(reqUrl.getPort());
@@ -607,10 +652,6 @@ public class Application extends AuthenticatedWebApplication implements IApplica
 		if (port.isEmpty()) {
 			delim = "";
 		}
-		return String.format("%s://%s%s%s;"
-			, insecure ? "ws" : "wss"
-			, reqUrl.getHost()
-			, delim
-			, port);
+		return String.format("%s://%s%s%s", insecure ? "ws" : "wss", reqUrl.getHost(), delim, port);
 	}
 }

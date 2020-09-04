@@ -6,27 +6,38 @@ var VideoManager = (function() {
 	function _onVideoResponse(m) {
 		const w = $('#' + VideoUtil.getVid(m.uid))
 			, v = w.data()
+			, peer = v && v.getPeer();
 
-		v.getPeer().processAnswer(m.sdpAnswer, function (error) {
-			if (error) {
-				return OmUtil.error(error);
-			}
-			const vidEls = w.find('audio, video')
-				, vidEl = vidEls.length === 1 ? vidEls[0] : null;
-			if (vidEl && vidEl.paused) {
-				vidEl.play().catch(function(err) {
-					if ('NotAllowedError' === err.name) {
-						VideoUtil.askPermission(function() {
-							vidEl.play();
-						});
+		if (peer) {
+			peer.processAnswer(m.sdpAnswer, function (error) {
+				if (error) {
+					if (true === this.cleaned) {
+						return;
 					}
-				});
-			}
-		});
+					return OmUtil.error(error);
+				}
+				const vidEls = w.find('audio, video')
+					, vidEl = vidEls.length === 1 ? vidEls[0] : null;
+				if (vidEl && vidEl.paused) {
+					vidEl.play().catch(function (err) {
+						if ('NotAllowedError' === err.name) {
+							VideoUtil.askPermission(function () {
+								vidEl.play();
+							});
+						}
+					});
+				}
+			});
+		}
 	}
 	function _onBroadcast(msg) {
 		const sd = msg.stream
 			, uid = sd.uid;
+		if (Array.isArray(msg.cleanup)) {
+			msg.cleanup.forEach(function(_cuid) {
+				_close(_cuid);
+			});
+		}
 		$('#' + VideoUtil.getVid(uid)).remove();
 		Video().init(msg);
 		OmUtil.log(uid + ' registered in room');
@@ -36,13 +47,12 @@ var VideoManager = (function() {
 			, uid = sd.uid
 			, w = $('#' + VideoUtil.getVid(uid))
 			, v = w.data();
-		if (!VideoUtil.isSharing(sd) && !VideoUtil.isRecording(sd)) {
-			VideoManager.close(uid, false);
-		} else {
+		if (v && (VideoUtil.isSharing(sd) || VideoUtil.isRecording(sd))) {
+			// Update activities in the current data object
 			v.stream().activities = sd.activities;
 		}
-		Sharer.setShareState(VideoUtil.isSharing(sd) ? SHARE_STARTED : SHARE_STOPED);
-		Sharer.setRecState(VideoUtil.isRecording(sd) ? SHARE_STARTED : SHARE_STOPED);
+		Sharer.setShareState(VideoUtil.isSharing(sd) ? SHARE_STARTED : SHARE_STOPPED);
+		Sharer.setRecState(VideoUtil.isRecording(sd) ? SHARE_STARTED : SHARE_STOPPED);
 	}
 	function _onReceive(msg) {
 		const uid = msg.stream.uid;
@@ -53,11 +63,11 @@ var VideoManager = (function() {
 	function _onKMessage(m) {
 		switch (m.id) {
 			case 'clientLeave':
-				$(VID_SEL + ' div[data-client-uid="' + m.uid + '"]').each(function() {
+				$(VID_SEL + '[data-client-uid="' + m.uid + '"]').each(function() {
 					_closeV($(this));
 				});
 				if (share.data('cuid') === m.uid) {
-					share.off('click').hide();
+					share.off().hide();
 				}
 				break;
 			case 'broadcastStopped':
@@ -73,13 +83,19 @@ var VideoManager = (function() {
 				{
 					const w = $('#' + VideoUtil.getVid(m.uid))
 						, v = w.data()
+						, peer = v && v.getPeer();
 
-					v.getPeer().addIceCandidate(m.candidate, function (error) {
-						if (error) {
-							OmUtil.error('Error adding candidate: ' + error);
-							return;
-						}
-					});
+					if (peer) {
+						peer.addIceCandidate(m.candidate, function (error) {
+							if (error) {
+								if (true === this.cleaned) {
+									return;
+								}
+								OmUtil.error('Error adding candidate: ' + error);
+								return;
+							}
+						});
+					}
 				}
 				break;
 			case 'newStream':
@@ -100,7 +116,7 @@ var VideoManager = (function() {
 			if (msg instanceof Blob) {
 				return; //ping
 			}
-			const m = jQuery.parseJSON(msg);
+			const m = JSON.parse(msg);
 			if (!m) {
 				return;
 			}
@@ -123,7 +139,7 @@ var VideoManager = (function() {
 	function _init() {
 		Wicket.Event.subscribe('/websocket/message', _onWsMessage);
 		VideoSettings.init(Room.getOptions());
-		share = $('.room-block .container').find('.icon.shared.ui-button');
+		share = $('.room-block .room-container').find('.btn.shared');
 		inited = true;
 	}
 	function _update(c) {
@@ -134,11 +150,13 @@ var VideoManager = (function() {
 		c.streams.forEach(function(sd) {
 			streamMap[sd.uid] = sd.uid;
 			sd.self = c.self;
+			sd.cam = c.cam;
+			sd.mic = c.mic;
 			if (VideoUtil.isSharing(sd) || VideoUtil.isRecording(sd)) {
 				return;
 			}
 			const _id = VideoUtil.getVid(sd.uid)
-				, av = VideoUtil.hasAudio(sd) || VideoUtil.hasVideo(sd)
+				, av = VideoUtil.hasMic(sd) || VideoUtil.hasCam(sd)
 				, v = $('#' + _id);
 			if (av && v.length === 1) {
 				v.data().update(sd);
@@ -147,13 +165,9 @@ var VideoManager = (function() {
 			}
 		});
 		if (c.uid === Room.getOptions().uid) {
-			Room.setRights(c.rights);
-			Room.setActivities(c.activities);
-			const windows = $(VID_SEL + ' .ui-dialog-content');
-			for (let i = 0; i < windows.length; ++i) {
-				const w = $(windows[i]);
-				w.data().setRights(c.rights);
-			}
+			$(VID_SEL).each(function() {
+				$(this).data().setRights(c.rights);
+			});
 		}
 		$('[data-client-uid="' + c.cuid + '"]').each(function() {
 			const sd = $(this).data().stream();
@@ -171,6 +185,15 @@ var VideoManager = (function() {
 		v.remove();
 		WbArea.updateAreaClass();
 	}
+	function _playSharing(sd, iceServers) {
+		const m = {stream: sd, iceServers: iceServers};
+		let v = $('#' + VideoUtil.getVid(sd.uid))
+		if (v.length === 1) {
+			v.remove();
+		}
+		v = Video().init(m);
+		VideoUtil.setPos(v, {left: 0, top: 35});
+	}
 	function _play(streams, iceServers) {
 		if (!inited) {
 			return;
@@ -182,15 +205,16 @@ var VideoManager = (function() {
 						.attr('title', share.data('user') + ' ' + sd.user.firstName + ' ' + sd.user.lastName + ' ' + share.data('text'))
 						.data('uid', sd.uid)
 						.data('cuid', sd.cuid)
-						.show(), 10);
-				share.tooltip().off('click').click(function() {
-					let v = $('#' + VideoUtil.getVid(sd.uid))
-					if (v.length === 1) {
-						v.remove();
-					}
-					v = Video().init(m);
-					VideoUtil.setPos(v, {left: 0, top: 35});
+						.show()
+					, 'btn-outline-warning', 10);
+				share.tooltip().off().click(function() {
+					_playSharing(sd, iceServers);
 				});
+				if (Room.getOptions().autoOpenSharing === true) {
+					_playSharing(sd, iceServers);
+				}
+			} else if (VideoUtil.isRecording(sd)) {
+				return;
 			} else {
 				_onReceive(m);
 			}
@@ -202,14 +226,14 @@ var VideoManager = (function() {
 			_closeV(v);
 		}
 		if (!showShareBtn && uid === share.data('uid')) {
-			share.off('click').hide();
+			share.off().hide();
 		}
 	}
 	function _find(uid) {
-		return $(VID_SEL + ' div[data-client-uid="' + uid + '"][data-client-type="WEBCAM"]');
+		return $(VID_SEL + '[data-client-uid="' + uid + '"][data-client-type="WEBCAM"]');
 	}
 	function _userSpeaks(uid, active) {
-		const u = $('#user' + uid + ' .audio-activity.ui-icon')
+		const u = $('#user' + uid + ' .audio-activity')
 			, v = _find(uid).parent();
 		if (active) {
 			u.addClass('speaking');
@@ -257,11 +281,12 @@ var VideoManager = (function() {
 		}
 	}
 	function _muteOthers(uid) {
-		const windows = $(VID_SEL + ' .ui-dialog-content');
-		for (let i = 0; i < windows.length; ++i) {
-			const w = $(windows[i]);
-			w.data().mute('room' + uid !== w.data('client-uid'));
-		}
+		$(VID_SEL).each(function() {
+			const w= $(this), v = w.data(), v2 = w.data('client-uid');
+			if (v && v2) {
+				v.mute('room' + uid !== v2);
+			}
+		});
 	}
 	function _toggleActivity(activity) {
 		self.sendMessage({

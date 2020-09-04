@@ -60,7 +60,8 @@ import org.apache.openmeetings.web.room.RoomPanel;
 import org.apache.openmeetings.web.room.wb.AbstractWbPanel;
 import org.apache.openmeetings.web.user.calendar.CalendarPanel;
 import org.apache.openmeetings.web.user.dashboard.OmDashboardPanel;
-import org.apache.openmeetings.web.user.profile.SettingsPanel;
+import org.apache.openmeetings.web.user.profile.EditProfilePanel;
+import org.apache.openmeetings.web.user.profile.MessagesContactsPanel;
 import org.apache.openmeetings.web.user.record.RecordingsPanel;
 import org.apache.openmeetings.web.user.rooms.RoomsSelectorPanel;
 import org.apache.openmeetings.web.util.OmUrlFragment.AreaKeys;
@@ -69,8 +70,6 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.jquery.ui.widget.tabs.TabbedPanel;
 
 public class TestMainAreas extends AbstractWicketTester {
 	private static final Logger log = LoggerFactory.getLogger(TestMainAreas.class);
@@ -91,7 +90,7 @@ public class TestMainAreas extends AbstractWicketTester {
 			log.debug("Positive test:: area: {}, type: {} for user: {}", area, type, user);
 			testArea(user, p -> {
 				tester.getRequest().setParameter(area.name(), type);
-				tester.executeBehavior((AbstractAjaxBehavior)p.getBehaviorById(1));
+				tester.executeBehavior((AbstractAjaxBehavior)p.getBehaviorById(0));
 				tester.assertComponent(PATH_CHILD, clazz);
 				if (consumer != null) {
 					consumer.accept(p);
@@ -106,7 +105,7 @@ public class TestMainAreas extends AbstractWicketTester {
 			testArea(user, p -> {
 				tester.getRequest().setParameter(area.name(), type);
 				try {
-					tester.executeBehavior((AbstractAjaxBehavior)p.getBehaviorById(1));
+					tester.executeBehavior((AbstractAjaxBehavior)p.getBehaviorById(0));
 					fail("Not authorized");
 				} catch (UnauthorizedInstantiationException e) {
 					assertTrue(true, "Exception is expected");
@@ -141,21 +140,13 @@ public class TestMainAreas extends AbstractWicketTester {
 	}
 
 	@Test
-	public void testRoomsProfileMessages() throws OmException {
-		checkArea(AreaKeys.profile, TYPE_MESSAGES, SettingsPanel.class, p -> {
-			TabbedPanel tp = (TabbedPanel)p.get("main-container:main:contents:child:tabs");
-			tester.executeBehavior((AbstractAjaxBehavior)tp.getBehaviorById(0)); //create behavior
-			for (int i = 0; i <= tp.getLastTabIndex(); ++i) {
-				tester.getRequest().setParameter("index", String.valueOf(i));
-				tester.executeBehavior((AbstractAjaxBehavior)tp.getBehaviorById(1)); // activate
-				//add visibility check
-			}
-		}, regularUsername);
+	public void testProfileMessages() throws OmException {
+		checkArea(AreaKeys.profile, TYPE_MESSAGES, MessagesContactsPanel.class, regularUsername);
 	}
 
 	@Test
-	public void testRoomsProfileEdit() throws OmException {
-		checkArea(AreaKeys.profile, TYPE_EDIT, SettingsPanel.class, regularUsername);
+	public void testProfileEdit() throws OmException {
+		checkArea(AreaKeys.profile, TYPE_EDIT, EditProfilePanel.class, regularUsername);
 	}
 
 	@Test
@@ -271,7 +262,7 @@ public class TestMainAreas extends AbstractWicketTester {
 	private void testRoom(Long id) throws OmException {
 		checkArea(AreaKeys.room, String.valueOf(id), RoomPanel.class, p -> {
 			RoomPanel rp = (RoomPanel)p.get(PATH_CHILD);
-			tester.executeBehavior((AbstractAjaxBehavior)rp.getBehaviorById(0)); //room enter
+			tester.executeBehavior((AbstractAjaxBehavior)rp.get("roomContainer").getBehaviorById(0)); //room enter
 			tester.assertComponent(PATH_CHILD + ":roomContainer:wb-area:whiteboard", AbstractWbPanel.class);
 		}, regularUsername);
 	}

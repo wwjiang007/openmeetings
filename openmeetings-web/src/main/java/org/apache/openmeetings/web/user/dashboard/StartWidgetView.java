@@ -27,17 +27,20 @@ import static org.apache.openmeetings.web.util.OmUrlFragment.ROOMS_PUBLIC;
 import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.pages.HashPage;
 import org.apache.openmeetings.web.pages.MainPage;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.dashboard.Widget;
 import org.wicketstuff.dashboard.web.WidgetView;
 
-import com.googlecode.wicket.jquery.ui.form.button.Button;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapButton;
+import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 
 public class StartWidgetView extends WidgetView {
 	private static final long serialVersionUID = 1L;
@@ -50,19 +53,14 @@ public class StartWidgetView extends WidgetView {
 	protected void onInitialize() {
 		add(new WebMarkupContainer("step1").add(new PublicRoomsEventBehavior()));
 		add(new WebMarkupContainer("step2").add(new PublicRoomsEventBehavior()));
-		add(new WebMarkupContainer("step3").add(new Link<Void>("avTest") {
-			private static final long serialVersionUID = 1L;
+		add(new WebMarkupContainer("step3").add(new WebMarkupContainer("avTest").add(AttributeModifier.append("href"
+				, RequestCycle.get().urlFor(HashPage.class, new PageParameters().add(APP, APP_TYPE_SETTINGS)).toString()))));
 
-			@Override
-			public void onClick() {
-				setResponsePage(HashPage.class, new PageParameters().add(APP, APP_TYPE_SETTINGS));
-			}
-		}));
 		add(new WebMarkupContainer("step4").add(new PublicRoomsEventBehavior()));
 		add(new Label("123msg", Application.getString("widget.start.desc")) //Application here is used to substitute {0}
 				.setEscapeModelStrings(false));
-		add(new Button("start").add(new PublicRoomsEventBehavior()));
-		add(new Button("calendar").add(new AjaxEventBehavior(EVT_CLICK) {
+		add(new BootstrapButton("start", new ResourceModel("788"), Buttons.Type.Outline_Primary).add(new PublicRoomsEventBehavior()));
+		add(new BootstrapButton("calendar", new ResourceModel("291"), Buttons.Type.Outline_Primary).add(new AjaxEventBehavior(EVT_CLICK) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
