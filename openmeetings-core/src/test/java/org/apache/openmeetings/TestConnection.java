@@ -18,12 +18,12 @@
  */
 package org.apache.openmeetings;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class TestConnection {
+class TestConnection {
 
 	@Test
-	public void testNoop() {
+	void testNoop() {
 		//no-op
 	}
 }

@@ -26,7 +26,7 @@
 	</parent>
 	<groupId>org.apache.openmeetings</groupId>
 	<artifactId>openmeetings-parent</artifactId>
-	<version>5.0.1-SNAPSHOT</version>
+	<version>6.1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Openmeetings</name>
 	<description>Parent project for all OpenMeetings Maven modules. Required to hold general settings</description>
@@ -36,6 +36,7 @@
 		<wicket.configuration>DEPLOYMENT</wicket.configuration>
 		<om.quick.build>false</om.quick.build>
 		<om.notquick.build>true</om.notquick.build>
+		<logback.console></logback.console>
 		<db>h2</db>
 		<autoModuleName>apache.openmeetings.parent</autoModuleName>
 		<jdk.version>11</jdk.version>
@@ -53,16 +54,16 @@
 		<reflow-maven-skin.version>2.3.0</reflow-maven-skin.version>
 		<reflow-theme>cerulean</reflow-theme>
 		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-		<maven-project-info-reports-plugin.version>3.1.0</maven-project-info-reports-plugin.version>
+		<maven-project-info-reports-plugin.version>3.1.2</maven-project-info-reports-plugin.version>
 		<maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
 		<maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
 		<maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
 		<maven-bundle-plugin.version>5.1.1</maven-bundle-plugin.version>
 		<maven-war-plugin.version>3.3.1</maven-war-plugin.version>
 		<maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
-		<wagon-maven-plugin.version>2.0.0</wagon-maven-plugin.version>
-		<maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
-		<maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+		<wagon-maven-plugin.version>2.0.2</wagon-maven-plugin.version>
+		<maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
+		<maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
 		<replacer.version>1.5.3</replacer.version>
 		<xml-maven-plugin.version>1.0.2</xml-maven-plugin.version>
 		<saxon.version>8.7</saxon.version>
@@ -70,55 +71,62 @@
 		<apache-rat-plugin.version>0.13</apache-rat-plugin.version>
 		<keytool-maven-plugin.version>1.5</keytool-maven-plugin.version>
 		<maven-jarsigner-plugin.version>3.0.0</maven-jarsigner-plugin.version>
-		<sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
-		<jacoco-maven-plugin.versoin>0.8.5</jacoco-maven-plugin.versoin>
-		<forbiddenapis.version>2.7</forbiddenapis.version>
+		<sonar-maven-plugin.version>3.8.0.2131</sonar-maven-plugin.version>
+		<jacoco-maven-plugin.versoin>0.8.6</jacoco-maven-plugin.versoin>
+		<forbiddenapis.version>3.1</forbiddenapis.version>
 		<maven-checkstyle-plugin.version>3.1.1</maven-checkstyle-plugin.version>
+		<frontend-maven-plugin.version>1.11.0</frontend-maven-plugin.version>
 		<!-- dependency versions -->
-		<junit.version>5.6.2</junit.version>
-		<wicket.version>9.0.0</wicket.version>
-		<wicketju.version>9.0.0-M5.1</wicketju.version>
-		<wickets.version>9.0.0</wickets.version>
-		<wicket-bootstrap.version>5.0.0-M2</wicket-bootstrap.version>
-		<spring.version>5.2.8.RELEASE</spring.version>
-		<tomcat.version>9.0.37</tomcat.version>
-		<ical4j.version>3.0.18</ical4j.version>
-		<cxf.version>3.4.0</cxf.version>
+		<junit.version>5.7.1</junit.version>
+		<wicket.version>9.3.0</wicket.version>
+		<wicket-jquery-ui.version>9.3.1</wicket-jquery-ui.version>
+		<wicketstuff.version>9.3.0</wicketstuff.version>
+		<wicket-bootstrap.version>5.0.4</wicket-bootstrap.version>
+		<font-awesome.version>5.15.2</font-awesome.version>
+		<spring.version>5.3.6</spring.version>
+		<tomcat.version>9.0.45</tomcat.version>
+		<ical4j.version>3.0.21</ical4j.version>
+		<cxf.version>3.4.3</cxf.version>
+		<io.prometheus.version>0.10.0</io.prometheus.version>
+		<aspectjtools.version>1.9.6</aspectjtools.version>
 		<simple-xml.version>2.7.1</simple-xml.version>
 		<jettison.version>1.4.1</jettison.version>
 		<site.basedir>${project.basedir}</site.basedir>
 		<src.pack.skip>false</src.pack.skip>
 		<h2.version>1.4.200</h2.version>
-		<commons-lang3.version>3.11</commons-lang3.version>
+		<commons-lang3.version>3.12.0</commons-lang3.version>
 		<javax.mail.version>1.6.2</javax.mail.version>
 		<openjpa.version>3.1.2</openjpa.version>
-		<asterisk-java.version>3.6.0</asterisk-java.version>
-		<commons-dbcp.version>2.7.0</commons-dbcp.version>
-		<commons-pool2.version>2.8.1</commons-pool2.version>
-		<postgresql.version>42.2.16</postgresql.version>
+		<asterisk-java.version>3.12.0</asterisk-java.version>
+		<commons-dbcp.version>2.8.0</commons-dbcp.version>
+		<commons-pool2.version>2.9.0</commons-pool2.version>
 		<commons-cli.version>1.4</commons-cli.version>
 		<dom4j.version>2.1.3</dom4j.version>
 		<commons-codec.version>1.15</commons-codec.version>
-		<commons-io.version>2.7</commons-io.version>
-		<mysql.version>8.0.21</mysql.version>
-		<mssql.version>8.4.0.jre11</mssql.version>
+		<commons-io.version>2.8.0</commons-io.version>
+		<postgresql.version>42.2.20</postgresql.version>
+		<mysql.version>8.0.24</mysql.version>
+		<mssql.version>9.2.1.jre11</mssql.version>
+		<ojdbc.version>19.10.0.0</ojdbc.version>
 		<commons-collections4.version>4.4</commons-collections4.version>
-		<xstream.version>1.4.12</xstream.version>
+		<xstream.version>1.4.16</xstream.version>
 		<api-all.version>2.0.1</api-all.version>
 		<caldav4j.version>1.0.1</caldav4j.version>
-		<tika-parsers.version>1.24.1</tika-parsers.version>
+		<tika-parsers.version>1.26</tika-parsers.version>
 		<commons-text.version>1.9</commons-text.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<logback.version>1.2.3</logback.version>
-		<jetty.version>9.4.31.v20200723</jetty.version>
+		<jetty.version>9.4.38.v20210224</jetty.version>
 		<license.excludedScopes>test</license.excludedScopes>
-		<bcprov-jdk15on.version>1.66</bcprov-jdk15on.version>
-		<mockito.version>3.5.7</mockito.version>
-		<powermock.version>2.0.7</powermock.version>
+		<bcprov-jdk15on.version>1.68</bcprov-jdk15on.version>
+		<mockito.version>3.9.0</mockito.version>
 		<quartz.version>2.3.2</quartz.version>
-		<kurento.version>6.14.0</kurento.version>
+		<kurento.version>6.16.0</kurento.version>
+		<jain-sip.version>1.2.307</jain-sip.version><!-- other versions are broken! -->
+		<jasny-bootstrap.version>3.1.3-2</jasny-bootstrap.version>
+		<jodconverter.version>4.4.2</jodconverter.version>
 		<!--  Exclude all generated code  -->
-		<sonar.exclusions>file:**/generated-sources/**, file:**/jquery-ui.css, file:**/fabric.js, file:**/cssemoticons.js, file:**/adapter-latest.js, file:**/kurento-utils.js, file:**/NoSleep.js, file:**/fileinput*.js, file:**/MathJax.js, file:**/network.js</sonar.exclusions>
+		<sonar.exclusions>file:**/generated-sources/**, file:**/jquery-ui.css, file:**/cssemoticons.js, file:**/bootstrap-confirmation.js</sonar.exclusions>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
 		<sonar.junit.reportPaths>target/surefire-reports</sonar.junit.reportPaths>
@@ -305,6 +313,19 @@
 				<role>pmc</role>
 			</roles>
 		</developer>
+		<developer>
+			<id>alialhaidary</id>
+			<name>Ali Alhaidary</name>
+			<email>ali.alhaidary@the5stars.org</email>
+			<organization>the5stars.org</organization>
+			<organizationUrl>https://the5stars.org</organizationUrl>
+			<roles>
+				<role>RTL Examinar</role>
+				<role>RTL Translator</role>
+				<role>Load tester</role>
+				<role>pmc</role>
+			</roles>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
@@ -450,6 +471,17 @@
 			</dependency>
 			<dependency>
 				<groupId>org.springframework</groupId>
+				<artifactId>spring-context</artifactId>
+				<version>${spring.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
 				<artifactId>spring-context-support</artifactId>
 				<version>${spring.version}</version>
 				<exclusions>
@@ -462,6 +494,17 @@
 			<dependency>
 				<groupId>org.springframework</groupId>
 				<artifactId>spring-orm</artifactId>
+				<version>${spring.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework</groupId>
+				<artifactId>spring-aop</artifactId>
 				<version>${spring.version}</version>
 				<exclusions>
 					<exclusion>
@@ -530,6 +573,26 @@
 				<version>${cxf.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.prometheus</groupId>
+				<artifactId>simpleclient</artifactId>
+				<version>${io.prometheus.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.prometheus</groupId>
+				<artifactId>simpleclient_servlet</artifactId>
+				<version>${io.prometheus.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.aspectj</groupId>
+				<artifactId>aspectjtools</artifactId>
+				<version>${aspectjtools.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.tomcat</groupId>
+				<artifactId>tomcat-catalina</artifactId>
+				<version>${tomcat.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.codehaus.jettison</groupId>
 				<artifactId>jettison</artifactId>
 				<version>${jettison.version}</version>
@@ -596,14 +659,6 @@
 						<groupId>org.slf4j</groupId>
 						<artifactId>slf4j-log4j12</artifactId>
 					</exclusion>
-					<exclusion> <!-- TIKA-2801 -->
-						<groupId>com.google.guava</groupId>
-						<artifactId>guava</artifactId>
-					</exclusion>
-					<exclusion> <!-- TIKA-2801 -->
-						<groupId>com.google.protobuf</groupId>
-						<artifactId>protobuf-java</artifactId>
-					</exclusion>
 					<exclusion>
 						<groupId>xml-apis</groupId>
 						<artifactId>xml-apis</artifactId>
@@ -612,31 +667,11 @@
 						<groupId>xerces</groupId>
 						<artifactId>xercesImpl</artifactId>
 					</exclusion>
+					<exclusion>
+						<groupId>org.glassfish.jaxb</groupId>
+						<artifactId>jaxb-runtime</artifactId>
+					</exclusion>
 				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-junit-jupiter</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-module-junit4</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.powermock</groupId>
-				<artifactId>powermock-api-mockito2</artifactId>
-				<version>${powermock.version}</version>
-				<scope>test</scope>
 			</dependency>
 			<dependency>
 				<groupId>javax.websocket</groupId>
@@ -652,7 +687,35 @@
 			<dependency>
 				<groupId>org.jodconverter</groupId>
 				<artifactId>jodconverter-local</artifactId>
-				<version>4.3.0</version>
+				<version>${jodconverter.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.asteriskjava</groupId>
+				<artifactId>asterisk-java</artifactId>
+				<version>${asterisk-java.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.sip</groupId>
+				<artifactId>jain-sip-ri</artifactId>
+				<version>${jain-sip.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-inline</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-junit-jupiter</artifactId>
+				<version>${mockito.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.junit.jupiter</groupId>
+				<artifactId>junit-jupiter-params</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -676,24 +739,13 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.junit.vintage</groupId>
-			<artifactId>junit-vintage-engine</artifactId>
-			<version>${junit.version}</version>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-module-junit4</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito2</artifactId>
+			<artifactId>mockito-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -914,6 +966,7 @@
 						<excludes>
 							<exclude/>
 						</excludes>
+						<argLine>@{argLine} --add-modules java.se --add-exports java.base/jdk.internal.ref=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.management/sun.management=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED</argLine>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -946,6 +999,20 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
 					<version>${maven-resources-plugin.version}</version>
+					<configuration>
+						<nonFilteredFileExtensions>
+							<nonFilteredFileExtension>pdf</nonFilteredFileExtension>
+							<nonFilteredFileExtension>svg</nonFilteredFileExtension>
+							<nonFilteredFileExtension>ods</nonFilteredFileExtension>
+							<nonFilteredFileExtension>odt</nonFilteredFileExtension>
+							<nonFilteredFileExtension>odp</nonFilteredFileExtension>
+							<nonFilteredFileExtension>docx</nonFilteredFileExtension>
+							<nonFilteredFileExtension>zip</nonFilteredFileExtension>
+							<nonFilteredFileExtension>jks</nonFilteredFileExtension>
+							<nonFilteredFileExtension>mp3</nonFilteredFileExtension>
+							<nonFilteredFileExtension>wav</nonFilteredFileExtension>
+						</nonFilteredFileExtensions>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -1002,6 +1069,14 @@
 									<pattern>BSD-style license</pattern>
 								</patterns>
 							</license>
+							<license implementation="org.apache.rat.analysis.license.SimplePatternBasedLicense">
+								<licenseFamilyCategory>Creative Commons Attribution</licenseFamilyCategory>
+								<licenseFamilyName>CC BY</licenseFamilyName>
+								<notes></notes>
+								<patterns>
+									<pattern>creativecommons.org/licenses/by/4.0</pattern>
+								</patterns>
+							</license>
 						</licenses>
 						<licenseFamilies>
 							<licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
@@ -1010,10 +1085,15 @@
 							<licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
 								<familyName>BSD</familyName>
 							</licenseFamily>
+							<licenseFamily implementation="org.apache.rat.license.SimpleLicenseFamily">
+								<familyName>CC BY</familyName>
+							</licenseFamily>
 						</licenseFamilies>
 						<excludes>
 							<exclude>**/*.mp3</exclude>
 							<exclude>**/localhost.jks</exclude>
+							<exclude>**/node_modules/**</exclude>
+							<exclude>**/package-lock.json</exclude>
 						</excludes>
 					</configuration>
 				</plugin>
@@ -1081,6 +1161,15 @@
 							</configuration>
 						</execution>
 					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.github.eirslett</groupId>
+					<artifactId>frontend-maven-plugin</artifactId>
+					<version>${frontend-maven-plugin.version}</version>
+					<configuration>
+						<nodeVersion>v14.15.3</nodeVersion>
+						<installDirectory>${project.build.directory}</installDirectory>
+					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -1186,6 +1275,7 @@
 				<om.notquick.build>false</om.notquick.build>
 				<wicket.configuration>DEVELOPMENT</wicket.configuration>
 				<src.pack.skip>true</src.pack.skip>
+				<logback.console><![CDATA[<appender-ref ref="CONSOLE" />]]></logback.console>
 			</properties>
 		</profile>
 		<profile>

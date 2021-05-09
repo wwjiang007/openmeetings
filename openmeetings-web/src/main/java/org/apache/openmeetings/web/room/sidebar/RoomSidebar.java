@@ -29,7 +29,6 @@ import org.apache.openmeetings.db.util.ws.RoomMessage;
 import org.apache.openmeetings.db.util.ws.TextRoomMessage;
 import org.apache.openmeetings.web.app.ClientManager;
 import org.apache.openmeetings.web.common.NameDialog;
-import org.apache.openmeetings.web.common.confirmation.ConfirmationDialog;
 import org.apache.openmeetings.web.room.RoomPanel;
 import org.apache.openmeetings.web.room.RoomPanel.Action;
 import org.apache.openmeetings.web.room.VideoSettings;
@@ -39,7 +38,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -59,9 +57,7 @@ public class RoomSidebar extends Panel {
 	private UploadDialog upload;
 	private RoomFilePanel roomFiles;
 	private final WebMarkupContainer fileTab = new WebMarkupContainer("file-tab");
-	private ConfirmationDialog confirmKick;
 	private boolean showFiles;
-	private Client kickedClient;
 	private VideoSettings settings = new VideoSettings("settings");
 	private ActivitiesPanel activities;
 
@@ -91,14 +87,6 @@ public class RoomSidebar extends Panel {
 		add(fileTab.setVisible(!room.isInterview()), roomFiles.setVisible(!room.isInterview()));
 
 		add(addFolder, settings);
-		add(confirmKick = new ConfirmationDialog("confirm-kick", new ResourceModel("603"), new ResourceModel("605")) {
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			protected void onConfirm(AjaxRequestTarget target) {
-				kickUser(kickedClient);
-			}
-		});
 		add(upload = new UploadDialog("upload", room, roomFiles));
 		updateShowFiles(null);
 		add(activities = new ActivitiesPanel("activities", room));
@@ -154,46 +142,48 @@ public class RoomSidebar extends Panel {
 				return;
 			}
 			Client self = room.getClient();
-			Action a = Action.valueOf(o.getString(PARAM_ACTION));
+			Action a = Action.of(o.getString(PARAM_ACTION));
 			switch (a) {
-				case kick:
+				case KICK:
 					if (self.hasRight(Right.MODERATOR)) {
-						kickedClient = cm.get(uid);
+						final Client kickedClient = cm.get(uid);
 						if (kickedClient == null) {
 							return;
 						}
 						if (!kickedClient.hasRight(Right.SUPER_MODERATOR) && !self.getUid().equals(kickedClient.getUid())) {
-							confirmKick.show(handler);
+							kickUser(kickedClient);
 						}
 					}
 					break;
-				case muteOthers:
+				case MUTE_OTHERS:
 					if (room.getClient().hasRight(Right.MUTE_OTHERS)) {
 						WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), self, RoomMessage.Type.MUTE_OTHERS, uid));
 					}
 					break;
-				case mute:
-				{
-					Client c = cm.get(uid);
-					if (c == null || !c.hasActivity(Client.Activity.AUDIO)) {
-						return;
-					}
-					if (self.hasRight(Right.MODERATOR) || self.getUid().equals(c.getUid())) {
-						WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), self, RoomMessage.Type.MUTE
-								, new JSONObject()
-										.put("sid", self.getSid())
-										.put(PARAM_UID, uid)
-										.put("mute", o.getBoolean("mute")).toString()));
-					}
-				}
+				case MUTE:
+					muteRoomAction(uid, self, o);
 					break;
-				case toggleRight:
+				case TOGGLE_RIGHT:
 					toggleRight(handler, self, uid, o);
 					break;
 				default:
 			}
 		} catch (Exception e) {
 			log.error("Unexpected exception while toggle 'roomAction'", e);
+		}
+	}
+
+	private void muteRoomAction(String uid, Client self, JSONObject o) {
+		Client c = cm.get(uid);
+		if (c == null || !c.hasActivity(Client.Activity.AUDIO)) {
+			return;
+		}
+		if (self.hasRight(Right.MODERATOR) || self.getUid().equals(c.getUid())) {
+			WebSocketHelper.sendRoom(new TextRoomMessage(room.getRoom().getId(), self, RoomMessage.Type.MUTE
+					, new JSONObject()
+							.put("sid", self.getSid())
+							.put(PARAM_UID, uid)
+							.put("mute", o.getBoolean("mute")).toString()));
 		}
 	}
 

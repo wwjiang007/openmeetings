@@ -19,6 +19,9 @@
 package org.apache.openmeetings.db.entity.room;
 
 import static org.apache.openmeetings.db.bind.Constants.ROOM_NODE;
+import static org.apache.openmeetings.db.dao.room.RoomDao.GRP_FILES;
+import static org.apache.openmeetings.db.dao.room.RoomDao.GRP_GROUPS;
+import static org.apache.openmeetings.db.dao.room.RoomDao.GRP_MODERATORS;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -66,9 +69,9 @@ import org.apache.openmeetings.db.entity.user.Group;
 
 @Entity
 @FetchGroups({
-	@FetchGroup(name = "roomModerators", attributes = { @FetchAttribute(name = "moderators") })
-	, @FetchGroup(name = "roomGroups", attributes = { @FetchAttribute(name = "groups") })
-	, @FetchGroup(name = "roomFiles", attributes = { @FetchAttribute(name = "files") })
+	@FetchGroup(name = GRP_MODERATORS, attributes = { @FetchAttribute(name = "moderators") })
+	, @FetchGroup(name = GRP_GROUPS, attributes = { @FetchAttribute(name = "groups") })
+	, @FetchGroup(name = GRP_FILES, attributes = { @FetchAttribute(name = "files") })
 })
 @NamedQuery(name = "getNondeletedRooms", query = "SELECT r FROM Room r WHERE r.deleted = false")
 @NamedQuery(name = "getPublicRooms", query = "SELECT r from Room r WHERE r.ispublic = true and r.deleted = false and r.type = :type")
@@ -78,6 +81,9 @@ import org.apache.openmeetings.db.entity.user.Group;
 @NamedQuery(name = "getExternalRoom", query = "SELECT rg.room FROM RoomGroup rg WHERE "
 		+ "rg.group.deleted = false AND rg.group.external = true AND rg.group.name = :externalType "
 		+ "AND rg.room.deleted = false AND rg.room.type = :type AND rg.room.externalId = :externalId")
+@NamedQuery(name = "getExternalRoomNoType", query = "SELECT rg.room FROM RoomGroup rg WHERE "
+		+ "rg.group.deleted = false AND rg.group.external = true AND rg.group.name = :externalType "
+		+ "AND rg.room.deleted = false AND rg.room.externalId = :externalId")
 @NamedQuery(name = "getPublicRoomsOrdered", query = "SELECT r from Room r WHERE r.ispublic= true AND r.deleted= false AND r.appointment = false ORDER BY r.name ASC")
 @NamedQuery(name = "getRoomById", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id = :id")
 @NamedQuery(name = "getRoomsByIds", query = "SELECT r FROM Room r WHERE r.deleted = false AND r.id IN :ids")
@@ -212,11 +218,11 @@ public class Room extends HistoricalEntity {
 	private String externalId;
 
 	@XmlElement(name = "externalType", required = false)
-	@Deprecated(since = "5.0")
 	@Transient
 	/**
 	 * @deprecated External group should be used instead
 	 */
+	@Deprecated(since = "5.0")
 	private String externalType;
 
 	@Column(name = "demo_room", nullable = false)

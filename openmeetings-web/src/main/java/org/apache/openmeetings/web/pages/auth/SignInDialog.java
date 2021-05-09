@@ -20,9 +20,9 @@ package org.apache.openmeetings.web.pages.auth;
 
 import static org.apache.openmeetings.util.OpenmeetingsVariables.CONFIG_DEFAULT_LDAP_ID;
 import static org.apache.openmeetings.web.app.Application.getAuthenticationStrategy;
+import static org.apache.openmeetings.web.app.UserManager.showAuth;
 import static org.apache.openmeetings.web.pages.HashPage.APP;
 import static org.apache.openmeetings.web.pages.HashPage.APP_TYPE_NETWORK;
-import static org.apache.openmeetings.web.pages.auth.SignInPage.showAuth;
 
 import java.util.List;
 
@@ -106,8 +106,8 @@ public class SignInDialog extends Modal<String> {
 		show(true);
 		setCloseOnEscapeKey(false);
 		setBackdrop(Backdrop.STATIC);
-		addButton(new SpinnerAjaxButton("button", new ResourceModel("112"), form, Buttons.Type.Outline_Primary)); // Login
-		addButton(new BootstrapAjaxLink<>("button", Model.of(""), Buttons.Type.Outline_Secondary, new ResourceModel("123")) {
+		addButton(new SpinnerAjaxButton(BUTTON_MARKUP_ID, new ResourceModel("112"), form, Buttons.Type.Outline_Primary)); // Login
+		addButton(new BootstrapAjaxLink<>(BUTTON_MARKUP_ID, Model.of(""), Buttons.Type.Outline_Secondary, new ResourceModel("123")) {
 			private static final long serialVersionUID = 1L;
 
 			public void onClick(AjaxRequestTarget target) {
@@ -156,9 +156,9 @@ public class SignInDialog extends Modal<String> {
 			int selectedLdap = cfgDao.getInt(CONFIG_DEFAULT_LDAP_ID, 0);
 			domain = ldaps.get(selectedLdap < ldaps.size() && selectedLdap > 0 ? selectedLdap : 0);
 			credentials.add(new WebMarkupContainer("ldap")
-				.add(new DropDownChoice<>("domain", new PropertyModel<LdapConfig>(SignInDialog.this, "domain")
-						, ldaps, new ChoiceRenderer<LdapConfig>("name", "id"))).setVisible(showLdap));
-			credentials.add(new CheckBox("rememberMe", new PropertyModel<Boolean>(SignInDialog.this, "rememberMe")).setOutputMarkupId(true));
+				.add(new DropDownChoice<>("domain", new PropertyModel<>(SignInDialog.this, "domain")
+						, ldaps, new ChoiceRenderer<>("name", "id"))).setVisible(showLdap));
+			credentials.add(new CheckBox("rememberMe", new PropertyModel<>(SignInDialog.this, "rememberMe")).setOutputMarkupId(true));
 			AjaxButton ab = new AjaxButton("submit") { //FAKE button so "submit-on-enter" works as expected
 				private static final long serialVersionUID = 1L;
 			};

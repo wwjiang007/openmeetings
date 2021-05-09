@@ -58,7 +58,7 @@ public abstract class OmWebSocketPanel extends Panel {
 	private KurentoHandler kHandler;
 	private boolean pingable = false;
 
-	public OmWebSocketPanel(String id) {
+	protected OmWebSocketPanel(String id) {
 		super(id);
 	}
 
@@ -113,20 +113,10 @@ public abstract class OmWebSocketPanel extends Panel {
 								kHandler.onMessage(getWsClient(), m);
 								break;
 							case "mic":
-							{
-								IWsClient _c = getWsClient();
-								if (!(_c instanceof Client)) {
-									break;
-								}
-								Client c = (Client)_c;
-								if (c.getRoomId() == null) {
-									break;
-								}
-								WebSocketHelper.sendRoomOthers(c.getRoomId(), c.getUid(), m.put("uid", c.getUid()));
-							}
+								micMessage(m);
 								break;
 							case "ping":
-								log.debug("Sending WebSocket PING");
+								log.trace("Sending WebSocket PING");
 								handler.appendJavaScript("OmUtil.ping();");
 								WebSocketHelper.sendClient(getWsClient(), new byte[]{getUserId() == null ? 0 : getUserId().byteValue()});
 								break;
@@ -152,6 +142,18 @@ public abstract class OmWebSocketPanel extends Panel {
 			@Override
 			protected void onError(WebSocketRequestHandler handler, ErrorMessage msg) {
 				closeHandler(msg);
+			}
+
+			private void micMessage(final JSONObject m) {
+				IWsClient curClient = getWsClient();
+				if (!(curClient instanceof Client)) {
+					return;
+				}
+				Client c = (Client)curClient;
+				if (c.getRoomId() == null) {
+					return;
+				}
+				WebSocketHelper.sendRoomOthers(c.getRoomId(), c.getUid(), m.put("uid", c.getUid()));
 			}
 		};
 	}

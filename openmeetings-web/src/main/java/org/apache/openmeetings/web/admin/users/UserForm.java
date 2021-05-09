@@ -91,7 +91,7 @@ public class UserForm extends AdminBaseForm<User> {
 	private GeneralUserForm generalForm;
 	private final RequiredTextField<String> login = new RequiredTextField<>("login");
 	private StrongPasswordValidator passValidator;
-	private final PasswordTextField password = new PasswordTextField("password", new Model<String>());
+	private final PasswordTextField password = new PasswordTextField("password", new Model<>());
 	private final Modal<String> warning;
 	private final DropDownChoice<Long> domainId = new DropDownChoice<>("domainId");
 	private final PasswordDialog adminPass;
@@ -154,13 +154,7 @@ public class UserForm extends AdminBaseForm<User> {
 			@Override
 			public void query(String term, int page, Response<Right> response) {
 				boolean isGroupAdmin = hasGroupAdminLevel(getRights());
-				for (Right r : Right.values()) {
-					if (Right.GROUP_ADMIN == r) {
-						continue;
-					}
-					if (isGroupAdmin && (Right.ADMIN == r || Right.SOAP == r)) {
-						continue;
-					}
+				for (Right r : Right.getAllowed(isGroupAdmin)) {
 					if (Strings.isEmpty(term) || r.name().contains(term)) {
 						response.add(r);
 					}
@@ -174,6 +168,7 @@ public class UserForm extends AdminBaseForm<User> {
 		}));
 		mainContainer.add(new ComunityUserForm("comunity", getModel()));
 		remove(validationBehavior);
+		setNewRecordVisible(true);
 	}
 
 	@Override
@@ -277,7 +272,7 @@ public class UserForm extends AdminBaseForm<User> {
 
 	private void updateForm(AjaxRequestTarget target) {
 		setModelObject(userDao.get(getModelObject().getId()));
-		setNewVisible(false);
+		setNewRecordVisible(false);
 		target.add(this, listContainer);
 	}
 

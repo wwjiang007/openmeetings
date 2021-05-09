@@ -53,7 +53,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="54"><![CDATA[Rendben]]></entry>
 	<entry key="59"><![CDATA[Nyelv:]]></entry>
 	<entry key="62"><![CDATA[Tábla törlése]]></entry>
-	<entry key="64"><![CDATA[Ne kérdezd többször]]></entry>
 	<entry key="70"><![CDATA[Vissza]]></entry>
 	<entry key="72"><![CDATA[Válassz objektumot]]></entry>
 	<entry key="73"><![CDATA[Szöveg]]></entry>
@@ -190,11 +189,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[Szerver-csevegési napló törlés]]></entry>
 	<entry key="482"><![CDATA[Résztvevők]]></entry>
 	<entry key="498"><![CDATA[Nincs előadó a szobában, de vannak résztvevők. Jelentkezz előadónak vagy várj.]]></entry>
-	<entry key="499"><![CDATA[{0} visszajelzés]]></entry>
 	<entry key="500"><![CDATA[{0} - Meghívó]]></entry>
 	<entry key="501"><![CDATA[Üzenet ettől a felhasználótól:]]></entry>
 	<entry key="502"><![CDATA[Üzenet:]]></entry>
-	<entry key="503"><![CDATA[Kattints erre a linkre a találkozókon való részvételhez:]]></entry>
 	<entry key="504"><![CDATA[Kattints ide a szobába való belépéshez]]></entry>
 	<entry key="505"><![CDATA[ha problémád adódik a linkkel akkor ezt másold a böngésző címsorába:]]></entry>
 	<entry key="506"><![CDATA[{0} Regisztráció]]></entry>
@@ -224,8 +221,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="557"><![CDATA[Mutató]]></entry>
 	<entry key="565"><![CDATA[Emlékeztető:]]></entry>
 	<entry key="569"><![CDATA[Hely:]]></entry>
-	<entry key="570"><![CDATA[Indul]]></entry>
-	<entry key="571"><![CDATA[Vége]]></entry>
 	<entry key="572"><![CDATA[Cím:]]></entry>
 	<entry key="582"><![CDATA[Vezérlőpult]]></entry>
 	<entry key="583"><![CDATA[Megtekintheti a rögzített felvételeket, eseményeket]]></entry>
@@ -290,7 +285,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[Moderáció megadása]]></entry>
 	<entry key="785"><![CDATA[Tábla használat megadása]]></entry>
 	<entry key="786"><![CDATA[Kamera/mikrofon használat megadása]]></entry>
-	<entry key="788"><![CDATA[Indítás]]></entry>
 	<entry key="792"><![CDATA[Termek]]></entry>
 	<entry key="797"><![CDATA[Figyelmeztetés]]></entry>
 	<entry key="799"><![CDATA[Nap]]></entry>
@@ -362,8 +356,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[Létrehozta]]></entry>
 	<entry key="1151"><![CDATA[új {0} konferencia:]]></entry>
 	<entry key="1152"><![CDATA[Részletek:]]></entry>
-	<entry key="1153"><![CDATA[Kezdődik:]]></entry>
-	<entry key="1154"><![CDATA[Vége:]]></entry>
 	<entry key="1155"><![CDATA[Változás {0} konferencia:]]></entry>
 	<entry key="1156"><![CDATA[Szervezet:]]></entry>
 	<entry key="1157"><![CDATA[Törölt {0} konferencia:]]></entry>
@@ -377,7 +369,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[Kapcsolati adatokat csak a személyes kontakt listámon láthatják]]></entry>
 	<entry key="1169"><![CDATA[Ne mutassa a kapcsolati adataimat]]></entry>
 	<entry key="1170"><![CDATA[Profilom]]></entry>
-	<entry key="1171"><![CDATA[Beállítások szerkesztés]]></entry>
 	<entry key="1172"><![CDATA[Felhasználók keresése]]></entry>
 	<entry key="1177"><![CDATA[Felhasználói ajánlatok]]></entry>
 	<entry key="1178"><![CDATA[Felhasználó nézi ezt]]></entry>
@@ -568,9 +559,11 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[Maximum files size]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[Maximum recordings size]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[Maximum room number]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[minutes]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[Recordings expire in]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[Expire reminder sent in]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[Tag]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[New user notification interval]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[OAuth User attribute]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[OM User attribute]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[Request info method]]></entry>
@@ -627,8 +620,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[Are you sure you want to delete all temporary files? This operation cannot be undone.]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[General Admin functions]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[Admin functions]]></entry>
+	<entry key="dont.ask.again"><![CDATA[Ne kérdezd többször]]></entry>
 	<entry key="download.pdf"><![CDATA[Letöltés mint PDF]]></entry>
 	<entry key="download.png"><![CDATA[Letöltés mint PNG]]></entry>
+	<entry key="edit.settings"><![CDATA[Beállítások szerkesztés]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[Username/email and/or password are incorrect.]]></entry>
 	<entry key="error.bad.password"><![CDATA[Hibás jelszó!]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[Konfigurációs beállító kulcs már létezik, válasszon másikat, vagy szerkessze a meglévőt]]></entry>
@@ -648,11 +643,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[Hiba]]></entry>
 	<entry key="error.type.info"><![CDATA[Üzenet]]></entry>
 	<entry key="error.unknown"><![CDATA[Ismeretlen hiba. Írd meg a fejlesztőknek.]]></entry>
+	<entry key="file.name.interview"><![CDATA[Interview]]></entry>
+	<entry key="file.name.recording"><![CDATA[Recording]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[Original]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[Group files]]></entry>
 	<entry key="find.user"><![CDATA[Find user]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Fixed video pod size]]></entry>
 	<entry key="goto.first"><![CDATA[ugrás az elsőre]]></entry>
 	<entry key="goto.last"><![CDATA[ugrás az utolsóra]]></entry>
 	<entry key="goto.next"><![CDATA[ugrás a következőre]]></entry>
@@ -810,8 +808,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 		target="_blank">https://openmeetings.apache.org/commercial-support.html</a></span>
 	<br />
 	]]></entry>
+	<entry key="internal.error"><![CDATA[Unfortunately something bad just happen :(, <br/>
+please check <tt>openmeetings.log</tt> and contact OpenMeetings developers]]></entry>
 	<entry key="invalid.hash"><![CDATA[Invalid hash]]></entry>
 	<entry key="label.dock.panel"><![CDATA[Click to dock panel]]></entry>
+	<entry key="label.end"><![CDATA[Vége]]></entry>
+	<entry key="label.hangup"><![CDATA[Hang-up]]></entry>
+	<entry key="label.start"><![CDATA[Indul]]></entry>
 	<entry key="label.undock.panel"><![CDATA[Click to undock panel]]></entry>
 	<entry key="lbl.cancel"><![CDATA[Mégse]]></entry>
 	<entry key="lbl.email"><![CDATA[EMail:]]></entry>
@@ -822,6 +825,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="lbl.refresh"><![CDATA[frissítés]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 	<entry key="lbl.update"><![CDATA[Update]]></entry>
+	<entry key="lbl.video"><![CDATA[Video]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[Email management]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[Check e-mails processing by the system]]></entry>
 	<entry key="menu.polls"><![CDATA[Polls]]></entry>
@@ -860,6 +864,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="network.test.upl.bytes"><![CDATA[Bytes uploaded]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[Upload speed]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[Upload time]]></entry>
+	<entry key="notification.chat.message"><![CDATA[You have new chat message(s)]]></entry>
+	<entry key="notification.room.activity"><![CDATA[You have new activities, please check "Activities&Action"]]></entry>
 	<entry key="poll.clone"><![CDATA[Clone]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[Szám 1-10]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[Igen/Nem]]></entry>
@@ -881,6 +887,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="send.on.enter"><![CDATA[Send on Enter]]></entry>
 	<entry key="sound.enable"><![CDATA[Enable sound]]></entry>
 	<entry key="sound.mute"><![CDATA[Mute sound]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Dear "{0}" group moderator,<br/>
+<br/>
+{1} new users were added to the group in the last {2} hours<br/>
+Please visit {3} OM server and check them under Admin -> Groups]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[Regards,<br/>
+{0} Support Team.]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] New "{1}" group users]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[Your recent {0} recording will be automatically deleted
 		in {1} days. If you would like to save this recording, please download it before then.]]></entry>
 	<entry key="template.recording.expiring.footer"><![CDATA[Regards,<br/>
@@ -888,6 +901,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="template.recording.expiring.greetings"><![CDATA[Hello {0}]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[Recording will be deleted]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ -- Room[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Click this link to view the conference recording video. [The link may only work for a certain period.]]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[Kattints erre a linkre a találkozókon való részvételhez:]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Allow this user to use microphone]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Request permission to use microphone]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Mute user and remove the right to turn on microphone]]></entry>

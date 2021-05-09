@@ -74,33 +74,24 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 	height: calc(100% - var(--room-sidebar-header-height) - var(--buffer-size));
 }
 .room-block .sb-wb .sidebar .user-list .user.entry {
-	min-height: 60px;
+	min-height: 90px;
 	padding-left: 5px;
 	padding-top: 5px;
-	background-size: 60px 60px;
+	background-size: 80px;
 	background-repeat: no-repeat;
 	background-position: 2px 2px;
 	position: relative;
 }
 .room-block .sb-wb .sidebar .user-list .user.entry:hover {
-	background-size: 80px 80px;
-	min-height: 80px;
-}
-.room-block .sb-wb .sidebar .user-list .user.entry:hover .user.name {
-	padding: 0;
-	margin-top: 84px;
-	min-height: 18px;
+	background-size: 55px;
 }
 .room-block .sb-wb .sidebar .user-list .user.entry .user.actions {
 	display: none;
 }
-.room-block.narrow .sidebar .user-list .user.entry:hover .user.actions {
-	margin-top: 84px;
-}
 .room-block .sb-wb .sidebar .user-list .user.entry:hover .user.actions {
 	display: block;
 	padding: 0;
-	margin-right: 35px;
+	margin-top: 45px;
 }
 .room-block .sb-wb .sidebar .user-list .user.name {
 	line-height: 18px;
@@ -138,14 +129,14 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 .user-list .user.entry:hover .video-container
 , .user-list .user.entry:hover .video-container .video.audio-only
 {
-	width: 80px;
-	height: 80px;
+	width: 50px;
+	height: 50px;
 }
 .user-list .user.entry .video-container
 , .user-list .user.entry .video-container .video.audio-only
 {
-	width: 50px;
-	height: 50px;
+	width: 80px;
+	height: 80px;
 }
 .user-list .user.entry .video-container .footer {
 	display: none !important;
@@ -509,13 +500,28 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 }
 .room-block .room-container .user-video {
 	display: inline-block !important;
-	overflow: hidden;
+	max-width: 95vw;
+	max-height: 95vh;
 }
 .room-block .room-container .user-video .ui-resizable-se {
+	position: absolute;
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	right: 0px;
+	bottom: 0px;
+	overflow: hidden;
+	background: none;
+}
+.room-block .room-container .user-video .ui-resizable-se:before {
+	content: ' ';
 	width: 32px;
 	height: 32px;
 	transform: rotate(-45deg);
-	right: -16px;
+	position: absolute;
+	top: 0;
+	right: 0;
+	right: -21px;
 	bottom: -16px;
 	background: repeating-linear-gradient(
 		var(--dark), var(--dark) 3px, transparent 3px, transparent 5px
@@ -611,8 +617,6 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 	background-position: center;
 	background-size: 64px;
 }
-.pod-area .pod {
-}
 .pod-area .pod .user-video.ui-dialog
 , .pod-area .pod-big .user-video.ui-dialog
 {
@@ -651,6 +655,9 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 }
 .main.room.INTERVIEW .wb-block .wb-area .rec-btn .ui-button-icon.ui-icon.record {
 	border-radius: 15px;
+}
+#room-poll-chart {
+	height: 300px;
 }
 #quick-vote {
 	position: absolute;
@@ -777,24 +784,5 @@ html[dir="rtl"] .room-block .sb-wb .sidebar {
 	}
 	.room-block.big .sb-wb .sidebar .user-list .user.name {
 		display: block;
-	}
-	.room-block .sb-wb .sidebar .file-tree .file.item .name
-	, .room-block .sb-wb .sidebar .file-tree .file.item .name span
-	{
-		width: 40px;
-	}
-	.room-block.big .sb-wb .sidebar .file-tree .file.item .name
-	, .room-block.big .sb-wb .sidebar .file-tree .file.item .name span
-	{
-		width: 255px;
-	}
-	.room-block .sb-wb .sidebar .file-tree .file.item .name span {
-		padding: 0;
-	}
-	.room-block .sb-wb .sidebar .file-tree .file.item {
-		width: 80px;
-	}
-	.room-block.big .sb-wb .sidebar .file-tree .file.item {
-		width: auto;
 	}
 }

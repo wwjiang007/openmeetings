@@ -19,41 +19,36 @@
  */
 package org.apache.openmeetings.core.remote;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Locale;
-
-import org.apache.openmeetings.db.dao.label.LabelDao;
+import org.apache.openmeetings.IApplication;
 import org.apache.openmeetings.db.dao.record.RecordingDao;
 import org.apache.openmeetings.db.dao.room.RoomDao;
 import org.apache.openmeetings.db.dao.user.UserDao;
 import org.apache.openmeetings.db.entity.basic.Client;
 import org.apache.openmeetings.db.entity.basic.Client.Activity;
 import org.apache.openmeetings.db.entity.basic.Client.StreamDesc;
-import org.apache.openmeetings.db.entity.label.OmLanguage;
 import org.apache.openmeetings.db.entity.record.Recording;
 import org.apache.openmeetings.db.entity.room.Room;
 import org.apache.openmeetings.db.entity.user.User;
 import org.apache.openmeetings.db.manager.IClientManager;
-import org.junit.Test;
-import org.kurento.client.MediaPipeline;
-import org.kurento.client.Transaction;
-import org.mockito.BDDMockito;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.github.openjson.JSONObject;
 
-@PrepareForTest(LabelDao.class)
-public class TestRecordingFlowMocked extends BaseMockedTest {
+class TestRecordingFlowMocked extends BaseMockedTest {
 	private static final Long USER_ID = 1L;
 	private static final Long ROOM_ID = 5L;
 	@Mock
@@ -64,6 +59,8 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 	private RecordingDao recDao;
 	@Mock
 	private IClientManager cm;
+	@Mock
+	private IApplication app;
 
 	//This variable holds a reference to the current client in the room
 	private Client c;
@@ -72,9 +69,9 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 	private String streamDescUID;
 
 	@Override
+	@BeforeEach
 	public void setup() {
 		super.setup();
-		doReturn(mock(MediaPipeline.class)).when(client).createMediaPipeline(any(Transaction.class));
 		User u = new User();
 		u.setId(USER_ID);
 		u.setFirstname("firstname");
@@ -88,15 +85,18 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 			return r;
 		});
 
-		PowerMockito.mockStatic(LabelDao.class);
-		BDDMockito.given(LabelDao.getLanguage(any(Long.class))).willReturn(new OmLanguage(Locale.ENGLISH));
-
 		// init client object for this test
 		c = getClientFull();
 		doReturn(c.getRoom()).when(roomDao).get(ROOM_ID);
 
 		// Mock out the methods that do webRTC
-		doReturn(null).when(streamProcessor).startBroadcast(any(), any(), any());
+		Mockito.doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				invocation.getArgument(3, Runnable.class).run();
+				return null;
+			}
+		}).when(streamProcessor).startBroadcast(any(), any(), any(), any());
 
 	}
 
@@ -119,13 +119,18 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 	}
 
 	@Test
-	public void testRecordingFlow() throws Exception {
+	void testRecordingFlow() {
+		runWrapped(() -> {
+			try {
+				// start recording and simulate broadcast starting
+				testStartRecordWhenSharingWasNot();
 
-		// start recording and simulate broadcast starting
-		testStartRecordWhenSharingWasNot();
-
-		// stop recording
-		testStopRecordingWhenNoSharingStarted();
+				// stop recording
+				testStopRecordingWhenNoSharingStarted();
+			} catch (Exception e) {
+				fail("Unexpected exception", e);
+			}
+		});
 	}
 
 	/**
@@ -143,8 +148,6 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 	private void testStartRecordWhenSharingWasNot() throws Exception {
 		JSONObject msg = new JSONObject(MSG_BASE.toString())
 				.put("id", "wannaRecord")
-				.put("width", 640)
-				.put("height", 480)
 				.put("shareType", "shareType")
 				.put("fps", "fps")
 				;
@@ -156,7 +159,7 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 		assertTrue(streamProcessor.isSharing(ROOM_ID));
 
 		// Get current Stream, there should be only 1 KStream created as result of this
-		assertTrue(c.getStreams().size() == 1);
+		assertEquals(1, c.getStreams().size());
 		StreamDesc streamDesc = c.getStreams().get(0);
 
 		//save UID for stopping the stream later
@@ -167,6 +170,8 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 				.put("type", "kurento")
 				.put("uid", streamDescUID)
 				.put("sdpOffer", "SDP-OFFER")
+				.put("width", 640)
+				.put("height", 480)
 				;
 		handler.onMessage(c, msgBroadcastStarted);
 
@@ -175,10 +180,10 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 		assertTrue(streamProcessor.isSharing(ROOM_ID));
 
 		//verify startBroadcast has been invoked
-		verify(streamProcessor).startBroadcast(any(), any(), any());
+		verify(streamProcessor).startBroadcast(any(), any(), any(), any());
 
 		// Assert that there is still just 1 stream and has only the activities to Record assigned
-		assertTrue(c.getStreams().size() == 1);
+		assertEquals(1, c.getStreams().size());
 		streamDesc = c.getStreams().get(0);
 		assertEquals(1, streamDesc.getActivities().size());
 		assertEquals(Activity.RECORD, streamDesc.getActivities().get(0));
@@ -211,6 +216,6 @@ public class TestRecordingFlowMocked extends BaseMockedTest {
 		// Verify it did also stop the sharing stream
 		verify(streamProcessor).pauseSharing(any(), any());
 		// Verify all streams gone
-		assertTrue(c.getStreams().size() == 0);
+		assertTrue(c.getStreams().isEmpty());
 	}
 }

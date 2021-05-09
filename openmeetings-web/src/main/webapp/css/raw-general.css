@@ -338,12 +338,6 @@ select.messages.selector {
 	display: inline-block;
 	margin-left: 10px;
 }
-.invisible-form-component {
-	position: absolute;
-	top: -9999px;
-	width: 1px;
-	height: 1px;
-}
 #messagesTable tr.selected {
 	background-color: #d7ebf9;
 }
@@ -740,10 +734,6 @@ select.messages.selector {
 }
 .abstractWizard input[type=checkbox], .abstractWizard input[type=radio] {
 	width: auto;
-}
-.invitation .message {
-	width: 280px;
-	height: 70px;
 }
 .img-upload .btn.btn-file {
 	width: 120px;

@@ -53,7 +53,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="54"><![CDATA[はい]]></entry>
 	<entry key="59"><![CDATA[言語:]]></entry>
 	<entry key="62"><![CDATA[ホワイトボードのクリア]]></entry>
-	<entry key="64"><![CDATA[次回から入力を省略]]></entry>
 	<entry key="70"><![CDATA[取り消し]]></entry>
 	<entry key="72"><![CDATA[オブジェクト選択]]></entry>
 	<entry key="73"><![CDATA[文字列]]></entry>
@@ -190,11 +189,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[チャット記録の削除]]></entry>
 	<entry key="482"><![CDATA[定員]]></entry>
 	<entry key="498"><![CDATA[この会議室には、参加者はいますがモデレータ（司会者）がいません。あなたがモデレータになるか、他の人がモデレータになるのをお待ちください。]]></entry>
-	<entry key="499"><![CDATA[{0} フィードバック]]></entry>
 	<entry key="500"><![CDATA[{0} - 会議参加依頼]]></entry>
 	<entry key="501"><![CDATA[宛先ユーザー:]]></entry>
 	<entry key="502"><![CDATA[メッセージ:]]></entry>
-	<entry key="503"><![CDATA[会議に参加するには:]]></entry>
 	<entry key="504"><![CDATA[会議室に入室するにはここをクリックしてください。]]></entry>
 	<entry key="505"><![CDATA[リンクが動作しない場合、ブラウザに下記URLをコピー&ペーストしてください。:]]></entry>
 	<entry key="506"><![CDATA[{0} サインアップ]]></entry>
@@ -224,8 +221,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="557"><![CDATA[ポインタ]]></entry>
 	<entry key="565"><![CDATA[リマインダ:]]></entry>
 	<entry key="569"><![CDATA[場所:]]></entry>
-	<entry key="570"><![CDATA[開始]]></entry>
-	<entry key="571"><![CDATA[終了]]></entry>
 	<entry key="572"><![CDATA[タイトル:]]></entry>
 	<entry key="582"><![CDATA[ダッシュボード]]></entry>
 	<entry key="583"><![CDATA[録画済みのミーティング/イベントを視聴する]]></entry>
@@ -290,7 +285,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[モデレータ（司会者）権限を許可]]></entry>
 	<entry key="785"><![CDATA[ホワイトボードへのアクセスを許可]]></entry>
 	<entry key="786"><![CDATA[カメラ・マイクへのアクセスを許可]]></entry>
-	<entry key="788"><![CDATA[開始]]></entry>
 	<entry key="792"><![CDATA[会議室]]></entry>
 	<entry key="797"><![CDATA[警告]]></entry>
 	<entry key="799"><![CDATA[日表示]]></entry>
@@ -362,8 +356,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[作成者]]></entry>
 	<entry key="1151"><![CDATA[{0}会議が設定されました:]]></entry>
 	<entry key="1152"><![CDATA[詳細:]]></entry>
-	<entry key="1153"><![CDATA[開始時刻:]]></entry>
-	<entry key="1154"><![CDATA[終了時刻:]]></entry>
 	<entry key="1155"><![CDATA[{0}会議が更新されました:]]></entry>
 	<entry key="1156"><![CDATA[主催者:]]></entry>
 	<entry key="1157"><![CDATA[{0}会議がキャンセルされました:]]></entry>
@@ -377,7 +369,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[コンタクト・データをコンタクトにのみ公開する]]></entry>
 	<entry key="1169"><![CDATA[コンタクト・データを非公開にする]]></entry>
 	<entry key="1170"><![CDATA[プロフィール]]></entry>
-	<entry key="1171"><![CDATA[設定]]></entry>
 	<entry key="1172"><![CDATA[ユーザー検索]]></entry>
 	<entry key="1177"><![CDATA[お勧め]]></entry>
 	<entry key="1178"><![CDATA[ユーザー名]]></entry>
@@ -568,9 +559,11 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[最大ファイル・サイズ]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[最大録画サイズ]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[最大会議室数]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[minutes]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[録画有効期限]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[有効期限切れの予告通知]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[タグ]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[New user notification interval]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[OAuth User attribute]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[OM User attribute]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[Request info method]]></entry>
@@ -627,8 +620,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[全ての一時ファイルを削除してよろしいですか？（この作業は実行後、元に戻せません）]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[一般管理機能]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[管理機能]]></entry>
+	<entry key="dont.ask.again"><![CDATA[次回から入力を省略]]></entry>
 	<entry key="download.pdf"><![CDATA[PDFとしてダウンロード]]></entry>
 	<entry key="download.png"><![CDATA[PNGとしてダウンロード]]></entry>
+	<entry key="edit.settings"><![CDATA[設定]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[ユーザー名/電子メール・アドレス、またはパスワードが不正です。]]></entry>
 	<entry key="error.bad.password"><![CDATA[パスワードが間違っています。]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[指定されたキーの構成は既に存在しています。別のキーを指定するか、既存の構成を編集してください。]]></entry>
@@ -648,11 +643,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[エラー]]></entry>
 	<entry key="error.type.info"><![CDATA[メッセージ]]></entry>
 	<entry key="error.unknown"><![CDATA[未知のエラーです。管理者に報告してください。]]></entry>
+	<entry key="file.name.interview"><![CDATA[Interview]]></entry>
+	<entry key="file.name.recording"><![CDATA[Recording]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[オリジナル]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[グループのファイル]]></entry>
 	<entry key="find.user"><![CDATA[ユーザーを検索]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Fixed video pod size]]></entry>
 	<entry key="goto.first"><![CDATA[最初へ]]></entry>
 	<entry key="goto.last"><![CDATA[最後へ]]></entry>
 	<entry key="goto.next"><![CDATA[次へ]]></entry>
@@ -822,8 +820,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 
 
 	]]></entry>
+	<entry key="internal.error"><![CDATA[Unfortunately something bad just happen :(, <br/>
+please check <tt>openmeetings.log</tt> and contact OpenMeetings developers]]></entry>
 	<entry key="invalid.hash"><![CDATA[不正なハッシュ]]></entry>
 	<entry key="label.dock.panel"><![CDATA[クリックしてパネルを連結する]]></entry>
+	<entry key="label.end"><![CDATA[終了]]></entry>
+	<entry key="label.hangup"><![CDATA[Hang-up]]></entry>
+	<entry key="label.start"><![CDATA[開始]]></entry>
 	<entry key="label.undock.panel"><![CDATA[クリックしてパネルを切り離す]]></entry>
 	<entry key="lbl.cancel"><![CDATA[キャンセル]]></entry>
 	<entry key="lbl.email"><![CDATA[メールアドレス:]]></entry>
@@ -834,6 +837,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="lbl.refresh"><![CDATA[更新]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 	<entry key="lbl.update"><![CDATA[更新]]></entry>
+	<entry key="lbl.video"><![CDATA[Video]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[電子メール管理]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[システムで使用する電子メールのチェックを実行]]></entry>
 	<entry key="menu.polls"><![CDATA[投票]]></entry>
@@ -872,6 +876,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="network.test.upl.bytes"><![CDATA[バイト 送信済み]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[アップロード速度]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[アップロード時間]]></entry>
+	<entry key="notification.chat.message"><![CDATA[You have new chat message(s)]]></entry>
+	<entry key="notification.room.activity"><![CDATA[You have new activities, please check "Activities&Action"]]></entry>
 	<entry key="poll.clone"><![CDATA[Clone]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[1～10の数字]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[はい/いいえ]]></entry>
@@ -893,6 +899,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="send.on.enter"><![CDATA[Enterを押して送信]]></entry>
 	<entry key="sound.enable"><![CDATA[消音を解除]]></entry>
 	<entry key="sound.mute"><![CDATA[消音]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Dear "{0}" group moderator,<br/>
+<br/>
+{1} new users were added to the group in the last {2} hours<br/>
+Please visit {3} OM server and check them under Admin -> Groups]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[Regards,<br/>
+{0} Support Team.]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] New "{1}" group users]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[あなたの録画（{0}）は {1} 日後に自動削除されます。
 		この録画を保存する場合は、自動削除される前にダウンロードしてください。]]></entry>
 	<entry key="template.recording.expiring.footer"><![CDATA[<br/>
@@ -900,6 +913,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="template.recording.expiring.greetings"><![CDATA[こんにちは、 {0}さん]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[録画自動削除予告]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ -- ルーム[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Click this link to view the conference recording video. [The link may only work for a certain period.]]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[会議に参加するには:]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Allow this user to use microphone]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Request permission to use microphone]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Mute user and remove the right to turn on microphone]]></entry>
@@ -952,7 +967,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="wb.tool.white-out"><![CDATA[White-Out]]></entry>
 	<entry key="widget.recent.desc"><![CDATA[あなたが最近開設した会議室を表示します。]]></entry>
 	<entry key="widget.recent.title"><![CDATA[最近の会議室]]></entry>
-	<entry key="widget.start.desc"><![CDATA[ウェブ会議プラットホーム「オープン・ミーティングス」<br>たった4ステップでウェブ会議を始められます。<br>カレンダーでウェブ会議の予定を作成することもできます。]]></entry>
+	<entry key="widget.start.desc"><![CDATA[ウェブ会議プラットホーム{0}<br>たった4ステップでウェブ会議を始められます。<br>カレンダーでウェブ会議の予定を作成することもできます。]]></entry>
 	<entry key="widget.start.header"><![CDATA[使用方法:]]></entry>
 	<entry key="widget.start.title"><![CDATA[さあ始めましょう]]></entry>
 	<entry key="wizard.button.finish"><![CDATA[インストール]]></entry>

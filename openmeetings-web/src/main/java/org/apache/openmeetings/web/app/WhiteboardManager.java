@@ -142,28 +142,30 @@ public class WhiteboardManager implements IWhiteboardManager {
 
 	public Map<Long, List<BaseFileItem>> get(Room r, Long langId) {
 		Map<Long, List<BaseFileItem>> result = new HashMap<>();
-		if (!contains(r.getId()) && r.getFiles() != null && !r.getFiles().isEmpty()) {
-			if (map().tryLock(r.getId())) {
-				try {
-					TreeMap<Long, List<BaseFileItem>> files = new TreeMap<>();
-					for (RoomFile rf : r.getFiles()) {
-						List<BaseFileItem> bfl = files.get(rf.getWbIdx());
-						if (bfl == null) {
-							files.put(rf.getWbIdx(), new ArrayList<>());
-							bfl = files.get(rf.getWbIdx());
-						}
-						bfl.add(rf.getFile());
+		if (!contains(r.getId())
+				&& r.getFiles() != null
+				&& !r.getFiles().isEmpty()
+				&& map().tryLock(r.getId()))
+		{
+			try {
+				TreeMap<Long, List<BaseFileItem>> files = new TreeMap<>();
+				for (RoomFile rf : r.getFiles()) {
+					List<BaseFileItem> bfl = files.get(rf.getWbIdx());
+					if (bfl == null) {
+						files.put(rf.getWbIdx(), new ArrayList<>());
+						bfl = files.get(rf.getWbIdx());
 					}
-					Whiteboards wbs = getOrCreate(r.getId(), null);
-					for (Map.Entry<Long, List<BaseFileItem>> e : files.entrySet()) {
-						Whiteboard wb = add(wbs, langId);
-						wbs.setActiveWb(wb.getId());
-						result.put(wb.getId(), e.getValue());
-					}
-					update(wbs);
-				} finally {
-					map().unlock(r.getId());
+					bfl.add(rf.getFile());
 				}
+				Whiteboards wbs = getOrCreate(r.getId(), null);
+				for (Map.Entry<Long, List<BaseFileItem>> e : files.entrySet()) {
+					Whiteboard wb = add(wbs, langId);
+					wbs.setActiveWb(wb.getId());
+					result.put(wb.getId(), e.getValue());
+				}
+				update(wbs);
+			} finally {
+				map().unlock(r.getId());
 			}
 		}
 		return result;
@@ -221,8 +223,8 @@ public class WhiteboardManager implements IWhiteboardManager {
 			consumer.accept(wb);
 		}
 		wb = clear(roomId, wbId);
-		sendWbAll(roomId, WbAction.clearAll, new JSONObject().put("wbId", wbId));
-		sendWbAll(roomId, WbAction.setSize, wb.getAddJson());
+		sendWbAll(roomId, WbAction.CLEAR_ALL, new JSONObject().put("wbId", wbId));
+		sendWbAll(roomId, WbAction.SET_SIZE, wb.getAddJson());
 	}
 
 	@Override
@@ -234,15 +236,18 @@ public class WhiteboardManager implements IWhiteboardManager {
 			if (consumer != null) {
 				consumer.accept(wb, arr);
 			}
-			sendWbAll(roomId, WbAction.clearSlide, new JSONObject()
+			sendWbAll(roomId, WbAction.CLEAR_SLIDE, new JSONObject()
 					.put("wbId", wbId)
 					.put(ATTR_SLIDE, slide));
 		}
 	}
 
-	public Whiteboard remove(long roomId, Long wbId) {
+	public Whiteboard remove(long roomId, long wbId, long prevWbId) {
 		Whiteboards wbs = get(roomId);
 		Whiteboard wb = wbs.getWhiteboards().remove(wbId);
+		if (prevWbId > -1) {
+			wbs.setActiveWb(prevWbId);
+		}
 		update(wbs);
 		return wb;
 	}

@@ -79,6 +79,7 @@
 	</member-attributes>
 	<network>
 		<join>
+			<auto-detection enabled="false"/>
 			<multicast enabled="false"/>
 			<tcp-ip enabled="false"/>
 			<aws enabled="false"/>
@@ -99,5 +100,6 @@
 	</network-->
 	<properties>
 		<property name="hazelcast.logging.type">slf4j</property>
+		<property name="hazelcast.discovery.enabled">false</property>
 	</properties>
 </hazelcast>

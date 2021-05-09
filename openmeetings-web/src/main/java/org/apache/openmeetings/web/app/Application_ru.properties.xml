@@ -50,10 +50,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="51"><![CDATA[Выбор устройства]]></entry>
 	<entry key="52"><![CDATA[Выбрать камеру:]]></entry>
 	<entry key="53"><![CDATA[Выбрать микрофон:]]></entry>
-	<entry key="54"><![CDATA[OK]]></entry>
+	<entry key="54"><![CDATA[ОК]]></entry>
 	<entry key="59"><![CDATA[Язык курса:]]></entry>
 	<entry key="62"><![CDATA[Очистить доску]]></entry>
-	<entry key="64"><![CDATA[Больше не спрашивать]]></entry>
 	<entry key="70"><![CDATA[Отмена]]></entry>
 	<entry key="72"><![CDATA[Выбрать объект]]></entry>
 	<entry key="73"><![CDATA[Текст]]></entry>
@@ -190,11 +189,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[Удалить лог чата на сервере]]></entry>
 	<entry key="482"><![CDATA[Участники]]></entry>
 	<entry key="498"><![CDATA[В этой комнате нет модератора, но есть участники. Вы можете запросить функции модератора или подождать]]></entry>
-	<entry key="499"><![CDATA[Обратная связь {0}]]></entry>
 	<entry key="500"><![CDATA[{0}: Приглашение]]></entry>
 	<entry key="501"><![CDATA[Сообщение от участника:]]></entry>
 	<entry key="502"><![CDATA[Текст сообщения:]]></entry>
-	<entry key="503"><![CDATA[Для того, чтобы принять участие в совещании, нажмите на следую ссылку:]]></entry>
 	<entry key="504"><![CDATA[Нажмите здесь для того, чтобы войти в комнату совещаний]]></entry>
 	<entry key="505"><![CDATA[Если не удаётся перейти по ссылке, скопируйте этот URL в браузер:]]></entry>
 	<entry key="506"><![CDATA[{0} регистрация]]></entry>
@@ -217,15 +214,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="546"><![CDATA[ось x]]></entry>
 	<entry key="547"><![CDATA[y]]></entry>
 	<entry key="548"><![CDATA[ось y]]></entry>
-	<entry key="549"><![CDATA[w]]></entry>
-	<entry key="551"><![CDATA[h]]></entry>
+	<entry key="549"><![CDATA[ш]]></entry>
+	<entry key="551"><![CDATA[в]]></entry>
 	<entry key="553"><![CDATA[Изменить прозрачность]]></entry>
 	<entry key="556"><![CDATA[Потеряно соединение с сервером. Загрузите заново приложение, либо проверьте вашу сеть.]]></entry>
 	<entry key="557"><![CDATA[Указатель]]></entry>
 	<entry key="565"><![CDATA[Напоминатель:]]></entry>
 	<entry key="569"><![CDATA[Место:]]></entry>
-	<entry key="570"><![CDATA[Начало]]></entry>
-	<entry key="571"><![CDATA[Конец]]></entry>
 	<entry key="572"><![CDATA[Название]]></entry>
 	<entry key="582"><![CDATA[информационная панель]]></entry>
 	<entry key="583"><![CDATA[Посмотреть записанные совещания и лекции]]></entry>
@@ -290,7 +285,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[Подать заявку на модерацию]]></entry>
 	<entry key="785"><![CDATA[Подать заявку на доступ к доске]]></entry>
 	<entry key="786"><![CDATA[Подать заявку на доступ к камере и микрофону]]></entry>
-	<entry key="788"><![CDATA[СТАРТ]]></entry>
 	<entry key="792"><![CDATA[Комнаты]]></entry>
 	<entry key="797"><![CDATA[Предупреждение]]></entry>
 	<entry key="799"><![CDATA[День]]></entry>
@@ -326,7 +320,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1001"><![CDATA[Установки SIP]]></entry>
 	<entry key="1002"><![CDATA[Номер конференции и PIN автоматически созданы через шлюз OpenXG RPC]]></entry>
 	<entry key="1003"><![CDATA[Номер SIP]]></entry>
-	<entry key="1004"><![CDATA[PIN]]></entry>
+	<entry key="1004"><![CDATA[Пин]]></entry>
 	<entry key="1005"><![CDATA[Очистить объекты только на текущем слайде!]]></entry>
 	<entry key="1065"><![CDATA[Бэкап системы. Включает все данные, сгенерированные пользователем. Не включается конфигурация и метки языка, потому что они импортируются системным инстоллятором. Для апдейта, сэкспортируйте вашу старую систему (1) преустановите новые пакеты для новой базы данных (2) и симпортируйте файл бэкапа снова (3). Бэкап должен быть симпортирован перед генерацией данных в новой системе.]]></entry>
 	<entry key="1066"><![CDATA[Системный бэкап]]></entry>
@@ -362,8 +356,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[Создано]]></entry>
 	<entry key="1151"><![CDATA[Новая конференция {0}:]]></entry>
 	<entry key="1152"><![CDATA[Детали:]]></entry>
-	<entry key="1153"><![CDATA[Старт:]]></entry>
-	<entry key="1154"><![CDATA[Конец:]]></entry>
 	<entry key="1155"><![CDATA[Изменённая конференция {0}:]]></entry>
 	<entry key="1156"><![CDATA[Организатор:]]></entry>
 	<entry key="1157"><![CDATA[Отменённая конференция {0}:]]></entry>
@@ -377,7 +369,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[Показывать контактные данные только контактам]]></entry>
 	<entry key="1169"><![CDATA[Не показывать контактные данные никому]]></entry>
 	<entry key="1170"><![CDATA[Мой профайл]]></entry>
-	<entry key="1171"><![CDATA[Редактировать установки]]></entry>
 	<entry key="1172"><![CDATA[Искать пользователей]]></entry>
 	<entry key="1177"><![CDATA[Польз-ль предлагает]]></entry>
 	<entry key="1178"><![CDATA[Польз-ль ищет]]></entry>
@@ -568,9 +559,11 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[Максимальный размер файлов]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[Максимальный размер записей]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[Максимальное количество комнат]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[минуты]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[Записи стираются через]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[Напоминание о стирании посылается за]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[Тэг]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[Интервал оповещения о новых пользователях]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[Атрибут пользователя OAuth]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[Атрибут пользователя OM]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[HTTP метод для инфо]]></entry>
@@ -597,12 +590,12 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="calendar.addCalendar"><![CDATA[Добавить внешний календарь]]></entry>
 	<entry key="calendar.defaultTitle"><![CDATA[Новый календарь]]></entry>
 	<entry key="calendar.dialogTitle"><![CDATA[Детали календаря]]></entry>
-	<entry key="calendar.error"><![CDATA[Error in making connection on the URL specified.]]></entry>
+	<entry key="calendar.error"><![CDATA[Ошибка при попытке соединения по указаному URL]]></entry>
 	<entry key="calendar.gcal"><![CDATA[Google Calendar]]></entry>
 	<entry key="calendar.googleID"><![CDATA[Google Calendar ID]]></entry>
 	<entry key="calendar.googleKey"><![CDATA[Google Calendar API key]]></entry>
 	<entry key="calendar.sync"><![CDATA[Синхр]]></entry>
-	<entry key="calendar.url"><![CDATA[External CalDAV Calendar URL]]></entry>
+	<entry key="calendar.url"><![CDATA[Внешняя ссылка на CalDAV Calendar]]></entry>
 	<entry key="camera.off"><![CDATA[Камера выключена. Нажмите чтобы включить.]]></entry>
 	<entry key="camera.on"><![CDATA[Камера включена. Нажмите чтобы выключить.]]></entry>
 	<entry key="captcha.text"><![CDATA[Текст капчи]]></entry>
@@ -610,13 +603,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="convert.errors.file"><![CDATA[Во время обработки файла произошла ошибка]]></entry>
 	<entry key="convert.errors.file.missing"><![CDATA[Файл не найден]]></entry>
 	<entry key="current.password"><![CDATA[Текущий пароль]]></entry>
-	<entry key="dashboard.widget.admin.cleanup.backup"><![CDATA[backup:]]></entry>
+	<entry key="dashboard.widget.admin.cleanup.backup"><![CDATA[резервная копия:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.cleanup"><![CDATA[Очистить]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.deleted"><![CDATA[удалённые:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.error"><![CDATA[Неизвестная ошибка при попытке очистить]]></entry>
-	<entry key="dashboard.widget.admin.cleanup.files"><![CDATA[files:]]></entry>
+	<entry key="dashboard.widget.admin.cleanup.files"><![CDATA[файлы:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.final"><![CDATA[преобразованные:]]></entry>
-	<entry key="dashboard.widget.admin.cleanup.import"><![CDATA[import:]]></entry>
+	<entry key="dashboard.widget.admin.cleanup.import"><![CDATA[загрузки:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.invalid"><![CDATA[не валидные:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.missing"><![CDATA[количество отсутствующих:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.profiles"><![CDATA[профили:]]></entry>
@@ -627,8 +620,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[Вы уверены что хотите удалить все временные файлы? Эту операцию нельзя будет отменить.]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[Основные административные фукции]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[Административные функции]]></entry>
+	<entry key="dont.ask.again"><![CDATA[Больше не спрашивать]]></entry>
 	<entry key="download.pdf"><![CDATA[Сохранить как PDF]]></entry>
 	<entry key="download.png"><![CDATA[Сохранить как PNG]]></entry>
+	<entry key="edit.settings"><![CDATA[Редактировать установки]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[Имя пользователя/e-mail и/или пароль не верны.]]></entry>
 	<entry key="error.bad.password"><![CDATA[Неверный пароль!]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[Конфигурация с этим ключем уже существует, пожалуйста укажите другой ключ или измените существующий]]></entry>
@@ -640,7 +635,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.hash.period"><![CDATA[Код вашего приглашения невалиден, он действует только в определённый период времени.]]></entry>
 	<entry key="error.hash.used"><![CDATA[Это приглашение уже использовано. Приглашение этого типа не может быть переиспользовано.]]></entry>
 	<entry key="error.login.inuse"><![CDATA[Это имя пользователя уже занято]]></entry>
-	<entry key="error.nogroup"><![CDATA[User is not assigned to group.]]></entry>
+	<entry key="error.nogroup"><![CDATA[Пользователь не принадлежит ни к одной группе]]></entry>
 	<entry key="error.notactivated"><![CDATA[Ваш аккаунт не активирован. Сначала перейдите по ссылке, полученной в письме, которое вы получили при регистрации.]]></entry>
 	<entry key="error.notallowed"><![CDATA[Требуется авторизация администратора]]></entry>
 	<entry key="error.reg.disabled"><![CDATA[Регистрация запрещена]]></entry>
@@ -648,11 +643,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[Ошибка]]></entry>
 	<entry key="error.type.info"><![CDATA[Сообщение]]></entry>
 	<entry key="error.unknown"><![CDATA[Неизвестная ошибка. Пожалуйста, сообщите в вашу сервисную службу.]]></entry>
+	<entry key="file.name.interview"><![CDATA[Интервью]]></entry>
+	<entry key="file.name.recording"><![CDATA[Запись]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[Оригинальный]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[Файлы группы]]></entry>
 	<entry key="find.user"><![CDATA[Найти пользователя]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Фиксированный размер "окошка"]]></entry>
 	<entry key="goto.first"><![CDATA[к первому]]></entry>
 	<entry key="goto.last"><![CDATA[к последнему]]></entry>
 	<entry key="goto.next"><![CDATA[к следующему]]></entry>
@@ -822,8 +820,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 		target="_blank">https://openmeetings.apache.org/commercial-support.html</a></span>
 	<br />
 	]]></entry>
+	<entry key="internal.error"><![CDATA[К сожалению что-то поломалось :(, <br/>
+пожалуйста проверьте <tt>openmeetings.log</tt> и свяжитесь с разработчиками OpenMeetings]]></entry>
 	<entry key="invalid.hash"><![CDATA[Неверный код]]></entry>
 	<entry key="label.dock.panel"><![CDATA[Кликните чтобы "прилепить" панель]]></entry>
+	<entry key="label.end"><![CDATA[Конец]]></entry>
+	<entry key="label.hangup"><![CDATA[Повесить трубку]]></entry>
+	<entry key="label.start"><![CDATA[Начало]]></entry>
 	<entry key="label.undock.panel"><![CDATA[Кликните чтобы "отлепить" панель]]></entry>
 	<entry key="lbl.cancel"><![CDATA[Отменить]]></entry>
 	<entry key="lbl.email"><![CDATA[e-mail:]]></entry>
@@ -834,6 +837,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="lbl.refresh"><![CDATA[обновить]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Настройки доски]]></entry>
 	<entry key="lbl.update"><![CDATA[Изменить]]></entry>
+	<entry key="lbl.video"><![CDATA[Видео]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[Управление письмами]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[Проверка статуса отосланных писем]]></entry>
 	<entry key="menu.polls"><![CDATA[Голосования]]></entry>
@@ -872,6 +876,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="network.test.upl.bytes"><![CDATA[Загруженные байты]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[Скорость загрузки]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[Время загрузки]]></entry>
+	<entry key="notification.chat.message"><![CDATA[У Вас есть новые сообщения в чате]]></entry>
+	<entry key="notification.room.activity"><![CDATA[У Вас новый запрос, пожалуйста проверьте "Активность и действия"]]></entry>
 	<entry key="poll.clone"><![CDATA[Клонировать]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[Число 1 - 10]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[Да/Нет]]></entry>
@@ -893,6 +899,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="send.on.enter"><![CDATA[Отправить по Enter]]></entry>
 	<entry key="sound.enable"><![CDATA[Включить звук]]></entry>
 	<entry key="sound.mute"><![CDATA[Выключить звук]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Уважаемый модератор "{0}" группы,<br/>
+<br/>
+{1} новых пользователей было добавлено в течение последних {2} часов<br/>
+Вы можете увидеть их если зайдёте на {3} OM сервер в раздел Админ -> Группы]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[С уважением,<br/>
+Команда поддержки {0}.]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] Новые пользователи "{1}" группы]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[Ваша {0} запись(и) будут автоматически удалены
 		в течении {1} дней. Пожалуйста скачайте запись если она Вам нужна.]]></entry>
 	<entry key="template.recording.expiring.footer"><![CDATA[С уважением,<br/>
@@ -900,6 +913,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="template.recording.expiring.greetings"><![CDATA[Дорогой(ая) {0}]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[Запись будет удалена]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ -- Комната[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Перейдите по ссылке чтобы просмотреть запись встречи. [Ссылка может быть доступна только в определённое время]]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[Перейдите по ссылке, чтобы принять участие в совещании. [Ссылка может быть доступна только в определённое время]]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Разрешить этому пользователю использовать микрофон]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Запросить право использовать микрофон]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Выключить микрофон и запретить его использовать]]></entry>

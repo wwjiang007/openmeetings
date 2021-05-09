@@ -32,10 +32,10 @@ import java.util.Locale;
 import org.apache.openmeetings.web.common.AbstractOmDateTimePicker;
 import org.junit.jupiter.api.Test;
 
-public class TestDateTime {
+class TestDateTime {
 
 	@Test
-	public void test1() throws Exception {
+	void test1() throws Exception {
 		final String dateStr = "19-11-29 07:05";
 		final String pattern = "y-MM-dd HH:mm";
 		final Locale loc = new Locale.Builder()
@@ -55,7 +55,7 @@ public class TestDateTime {
 	}
 
 	@Test
-	public void test2() throws Exception {
+	void test2() throws Exception {
 		final String dateStr = "2020-05-12, 6:43 a.m.";
 		final String jsDateStr = "2020-05-12, 6:43 AM";
 		final String pattern = "y-MM-dd, h:mm a";
@@ -76,7 +76,7 @@ public class TestDateTime {
 	}
 
 	@Test
-	public void test3() throws Exception {
+	void test3() throws Exception {
 		final Locale loc = new Locale.Builder()
 				.setLanguage("fr")
 				.setRegion("CA")
@@ -85,5 +85,15 @@ public class TestDateTime {
 		assertEquals("yy-MM-dd HH [h] mm", AbstractOmDateTimePicker.patch(format));
 		format = AbstractOmDateTimePicker.getDateTimeFormat(Locale.ENGLISH);
 		assertEquals(format, AbstractOmDateTimePicker.patch(format));
+	}
+
+	@Test
+	void test4() throws Exception {
+		final Locale loc = new Locale.Builder()
+				.setLanguage("bg")
+				.setRegion("BG")
+				.build();
+		String format = AbstractOmDateTimePicker.getDateTimeFormat(loc);
+		assertEquals("d.MM.yy [г]., H:mm [ч].", AbstractOmDateTimePicker.patch(format));
 	}
 }

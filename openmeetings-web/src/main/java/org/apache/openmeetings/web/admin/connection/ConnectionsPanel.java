@@ -20,15 +20,14 @@ package org.apache.openmeetings.web.admin.connection;
 
 import static org.apache.openmeetings.util.OpenmeetingsVariables.ATTR_CLASS;
 import static org.apache.openmeetings.web.app.WebSession.getDateFormat;
-import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelConfirm;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmationBehavior.newOkCancelConfirm;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.openmeetings.core.remote.KurentoHandler;
 import org.apache.openmeetings.core.remote.StreamProcessor;
@@ -43,6 +42,7 @@ import org.apache.openmeetings.web.data.SearchableDataProvider;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeInstantiation;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
@@ -53,6 +53,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxLink;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
 
+@AuthorizeInstantiation({"ADMIN", "ADMIN_CONNECTIONS"})
 public class ConnectionsPanel extends AdminBasePanel {
 	private static final long serialVersionUID = 1L;
 	@SpringBean
@@ -76,14 +77,11 @@ public class ConnectionsPanel extends AdminBasePanel {
 			private static final long serialVersionUID = 1L;
 
 			private List<IDataProviderEntity> getConnections() {
-				List<IDataProviderEntity> l = new ArrayList<>();
-				l.addAll(cm.list());
-				Collection<KStreamDto> streams = streamProcessor.getStreams()
+				return Stream.concat(cm.stream()
+						, streamProcessor.getStreams()
 						.stream()
 						.map(KStreamDto::new)
-						.collect(Collectors.toList());
-				l.addAll(streams);
-				return l;
+					).collect(Collectors.toList());
 			}
 
 			@Override

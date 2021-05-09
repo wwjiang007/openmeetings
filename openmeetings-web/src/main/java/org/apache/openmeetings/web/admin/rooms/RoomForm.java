@@ -19,11 +19,12 @@
 package org.apache.openmeetings.web.admin.rooms;
 
 import static org.apache.openmeetings.db.util.AuthLevelUtil.hasGroupAdminLevel;
+import static org.apache.openmeetings.util.OpenmeetingsVariables.isRecordingsEnabled;
 import static org.apache.openmeetings.web.admin.AdminUserChoiceProvider.PAGE_SIZE;
 import static org.apache.openmeetings.web.app.Application.kickUser;
 import static org.apache.openmeetings.web.app.WebSession.getRights;
 import static org.apache.openmeetings.web.app.WebSession.getUserId;
-import static org.apache.openmeetings.web.common.confirmation.ConfirmableAjaxBorder.newOkCancelDangerConfirm;
+import static org.apache.openmeetings.web.common.confirmation.ConfirmationBehavior.newOkCancelDangerConfirm;
 import static org.apache.wicket.validation.validator.StringValidator.maximumLength;
 
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 		}
 	};
 	private IModel<User> moderator2add = Model.of((User)null);
-	private IModel<Collection<BaseFileItem>> files2add = new CollectionModel<>(new ArrayList<BaseFileItem>());
+	private IModel<Collection<BaseFileItem>> files2add = new CollectionModel<>(new ArrayList<>());
 	private IModel<Long> wbIdx = Model.of(0L);
 	@SpringBean
 	private GroupDao groupDao;
@@ -202,10 +203,10 @@ public class RoomForm extends AdminBaseForm<Room> {
 			}
 
 			@Override
-			public RoomGroup fromId(String _id) {
-				Long id = Long.valueOf(_id);
+			public RoomGroup fromId(String inId) {
+				Long id = Long.valueOf(inId);
 
-				if (!orgList.stream().filter(g -> g.getId().equals(id)).findFirst().isPresent()) {
+				if (orgList.stream().noneMatch(g -> g.getId().equals(id))) {
 					return null; // seems to be hacked
 				}
 				Group g = groupDao.get(id);
@@ -222,7 +223,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 		add(new CheckBox("closed"));
 		add(new TextField<String>("redirectURL"));
 		add(new CheckBox("waitRecording"));
-		add(new CheckBox("allowRecording"));
+		add(new CheckBox("allowRecording").setEnabled(isRecordingsEnabled()));
 		add(new CheckBox("chatModerated"));
 
 		add(new Select2MultiChoice<>("hiddenElements", null, new ChoiceProvider<RoomElement>() {
@@ -286,7 +287,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 				boolean found = false;
 				if (u != null) {
 					if (r.getModerators() == null) {
-						r.setModerators(new ArrayList<RoomModerator>());
+						r.setModerators(new ArrayList<>());
 					}
 					for (RoomModerator rm : r.getModerators()) {
 						if (rm.getUser().getId().equals(u.getId())) {
@@ -323,7 +324,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 				};
 				del.setIconType(FontAwesome5IconType.times_s)
 						.add(newOkCancelDangerConfirm(this, getString("833")));
-				item.add(new CheckBox("superModerator", new PropertyModel<Boolean>(moderator, "superModerator")))
+				item.add(new CheckBox("superModerator", new PropertyModel<>(moderator, "superModerator")))
 					.add(new Label("userId", String.valueOf(moderator.getUser().getId())))
 					.add(name)
 					.add(new Label("email", moderator.getUser().getAddress().getEmail()))
@@ -398,8 +399,8 @@ public class RoomForm extends AdminBaseForm<Room> {
 					public void onClick(AjaxRequestTarget target) {
 						Room r = RoomForm.this.getModelObject();
 						for (Iterator<RoomFile> iter = r.getFiles().iterator(); iter.hasNext();) {
-							RoomFile _rf = iter.next();
-							if (_rf.getFile().getId().equals(rf.getFile().getId())) {
+							RoomFile curRf = iter.next();
+							if (curRf.getFile().getId().equals(rf.getFile().getId())) {
 								iter.remove();
 								break;
 							}
@@ -434,8 +435,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 
 	void updateClients(AjaxRequestTarget target) {
 		long roomId = getModelObject().getId() != null ? getModelObject().getId() : 0;
-		final List<Client> clientsInRoom = cm.listByRoom(roomId);
-		clients.setDefaultModelObject(clientsInRoom);
+		clients.setDefaultModelObject(cm.streamByRoom(roomId).collect(Collectors.toList()));
 		target.add(clientsContainer);
 	}
 
@@ -453,7 +453,7 @@ public class RoomForm extends AdminBaseForm<Room> {
 			}
 			roomDao.update(getModelObject(), getUserId());
 		}
-		setNewVisible(false);
+		setNewRecordVisible(false);
 		updateView(target);
 	}
 

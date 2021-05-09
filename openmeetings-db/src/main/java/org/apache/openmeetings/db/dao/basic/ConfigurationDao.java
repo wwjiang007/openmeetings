@@ -27,7 +27,6 @@ import static org.apache.wicket.csp.CSPDirectiveSrcValue.STRICT_DYNAMIC;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -228,13 +227,11 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 		String key = entity.getKey();
 		String value = entity.getValue();
 		if (entity.getId() == null || entity.getId().longValue() <= 0) {
-			entity.setInserted(new Date());
 			entity.setDeleted(deleted);
 			em.persist(entity);
 		} else {
 			entity.setUser(userDao.get(userId));
 			entity.setDeleted(deleted);
-			entity.setUpdated(new Date());
 			entity = em.merge(entity);
 		}
 		switch (key) {
@@ -287,10 +284,11 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 				reloadRestAllowOrigin();
 				break;
 			case CONFIG_LOGIN_MIN_LENGTH:
-				reloadLoginMinLength();
-				break;
 			case CONFIG_PASS_MIN_LENGTH:
-				reloadPasswdMinLength();
+			case CONFIG_PASS_CHECK_UPPER:
+			case CONFIG_PASS_CHECK_DIGIT:
+			case CONFIG_PASS_CHECK_SPECIAL:
+				reloadLoginPassword();
 				break;
 			case CONFIG_DEFAULT_GROUP_ID:
 				reloadDefaultGroup();
@@ -308,13 +306,9 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 				reloadChatSendOnEnter();
 				break;
 			case CONFIG_REGISTER_FRONTEND:
-				reloadAllowRegisterFront();
-				break;
 			case CONFIG_REGISTER_SOAP:
-				reloadAllowRegisterSoap();
-				break;
 			case CONFIG_REGISTER_OAUTH:
-				reloadAllowRegisterOauth();
+				reloadRegister();
 				break;
 			case CONFIG_EMAIL_VERIFICATION:
 				reloadSendVerificationEmail();
@@ -350,13 +344,22 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 			case CONFIG_SMTP_TIMEOUT:
 				reloadMailSettings();
 				break;
+			case CONFIG_APPOINTMENT_REMINDER_MINUTES:
+			case CONFIG_APPOINTMENT_PRE_START_MINUTES:
+				reloadAppointmentSettings();
+				break;
+			case CONFIG_RECORDING_ENABLED:
+				reloadRecordingEnabled();
+				break;
+			case CONFIG_THEME:
+				reloadTheme();
+				break;
 		}
 		return entity;
 	}
 
 	@Override
 	public void delete(Configuration entity, Long userId) {
-		entity.setUpdated(new Date());
 		this.update(entity, userId, true);
 	}
 
@@ -421,12 +424,12 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 		setRestAllowOrigin(getString(CONFIG_REST_ALLOW_ORIGIN, null));
 	}
 
-	private void reloadLoginMinLength() {
+	private void reloadLoginPassword() {
 		setMinLoginLength(getInt(CONFIG_LOGIN_MIN_LENGTH, USER_LOGIN_MINIMUM_LENGTH));
-	}
-
-	private void reloadPasswdMinLength() {
 		setMinPasswdLength(getInt(CONFIG_LOGIN_MIN_LENGTH, USER_PASSWORD_MINIMUM_LENGTH));
+		setPwdCheckUpper(getBool(CONFIG_PASS_CHECK_UPPER, true));
+		setPwdCheckDigit(getBool(CONFIG_PASS_CHECK_DIGIT, true));
+		setPwdCheckSpecial(getBool(CONFIG_PASS_CHECK_SPECIAL, true));
 	}
 
 	private void reloadDefaultGroup() {
@@ -449,15 +452,9 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 		setChatSendOnEnter(getBool(CONFIG_CHAT_SEND_ON_ENTER, false));
 	}
 
-	private void reloadAllowRegisterFront() {
+	private void reloadRegister() {
 		setAllowRegisterFrontend(getBool(CONFIG_REGISTER_FRONTEND, false));
-	}
-
-	private void reloadAllowRegisterSoap() {
 		setAllowRegisterSoap(getBool(CONFIG_REGISTER_SOAP, false));
-	}
-
-	private void reloadAllowRegisterOauth() {
 		setAllowRegisterOauth(getBool(CONFIG_REGISTER_OAUTH, false));
 	}
 
@@ -490,6 +487,20 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 		setMailAddReplyTo(getBool(CONFIG_REPLY_TO_ORGANIZER, true));
 	}
 
+	private void reloadAppointmentSettings() {
+		setAppointmentPreStartMinutes(getInt(CONFIG_APPOINTMENT_PRE_START_MINUTES, 5));
+		setAppointmentReminderMinutes(getInt(CONFIG_APPOINTMENT_REMINDER_MINUTES, 15));
+	}
+
+	private void reloadRecordingEnabled() {
+		setRecordingsEnabled(getBool(CONFIG_RECORDING_ENABLED, true));
+	}
+
+	private void reloadTheme() {
+		setTheme(getString(CONFIG_THEME, ""));
+		app.updateTheme();
+	}
+
 	public void reinit() {
 		reloadMaxUpload();
 		reloadCrypt();
@@ -503,21 +514,21 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 		reloadTimezone();
 		reloadRestAllowOrigin();
 		reloadRoomSettings();
-		reloadLoginMinLength();
-		reloadPasswdMinLength();
+		reloadLoginPassword();
 		reloadDefaultGroup();
 		reloadSipContext();
 		reloadFnameMinLength();
 		reloadLnameMinLength();
 		reloadChatSendOnEnter();
-		reloadAllowRegisterFront();
-		reloadAllowRegisterSoap();
-		reloadAllowRegisterOauth();
+		reloadRegister();
 		reloadSendVerificationEmail();
 		reloadSendRegisterEmail();
 		reloadDisplayNameEditable();
 		reloadMyRoomsEnabled();
 		reloadMailSettings();
+		reloadAppointmentSettings();
+		reloadRecordingEnabled();
+		reloadTheme();
 
 		updateCsp();
 	}
@@ -565,7 +576,7 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 			for(String str : val.split(",")) {
 				if (!Strings.isEmpty(str)) {
 					try {
-					cspConfig.add(key, str.trim());
+						cspConfig.add(key, str.trim());
 					} catch (Exception e) {
 						log.error("Enexpected error while adding CSP rule: key '{}', value '{}', part '{}'", key, val, str, e);
 					}
@@ -585,7 +596,7 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 			getLine(sb, "CSP headers are DISABLED", ' ');
 			getLine(sb, "Disabling CSP can lead to XSS attacks! Use this mode only if you must!", ' ');
 			getLine(sb, "", '#');
-			log.warn(sb.toString());
+			log.warn("{}", sb);
 			WebApplication.get().getCspSettings().blocking().disabled();
 			return;
 		}
@@ -604,11 +615,12 @@ public class ConfigurationDao implements IDataProviderDao<Configuration> {
 			addCspRule(cspConfig, CSPDirective.MEDIA_SRC, getCspMediaSrc());
 			addCspRule(cspConfig, CSPDirective.SCRIPT_SRC, getCspScriptSrc());
 			addCspRule(cspConfig, CSPDirective.STYLE_SRC, getCspStyleSrc());
-			addCspRule(cspConfig, CSPDirective.CONNECT_SRC, app.getWsUrl(), false); // special code for Safari browser
+			app.getWsUrls().forEach(wsUrl -> addCspRule(cspConfig, CSPDirective.CONNECT_SRC, wsUrl, false)); // special code for Safari browser
 			if (!Strings.isEmpty(getGaCode())) {
 				// https://developers.google.com/tag-manager/web/csp#universal_analytics_google_analytics
 				addCspRule(cspConfig, CSPDirective.IMG_SRC, "https://www.google-analytics.com");
-				addCspRule(cspConfig, CSPDirective.SCRIPT_SRC, "https://www.google-analytics.com, https://ssl.google-analytics.com");
+				addCspRule(cspConfig, CSPDirective.CONNECT_SRC, "https://www.google-analytics.com");
+				addCspRule(cspConfig, CSPDirective.SCRIPT_SRC, "https://www.googletagmanager.com");
 			}
 			oauthDao.getActive().forEach(oauth -> {
 				if (!Strings.isEmpty(oauth.getIconUrl())) {

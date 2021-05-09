@@ -53,7 +53,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="54"><![CDATA[Ok]]></entry>
 	<entry key="59"><![CDATA[Kurssprache:]]></entry>
 	<entry key="62"><![CDATA[Zeichenbrett leeren]]></entry>
-	<entry key="64"><![CDATA[Nicht nochmal fragen]]></entry>
 	<entry key="70"><![CDATA[Rückgängig]]></entry>
 	<entry key="72"><![CDATA[Markieren]]></entry>
 	<entry key="73"><![CDATA[Text]]></entry>
@@ -156,7 +155,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="314"><![CDATA[via Nutzername]]></entry>
 	<entry key="315"><![CDATA[E-Mail]]></entry>
 	<entry key="316"><![CDATA[Nutzername]]></entry>
-	<entry key="317"><![CDATA[Dateien]]></entry>
+	<entry key="317"><![CDATA[Sende Email mit Link zum Zurücksetzen]]></entry>
 	<entry key="321"><![CDATA[Die E-Mail mit einem speziellen Link wurde an die E-Mail-Adresse gesendet, die für den registrierten Nutzer angegeben wurde.]]></entry>
 	<entry key="325"><![CDATA[Passwort zurücksetzen]]></entry>
 	<entry key="327"><![CDATA[Passwort ändern]]></entry>
@@ -190,11 +189,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[Chatlog löschen]]></entry>
 	<entry key="482"><![CDATA[Teilnehmerzahl]]></entry>
 	<entry key="498"><![CDATA[Es gibt momentan keinen Moderator in diesen Raum. Sie müssen warten, können aber die Moderation beantragen.]]></entry>
-	<entry key="499"><![CDATA[Rückmeldung {0}]]></entry>
 	<entry key="500"><![CDATA[{0} - Einladung]]></entry>
 	<entry key="501"><![CDATA[Nachricht von Nutzer:]]></entry>
 	<entry key="502"><![CDATA[Nachricht:]]></entry>
-	<entry key="503"><![CDATA[Klicken Sie auf diesen Link, um in den Raum zu gelangen:]]></entry>
 	<entry key="504"><![CDATA[Klicken Sie hier]]></entry>
 	<entry key="505"><![CDATA[Wenn der Link fehlerhaft dargestellt wird, kopieren Sie bitte folgenden Link in die Adresszeile ihres Browsers:]]></entry>
 	<entry key="506"><![CDATA[{0} Registrierung]]></entry>
@@ -204,7 +201,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="513"><![CDATA[{0} - Passwort zurücksetzen]]></entry>
 	<entry key="514"><![CDATA[Klicken Sie hier, um ein neues Passwort einzugeben:]]></entry>
 	<entry key="515"><![CDATA[Klicken Sie hier]]></entry>
-	<entry key="517"><![CDATA[{0} Password Reset]]></entry>
+	<entry key="517"><![CDATA[{0} Passwort zurücksetzen]]></entry>
 	<entry key="524"><![CDATA[Passwort geschützt]]></entry>
 	<entry key="526"><![CDATA[Gültigkeit]]></entry>
 	<entry key="527"><![CDATA[Immer]]></entry>
@@ -224,8 +221,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="557"><![CDATA[Zeiger]]></entry>
 	<entry key="565"><![CDATA[Erinnerung]]></entry>
 	<entry key="569"><![CDATA[Ort:]]></entry>
-	<entry key="570"><![CDATA[Start]]></entry>
-	<entry key="571"><![CDATA[Ende]]></entry>
 	<entry key="572"><![CDATA[Titel:]]></entry>
 	<entry key="582"><![CDATA[Start]]></entry>
 	<entry key="583"><![CDATA[Aufgenommene Konferenzen ansehen]]></entry>
@@ -290,7 +285,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[Moderation beantragen]]></entry>
 	<entry key="785"><![CDATA[Zeichenbrett beantragen]]></entry>
 	<entry key="786"><![CDATA[WebCam/Mikrofon beantragen]]></entry>
-	<entry key="788"><![CDATA[START]]></entry>
 	<entry key="792"><![CDATA[Räume]]></entry>
 	<entry key="797"><![CDATA[Warnung]]></entry>
 	<entry key="799"><![CDATA[Tag]]></entry>
@@ -298,7 +292,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="801"><![CDATA[Monat]]></entry>
 	<entry key="803"><![CDATA[Teilnehmer]]></entry>
 	<entry key="815"><![CDATA[Event Details]]></entry>
-	<entry key="816"><![CDATA[Default Moderatoren]]></entry>
+	<entry key="816"><![CDATA[Standard Moderatoren]]></entry>
 	<entry key="817"><![CDATA[Super]]></entry>
 	<entry key="823"><![CDATA[In einem moderierten Raum sind Nutzer mit den Rollen Level-Moderator oder Administrator beim Betreten des Raums automatisch Moderatoren. Um dies abzuschalten, verwenden Sie die Funktion Default-Moderator.]]></entry>
 	<entry key="828"><![CDATA[Wenn Sie einem Raum eine Organisation  zuweisen, haben nur Mitglieder der Organisation Zugang. (Dies gilt nur wenn die Einstellung isPublic auf false gesetzt wurde!)]]></entry>
@@ -362,8 +356,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[Erstellt von]]></entry>
 	<entry key="1151"><![CDATA[Neue {0} Konferenz:]]></entry>
 	<entry key="1152"><![CDATA[Details:]]></entry>
-	<entry key="1153"><![CDATA[Start:]]></entry>
-	<entry key="1154"><![CDATA[Ende:]]></entry>
 	<entry key="1155"><![CDATA[{0} Konferenz geändert:]]></entry>
 	<entry key="1156"><![CDATA[Organisation durch:]]></entry>
 	<entry key="1157"><![CDATA[{0} Konferenz abgesagt:]]></entry>
@@ -377,7 +369,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[Meine Kontaktdaten nur persönlichen Kontakten anzeigen]]></entry>
 	<entry key="1169"><![CDATA[Niemanden meine Kontaktdaten anzeigen]]></entry>
 	<entry key="1170"><![CDATA[Mein Profil]]></entry>
-	<entry key="1171"><![CDATA[Einstellungen bearbeiten]]></entry>
 	<entry key="1172"><![CDATA[Nutzer suchen]]></entry>
 	<entry key="1177"><![CDATA[Nutzer bietet an]]></entry>
 	<entry key="1178"><![CDATA[Nutzer sucht]]></entry>
@@ -557,7 +548,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.email.group.label"><![CDATA[E-Mail Nachricht]]></entry>
 	<entry key="admin.email.lastError"><![CDATA[Letzter Fehler]]></entry>
 	<entry key="admin.email.recipients"><![CDATA[Empfänger]]></entry>
-	<entry key="admin.email.reset.status"><![CDATA[Reset Status]]></entry>
+	<entry key="admin.email.reset.status"><![CDATA[Status zurücksetzen]]></entry>
 	<entry key="admin.email.status.DONE"><![CDATA[fertig]]></entry>
 	<entry key="admin.email.status.ERROR"><![CDATA[Fehler]]></entry>
 	<entry key="admin.email.status.NONE"><![CDATA[keine]]></entry>
@@ -568,13 +559,15 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[maximale Dateigröße]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[Maximale Größe einer Aufnahme]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[Maximale Anzahl von Räumen]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[Minuten]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[Aufnahmen laufen ab in]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[Erinnerung des Ablaufs gesenet in]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[Markierung]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[Benachrichtigungsintervall für eine Nutzer]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[OAuth Nutzer Attribute]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[OM Nutzer-Attribute]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[Info-Methode anfragen]]></entry>
-	<entry key="admin.oauth.req.token.method"><![CDATA[Request token method]]></entry>
+	<entry key="admin.oauth.req.token.method"><![CDATA[Token-Methode anfordern]]></entry>
 	<entry key="admin.oauth.user.mapping"><![CDATA[Nutzerzuordnung]]></entry>
 	<entry key="admin.purge"><![CDATA[Bereinigen]]></entry>
 	<entry key="admin.purge.desc"><![CDATA[Wollen Sie dieses Element wirklich säubern? Dies kann nicht rückgängig gemacht werden.]]></entry>
@@ -615,10 +608,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.deleted"><![CDATA[gelöscht:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.error"><![CDATA[Unerwarteter Fehler während dem Cleanup]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.files"><![CDATA[Dateien:]]></entry>
-	<entry key="dashboard.widget.admin.cleanup.final"><![CDATA[final:]]></entry>
+	<entry key="dashboard.widget.admin.cleanup.final"><![CDATA[abschließende:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.import"><![CDATA[Import:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.invalid"><![CDATA[ungültig:]]></entry>
-	<entry key="dashboard.widget.admin.cleanup.missing"><![CDATA[missing count:]]></entry>
+	<entry key="dashboard.widget.admin.cleanup.missing"><![CDATA[fehlend]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.profiles"><![CDATA[Profile:]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.show"><![CDATA[Cleanup-Bericht anzeigen]]></entry>
 	<entry key="dashboard.widget.admin.cleanup.streams"><![CDATA[Streams-Ordner:]]></entry>
@@ -627,8 +620,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[Wollen sie wirklich alle Temporären Dateien löschen? Diese Vorgang kann nicht rückgängig gemacht werden.]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[Allgemeine Admin-Funktionen]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[Admin-Funktionen]]></entry>
+	<entry key="dont.ask.again"><![CDATA[Nicht nochmal fragen]]></entry>
 	<entry key="download.pdf"><![CDATA[Download als PDF]]></entry>
 	<entry key="download.png"><![CDATA[Download als PNG]]></entry>
+	<entry key="edit.settings"><![CDATA[Einstellungen bearbeiten]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[Nutzername/E-Mail und/oder Passwort ist/sind falsch.]]></entry>
 	<entry key="error.bad.password"><![CDATA[Falsches Passwort!]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[Eine Konfiguration mit diesem Schlüssel gibt es bereits. Bitte benutzen Sie einen neuen Schlüssel oder ändern die vorhanden Konfiguration]]></entry>
@@ -648,11 +643,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[Fehler!]]></entry>
 	<entry key="error.type.info"><![CDATA[Nachricht]]></entry>
 	<entry key="error.unknown"><![CDATA[Unbekannter Fehler. Bitte melden Sie das dem Service-Team.]]></entry>
+	<entry key="file.name.interview"><![CDATA[Interview]]></entry>
+	<entry key="file.name.recording"><![CDATA[Aufzeichnung]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[Original]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[Gruppendateien]]></entry>
 	<entry key="find.user"><![CDATA[Nutzer finden]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Feste Größe der Videos]]></entry>
 	<entry key="goto.first"><![CDATA[Zum Ersten]]></entry>
 	<entry key="goto.last"><![CDATA[Zum Letzten]]></entry>
 	<entry key="goto.next"><![CDATA[Zum Nächsten]]></entry>
@@ -681,8 +679,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="install.wizard.db.step.host"><![CDATA[DB host spezifizieren]]></entry>
 	<entry key="install.wizard.db.step.instructions.db2"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/IBMDB2Config.html">IBM DB2</a>]]></entry>
 	<entry key="install.wizard.db.step.instructions.h2"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/H2Config.html">H2</a>]]></entry>
-	<entry key="install.wizard.db.step.instructions.mssql"><![CDATA[
-<a target="_blank" href="https://openmeetings.apache.org/MSSQLConfig.html">MSSQL</a>]]></entry>
+	<entry key="install.wizard.db.step.instructions.mssql"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/MSSQLConfig.html">MSSQL</a>]]></entry>
 	<entry key="install.wizard.db.step.instructions.mysql"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/MySQLConfig.html">MySQL</a>]]></entry>
 	<entry key="install.wizard.db.step.instructions.oracle"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/OracleConfig.html">Oracle</a>]]></entry>
 	<entry key="install.wizard.db.step.instructions.postgresql"><![CDATA[<a target="_blank" href="https://openmeetings.apache.org/PostgresConfig.html">PostgreSql</a>]]></entry>
@@ -732,7 +729,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="install.wizard.params.step2.mailAuthName.title"><![CDATA[Nutzername für Email eintragen]]></entry>
 	<entry key="install.wizard.params.step2.mailAuthPass"><![CDATA[SMTP-Nutzerpasswort]]></entry>
 	<entry key="install.wizard.params.step2.mailAuthPass.title"><![CDATA[E-Mail-Passwort eingeben]]></entry>
-	<entry key="install.wizard.params.step2.mailReferer"><![CDATA[Mail-Referer]]></entry>
+	<entry key="install.wizard.params.step2.mailReferer"><![CDATA[E-Mail-Referer]]></entry>
 	<entry key="install.wizard.params.step2.mailReferer.title"><![CDATA[Geben Sie eine Internetadresse an]]></entry>
 	<entry key="install.wizard.params.step2.mailUseTls"><![CDATA[TLS zur Mailserver-Authentifizierung aktivieren]]></entry>
 	<entry key="install.wizard.params.step2.replyToOrganizer"><![CDATA[Die E-Mail-Adresse des Einladenden als 'ReplyTo'-Adresse
@@ -828,8 +825,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 		target="_blank">https://openmeetings.apache.org/commercial-support.html</a></span>
 	<br />
 	]]></entry>
+	<entry key="internal.error"><![CDATA[Leider ist etwas schlimmes passiert :(, <br/>
+Bitte <tt>openmeetings.log</tt> prüfen und die OpenMeetings-Entwickeler kontaktieren.]]></entry>
 	<entry key="invalid.hash"><![CDATA[Fehlerhafter Hash]]></entry>
 	<entry key="label.dock.panel"><![CDATA[Klicken, um das Panel anzudocken]]></entry>
+	<entry key="label.end"><![CDATA[Ende]]></entry>
+	<entry key="label.hangup"><![CDATA[Auflegen]]></entry>
+	<entry key="label.start"><![CDATA[Start]]></entry>
 	<entry key="label.undock.panel"><![CDATA[Klicken, um das Panel abzudocken]]></entry>
 	<entry key="lbl.cancel"><![CDATA[Abbrechen]]></entry>
 	<entry key="lbl.email"><![CDATA[E-Mail:]]></entry>
@@ -840,6 +842,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="lbl.refresh"><![CDATA[Neu laden]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Einstellungen Zeichenbrett]]></entry>
 	<entry key="lbl.update"><![CDATA[Update]]></entry>
+	<entry key="lbl.video"><![CDATA[Video]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[E-Mail Management]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[E-Mail-Prozess im System überprüfen]]></entry>
 	<entry key="menu.polls"><![CDATA[Umfragen]]></entry>
@@ -878,6 +881,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="network.test.upl.bytes"><![CDATA[Bytes hochgeladen]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[Upload Geschwindigkeit]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[Upload Zeit]]></entry>
+	<entry key="notification.chat.message"><![CDATA[Sie haben neue Chat-Nachrichten]]></entry>
+	<entry key="notification.room.activity"><![CDATA[Es gibt neue Aktivitäten. Bitte sehen Sie unter "Aktivitäten & Aktionen" nach.]]></entry>
 	<entry key="poll.clone"><![CDATA[Clonen]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[Numerisch 1-10]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[Ja/Nein]]></entry>
@@ -899,12 +904,20 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="send.on.enter"><![CDATA[Abschicken bei Drücken der Eingabetaste]]></entry>
 	<entry key="sound.enable"><![CDATA[Ton einschalten]]></entry>
 	<entry key="sound.mute"><![CDATA[Ton ausschalten]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Hallo Gruppenmoderator "{0}",<br/>
+<br/>
+Der Gruppe wurden in den letzten {2} Stunden {1} neue Nutzer hinzugefügt.<br/>
+Bitte am OM server {3} anmelden und sie unter Admininistration -> Gruppen prüfen.]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[Gruß,<br/> {0} Supportteam]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] Es gibt "{1}" neue Gruppennutzer]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[Ihre momentane {0} Aufnahme wird automatisch in {1} Tagen gelöscht. Wenn Sie diese Aufnahme speichern möchten, laden Sie sie vorher herunter.]]></entry>
 	<entry key="template.recording.expiring.footer"><![CDATA[Grüße,<br/>
        {0} Support Team.]]></entry>
 	<entry key="template.recording.expiring.greetings"><![CDATA[Liebe {0}]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[Aufnahme wird gelöscht werden]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ -- Raum[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Zur Ansicht des Konferenzvideos bitte diesen Link klicken. [Der Link funktioniert nur für eine gewisse Zeit] ]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[Klicken Sie auf diesen Link, um in den Raum zu gelangen:]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Diesem Nutzer erlauben, das Mikrofon zu benutzen]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Berechtigung anfragen, um das Mikrofon zu benutzen]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Nutzer stumm schalten und das Recht entziehen, das Mikrofon einzuschalten]]></entry>

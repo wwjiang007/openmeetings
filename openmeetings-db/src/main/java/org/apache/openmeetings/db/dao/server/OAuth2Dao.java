@@ -22,7 +22,6 @@ import static org.apache.openmeetings.db.util.DaoHelper.setLimits;
 import static org.apache.openmeetings.util.OpenmeetingsVariables.isAllowRegisterOauth;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -44,7 +43,7 @@ public class OAuth2Dao implements IDataProviderDao<OAuthServer> {
 	@PersistenceContext
 	private EntityManager em;
 	@Autowired
-	private ConfigurationDao cfgDao;;
+	private ConfigurationDao cfgDao;
 
 	public List<OAuthServer> getActive() {
 		if (!isAllowRegisterOauth()) {
@@ -88,10 +87,8 @@ public class OAuth2Dao implements IDataProviderDao<OAuthServer> {
 	@Override
 	public OAuthServer update(OAuthServer server, Long userId) {
 		if (server.getId() == null) {
-			server.setInserted(new Date());
 			em.persist(server);
 		} else {
-			server.setUpdated(new Date());
 			server = em.merge(server);
 		}
 		cfgDao.updateCsp();

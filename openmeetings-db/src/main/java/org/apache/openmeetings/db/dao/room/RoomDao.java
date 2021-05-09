@@ -29,7 +29,6 @@ import static org.apache.openmeetings.util.OpenmeetingsVariables.isSipEnabled;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +47,7 @@ import org.apache.openmeetings.db.entity.room.Room.RoomElement;
 import org.apache.openmeetings.db.entity.room.Room.Type;
 import org.apache.openmeetings.db.entity.room.RoomFile;
 import org.apache.openmeetings.db.entity.room.RoomGroup;
+import org.apache.openmeetings.db.manager.ISipManager;
 import org.apache.openmeetings.db.util.DaoHelper;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -60,14 +60,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 	private static final Logger log = LoggerFactory.getLogger(RoomDao.class);
-	private static final String[] searchFields = {"name"};
+	private static final String[] searchFields = {"name", "comment"};
+	public static final String GRP_MODERATORS = "roomModerators";
+	public static final String GRP_GROUPS = "roomGroups";
+	public static final String GRP_FILES = "roomFiles";
 
 	@PersistenceContext
 	private EntityManager em;
 	@Autowired
 	private ConfigurationDao cfgDao;
 	@Autowired
-	private SipDao sipDao;
+	private ISipManager sipManager;
 	@Autowired
 	private UserDao userDao;
 
@@ -78,7 +81,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 			r = single(fillLazy(em
 					, oem -> oem.createNamedQuery("getRoomById", Room.class)
 						.setParameter("id", id)
-					, "roomModerators", "roomGroups", "roomFiles"));
+					, GRP_MODERATORS, GRP_GROUPS, GRP_FILES));
 		} else {
 			log.info("[get]: No room id given");
 		}
@@ -90,7 +93,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 		if (!Strings.isEmpty(tag)) {
 			r = single(fillLazy(em
 					, oem -> oem.createNamedQuery("getRoomByTag", Room.class).setParameter("tag", tag)
-					, "roomModerators", "roomGroups", "roomFiles"));
+					, GRP_MODERATORS, GRP_GROUPS, GRP_FILES));
 		} else {
 			log.info("[get]: No room tag given");
 		}
@@ -100,7 +103,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 	public List<Room> get() {
 		return fillLazy(em
 				, oem -> oem.createNamedQuery("getBackupRooms", Room.class)
-				, "roomModerators", "roomGroups", "roomFiles");
+				, GRP_MODERATORS, GRP_GROUPS, GRP_FILES);
 	}
 
 	public List<Room> get(List<Long> ids) {
@@ -200,19 +203,16 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 	@Override
 	public Room update(Room entity, Long userId) {
 		if (entity.getId() == null) {
-			entity.setInserted(new Date());
 			em.persist(entity);
-		} else {
-			entity.setUpdated(new Date());
 		}
 		if (entity.isSipEnabled() && isSipEnabled()) {
 			String sipNumber = getSipNumber(entity.getId());
 			if (sipNumber != null && !sipNumber.equals(entity.getConfno())) {
 				entity.setConfno(sipNumber);
 			}
-			sipDao.update(sipNumber, entity.getPin());
+			sipManager.update(sipNumber, entity.getPin());
 		} else {
-			sipDao.delete(entity.getConfno());
+			sipManager.delete(entity.getConfno());
 			entity.setConfno(null);
 			entity.setPin(null);
 		}
@@ -229,11 +229,10 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 
 	public Room getUserRoom(Long ownerId, Room.Type type, String name) {
 		log.debug("getUserRoom : {} || {}", ownerId, type);
-		Room room = null;
-		List<Room> ll = em.createNamedQuery("getRoomByOwnerAndTypeId", Room.class).setParameter("ownerId", ownerId).setParameter("type", type).getResultList();
-		if (!ll.isEmpty()) {
-			room = ll.get(0);
-		}
+		Room room = single(em.createNamedQuery("getRoomByOwnerAndTypeId", Room.class)
+				.setParameter("ownerId", ownerId)
+				.setParameter("type", type)
+				.getResultList());
 
 		if (room == null) {
 			log.debug("Could not find room {} || {}", ownerId, type);
@@ -246,6 +245,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 			room.setAllowUserQuestions(true);
 			room.setOwnerId(ownerId);
 			room.setAllowRecording(true);
+			room.setModerated(true);
 			room.hide(RoomElement.MICROPHONE_STATUS);
 
 			room = update(room, ownerId);
@@ -254,8 +254,19 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 			}
 			return null;
 		} else {
+			room.setName(name);
+			room = update(room, ownerId);
 			return room;
 		}
+	}
+
+	public Room getExternal(String externalType, String externalId) {
+		log.debug("getExternal : {}  - {}", externalType, externalId);
+		return single(fillLazy(em
+				, oem -> oem.createNamedQuery("getExternalRoomNoType", Room.class)
+					.setParameter("externalId", externalId)
+					.setParameter("externalType", externalType)
+				, GRP_GROUPS));
 	}
 
 	public Room getExternal(Type type, String externalType, String externalId) {
@@ -265,7 +276,7 @@ public class RoomDao implements IGroupAdminDataProviderDao<Room> {
 					.setParameter("externalId", externalId)
 					.setParameter("externalType", externalType)
 					.setParameter("type", type)
-				, "roomGroups"));
+				, GRP_GROUPS));
 	}
 
 	public List<Room> getRecent(Long userId) {

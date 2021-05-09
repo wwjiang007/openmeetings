@@ -150,6 +150,11 @@ public class Recording extends BaseFileItem {
 	@XmlJavaTypeAdapter(value = BooleanAdapter.class, type = boolean.class)
 	private boolean notified = false;
 
+	/**
+	 * Method to get ID
+	 *
+	 * required to be overridden for valid export
+	 */
 	@Override
 	public Long getId() {
 		return super.getId();

@@ -18,56 +18,30 @@
  */
 package org.apache.openmeetings.db.entity.file;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mockStatic;
 
 import java.io.File;
 
 import org.apache.openmeetings.util.OmFileHelper;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(OmFileHelper.class)
-public class FileItemTest {
-
-	@Mock
-	private OmFileHelper omFileHelper;
-
-	@InjectMocks
+@ExtendWith(MockitoExtension.class)
+class FileItemTest {
 	private FileItem fileItem;
 
-	@Before
-	public void setup() {
-		initMocks(this);
-
-		// Setup path to be local test resources
-		mockStatic(OmFileHelper.class);
-
-		// PDF file tests
-		when(OmFileHelper.getFileExt("6594186e-c6bb-49d5-9f66-829e45599aaa.pdf")).thenReturn("pdf");
-
-		// DOCX file tests
-		when(OmFileHelper.getFileExt("d44ab2c5-fd5d-4903-8fa7-292286d72a5f.docx")).thenReturn("docx");
-		when(OmFileHelper.getFileExt("d44ab2c5-fd5d-4903-8fa7-292286d72a5f.pdf")).thenReturn("pdf");
-
-		// Generic
-		when(OmFileHelper.getFileExt("page-0000.png")).thenReturn("png");
-		when(OmFileHelper.getFileExt("page-0001.png")).thenReturn("png");
-
-		when(OmFileHelper.getUploadFilesDir()).thenReturn(new File("src/test/resources/org/apache/openmeetings/db/entity/file"));
+	@BeforeEach
+	void createNewStack() {
+		fileItem = new FileItem();
 	}
 
 	@Test
-	public void testGetFileShouldReturnFirstSlideWithPDF() {
+	void testGetFileShouldReturnFirstSlideWithPDF() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("6594186e-c6bb-49d5-9f66-829e45599aaa");
@@ -77,11 +51,11 @@ public class FileItemTest {
 		File f = fileItem.getFile(null);
 
 		assertTrue(f.getName().endsWith("png"));
-		assertEquals(f.getName(), "page-0000.png");
+		assertEquals("page-0000.png", f.getName());
 	}
 
 	@Test
-	public void testGetOriginalWithPDFWithOriginalName() {
+	void testGetOriginalWithPDFWithOriginalName() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("6594186e-c6bb-49d5-9f66-829e45599aaa");
@@ -91,11 +65,11 @@ public class FileItemTest {
 		File f = fileItem.getOriginal();
 
 		assertTrue(f.getName().endsWith("pdf"));
-		assertEquals(f.getName(), "6594186e-c6bb-49d5-9f66-829e45599aaa.pdf");
+		assertEquals("6594186e-c6bb-49d5-9f66-829e45599aaa.pdf", f.getName());
 	}
 
 	@Test
-	public void testGetOriginalWithPDFWithChangedName() {
+	void testGetOriginalWithPDFWithChangedName() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("6594186e-c6bb-49d5-9f66-829e45599aaa");
@@ -105,39 +79,49 @@ public class FileItemTest {
 		File f = fileItem.getOriginal();
 
 		assertTrue(f.getName().endsWith("pdf"));
-		assertEquals(f.getName(), "6594186e-c6bb-49d5-9f66-829e45599aaa.pdf");
+		assertEquals("6594186e-c6bb-49d5-9f66-829e45599aaa.pdf", f.getName());
+	}
+
+	private void wrapper(Runnable r) {
+		try (MockedStatic<OmFileHelper> theMock = mockStatic(OmFileHelper.class)) {
+			theMock.when(OmFileHelper::getUploadFilesDir).thenReturn(new File("src/test/resources/org/apache/openmeetings/db/entity/file"));
+			r.run();
+		}
 	}
 
 	@Test
-	public void testGetOriginalWithDOCXWithOriginalName() {
+	void testGetOriginalWithDOCXWithOriginalName() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("d44ab2c5-fd5d-4903-8fa7-292286d72a5f");
 		fileItem.setName("Sample Document.docx");
 		fileItem.setType(BaseFileItem.Type.PRESENTATION);
 
-		File f = fileItem.getOriginal();
+		wrapper(() -> {
+			File f = fileItem.getOriginal();
 
-		assertTrue(f.getName().endsWith("docx"));
-		assertEquals(f.getName(), "d44ab2c5-fd5d-4903-8fa7-292286d72a5f.docx");
+			assertTrue(f.getName().endsWith("docx"));
+			assertEquals("d44ab2c5-fd5d-4903-8fa7-292286d72a5f.docx", f.getName());
+		});
 	}
 
 	@Test
-	public void testGetOriginalWithDOCXWithChangedName() {
+	void testGetOriginalWithDOCXWithChangedName() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("d44ab2c5-fd5d-4903-8fa7-292286d72a5f");
 		fileItem.setName("Random Name");
 		fileItem.setType(BaseFileItem.Type.PRESENTATION);
+		wrapper(() -> {
+			File f = fileItem.getOriginal();
 
-		File f = fileItem.getOriginal();
-
-		assertTrue(f.getName().endsWith("docx"));
-		assertEquals(f.getName(), "d44ab2c5-fd5d-4903-8fa7-292286d72a5f.docx");
+			assertTrue(f.getName().endsWith("docx"));
+			assertEquals("d44ab2c5-fd5d-4903-8fa7-292286d72a5f.docx", f.getName());
+		});
 	}
 
 	@Test
-	public void testGetFileShouldReturnFirstSlideWithDOCX() {
+	void testGetFileShouldReturnFirstSlideWithDOCX() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("d44ab2c5-fd5d-4903-8fa7-292286d72a5f");
@@ -147,11 +131,11 @@ public class FileItemTest {
 		File f = fileItem.getFile(null);
 
 		assertTrue(f.getName().endsWith("png"));
-		assertEquals(f.getName(), "page-0000.png");
+		assertEquals("page-0000.png", f.getName());
 	}
 
 	@Test
-	public void testGetFileShouldReturnPDFWhenRequested() {
+	void testGetFileShouldReturnPDFWhenRequested() {
 		// Setup file
 		fileItem.setDeleted(false);
 		fileItem.setHash("d44ab2c5-fd5d-4903-8fa7-292286d72a5f");
@@ -161,7 +145,7 @@ public class FileItemTest {
 		File f = fileItem.getFile("pdf");
 
 		assertTrue(f.getName().endsWith("pdf"));
-		assertEquals(f.getName(), "d44ab2c5-fd5d-4903-8fa7-292286d72a5f.pdf");
+		assertEquals("d44ab2c5-fd5d-4903-8fa7-292286d72a5f.pdf", f.getName());
 	}
 
 }

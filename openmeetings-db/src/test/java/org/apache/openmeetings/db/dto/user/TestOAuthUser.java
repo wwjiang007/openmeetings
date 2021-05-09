@@ -26,16 +26,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.openmeetings.db.entity.server.OAuthServer;
 import org.apache.wicket.util.string.Strings;
 import org.junit.jupiter.api.Test;
 
-public class TestOAuthUser {
+class TestOAuthUser {
 	@Test
-	public void firstLevel() {
+	void firstLevel() {
 		OAuthServer server = new OAuthServer()
 				.addMapping(PARAM_LOGIN, "id")
 				.addMapping(PARAM_EMAIL, "email")
@@ -52,7 +51,7 @@ public class TestOAuthUser {
 	}
 
 	@Test
-	public void secondLevel() {
+	void secondLevel() {
 		OAuthServer server = new OAuthServer()
 				.addMapping(PARAM_LOGIN, "uid")
 				.addMapping(PARAM_EMAIL, "email")
@@ -76,7 +75,7 @@ public class TestOAuthUser {
 	}
 
 	@Test
-	public void secondLevel1() {
+	void secondLevel1() {
 		OAuthServer server = new OAuthServer()
 				.addMapping(PARAM_LOGIN, "username")
 				.addMapping(PARAM_EMAIL, "email")
@@ -93,7 +92,7 @@ public class TestOAuthUser {
 	}
 
 	@Test
-	public void thirdLevel() {
+	void thirdLevel() {
 		OAuthServer server = new OAuthServer()
 				.addMapping(PARAM_LOGIN, "id")
 				.addMapping(PARAM_EMAIL, "email")
@@ -140,11 +139,10 @@ public class TestOAuthUser {
 	}
 
 	@Test
-	public void map() {
-		Map<String, String> umap = new HashMap<>();
-		umap.put("login", "abc");
-		umap.put("email", "abc@local");
-		OAuthUser user = new OAuthUser(umap);
+	void map() {
+		OAuthUser user = new OAuthUser(Map.of(
+				"login", "abc"
+				, "email", "abc@local"));
 		assertEquals("abc", user.getLogin(), "Login should be correct");
 		assertEquals("abc@local", user.getEmail(), "Email should be correct");
 		assertNull(user.getUserData().get(PARAM_FNAME), "First name should be empty");

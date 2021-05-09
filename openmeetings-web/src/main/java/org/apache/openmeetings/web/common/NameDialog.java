@@ -40,11 +40,11 @@ public abstract class NameDialog extends Modal<String> {
 	private final String name;
 	private RequiredTextField<String> title;
 
-	public NameDialog(String id) {
+	protected NameDialog(String id) {
 		this(id, null);
 	}
 
-	public NameDialog(String id, String name) {
+	protected NameDialog(String id, String name) {
 		super(id, Model.of(name));
 		this.name = name;
 		form = new Form<>("form", getModel());
@@ -54,7 +54,7 @@ public abstract class NameDialog extends Modal<String> {
 	protected void onInitialize() {
 		header(getTitle());
 
-		addButton(new BootstrapAjaxButton("button", getAddBtnLabel(), form, Buttons.Type.Outline_Primary) {
+		addButton(new BootstrapAjaxButton(BUTTON_MARKUP_ID, getAddBtnLabel(), form, Buttons.Type.Outline_Primary) {
 			private static final long serialVersionUID = 1L;
 
 			@Override

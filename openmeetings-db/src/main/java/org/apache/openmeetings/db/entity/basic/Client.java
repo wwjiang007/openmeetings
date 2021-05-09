@@ -19,6 +19,7 @@
 package org.apache.openmeetings.db.entity.basic;
 
 import static java.util.UUID.randomUUID;
+import static org.apache.openmeetings.util.OmFileHelper.SIP_USER_ID;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -113,7 +114,7 @@ public class Client implements IDataProviderEntity, IWsClient {
 	}
 
 	public boolean sameUserId(Long userId) {
-		return getUserId() == null ? false : getUserId().equals(userId);
+		return getUserId() != null && getUserId().equals(userId);
 	}
 
 	public String getPictureUri() {
@@ -127,6 +128,10 @@ public class Client implements IDataProviderEntity, IWsClient {
 
 	public String getSid() {
 		return sid;
+	}
+
+	public boolean isSip() {
+		return SIP_USER_ID.equals(getUserId());
 	}
 
 	public void clear() {
@@ -553,13 +558,21 @@ public class Client implements IDataProviderEntity, IWsClient {
 		}
 
 		public JSONObject toJson() {
-			return addUserJson(new JSONObject()
+			return toJson(false);
+		}
+
+		public JSONObject toJson(boolean self) {
+			JSONObject o = new JSONObject()
 					.put("uid", uuid)
 					.put("type", type.name())
 					.put("width", swidth)
 					.put("height", sheight)
 					.put("activities", new JSONArray(sactivities))
-					.put("cuid", uid));
+					.put("cuid", uid);
+			if (self) {
+				o.put("cam", cam).put("mic", mic);
+			}
+			return addUserJson(o);
 		}
 
 		@Override

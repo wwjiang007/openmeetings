@@ -111,10 +111,10 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	private OmUrlFragment area = null;
 	private TimeZone tz;
 	private TimeZone browserTz;
-	private FastDateFormat ISO8601FORMAT = null;
+	private FastDateFormat iso8601Format = null;
 	private FastDateFormat  sdf = null;
 	private UserDashboard dashboard;
-	private Invitation i = null;
+	private Invitation invitation = null;
 	private SOAPLogin soap = null;
 	private Long roomId = null;
 	private Long recordingId = null;
@@ -149,11 +149,11 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		cm.invalidate(userId, getId());
 		super.invalidate();
 		userId = null;
-		rights = Collections.unmodifiableSet(Collections.<Right>emptySet());
-		ISO8601FORMAT = null;
+		rights = Set.of();
+		iso8601Format = null;
 		sdf = null;
 		languageId = -1;
-		i = null;
+		invitation = null;
 		soap = null;
 		roomId = null;
 		recordingId = null;
@@ -206,9 +206,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 			String url = cm.getServerUrl(r, baseUrl -> {
 				PageParameters params = new PageParameters();
 				IRequestParameters reqParams = RequestCycle.get().getRequest().getQueryParameters();
-				reqParams.getParameterNames().forEach(name -> {
-					params.add(name, reqParams.getParameterValue(name));
-				});
+				reqParams.getParameterNames().forEach(name -> params.add(name, reqParams.getParameterValue(name)));
 				return Application.urlForPage(HashPage.class
 						, params
 						, baseUrl);
@@ -221,8 +219,8 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		}
 	}
 
-	public void checkHashes(StringValue secure, StringValue invitation) {
-		log.debug("checkHashes, secure: '{}', invitation: '{}'", secure, invitation);
+	public void checkHashes(StringValue secure, StringValue inviteStr) {
+		log.debug("checkHashes, secure: '{}', invitation: '{}'", secure, inviteStr);
 		try {
 			log.debug("checkHashes, has soap in session ? '{}'", (soap != null));
 			if (!secure.isEmpty() && (soap == null || !soap.getHash().equals(secure.toString()))) {
@@ -233,29 +231,32 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 				}
 				signIn(secure.toString(), true);
 			}
-			if (!invitation.isEmpty() && (i == null || !i.getHash().equals(invitation.toString()))) {
+			if (!inviteStr.isEmpty()) {
+				// invitation should be re-checked each time, due to PERIOD invitation can be
+				// 1) not ready
+				// 2) already expired
 				// otherwise already logged-in with the same hash
 				if (isSignedIn()) {
 					log.debug("invitation: Session is authorized, going to invalidate");
 					invalidateNow();
 				}
-				i = inviteDao.getByHash(invitation.toString(), false);
+				invitation = inviteDao.getByHash(inviteStr.toString(), false);
 				Room r = null;
-				if (i != null && i.isAllowEntry()) {
+				if (invitation != null && invitation.isAllowEntry()) {
 					Set<Right> hrights = new HashSet<>();
-					if (i.getRoom() != null) {
-						r = i.getRoom();
-					} else if (i.getAppointment() != null && i.getAppointment().getRoom() != null) {
-						r = i.getAppointment().getRoom();
-					} else if (i.getRecording() != null) {
-						recordingId = i.getRecording().getId();
+					if (invitation.getRoom() != null) {
+						r = invitation.getRoom();
+					} else if (invitation.getAppointment() != null && invitation.getAppointment().getRoom() != null) {
+						r = invitation.getAppointment().getRoom();
+					} else if (invitation.getRecording() != null) {
+						recordingId = invitation.getRecording().getId();
 					}
 					if (r != null) {
-						redirectHash(r, () -> inviteDao.markUsed(i));
+						redirectHash(r, () -> inviteDao.markUsed(invitation));
 						hrights.add(Right.ROOM);
 						roomId = r.getId();
 					}
-					setUser(i.getInvitee(), hrights);
+					setUser(invitation.getInvitee(), hrights);
 				}
 			}
 		} catch (RedirectToUrlException e) {
@@ -288,8 +289,13 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 			if (sd.getXml() != null) {
 				RemoteSessionObject remoteUser = RemoteSessionObject.fromString(sd.getXml());
 				log.debug("Hash data was parsed successfuly ? {}, containg exterlaId ? {}", (remoteUser != null), !Strings.isEmpty(remoteUser.getExternalId()));
-				if (remoteUser != null && !Strings.isEmpty(remoteUser.getExternalId())) {
-					Room r = roomDao.get(soapLogin.getRoomId());
+				if (!Strings.isEmpty(remoteUser.getExternalId())) {
+					Room r;
+					if (Strings.isEmpty(soapLogin.getExternalRoomId()) || Strings.isEmpty(soapLogin.getExternalType())) {
+						r = roomDao.get(soapLogin.getRoomId());
+					} else {
+						r = roomDao.getExternal(soapLogin.getExternalType(), soapLogin.getExternalRoomId());
+					}
 					if (r == null) {
 						log.warn("Room was not found");
 					} else {
@@ -319,7 +325,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 						soapLogin.setUseDate(new Date());
 						soapDao.update(soapLogin);
 					}
-					roomId = soapLogin.getRoomId();
+					roomId = r == null ? null : r.getId();
 					sd.setUserId(user.getId());
 					sd.setRoomId(roomId);
 					sessionDao.update(sd);
@@ -354,7 +360,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		}
 		languageId = u.getLanguageId();
 		tz = getTimeZone(u);
-		ISO8601FORMAT = FastDateFormat.getInstance(ISO8601_FULL_FORMAT_STRING, tz);
+		iso8601Format = FastDateFormat.getInstance(ISO8601_FULL_FORMAT_STRING, tz);
 		setLocale(LocaleHelper.getLocale(u));
 		sdf = FormatHelper.getDateTimeFormat(u);
 	}
@@ -427,7 +433,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	}
 
 	public Invitation getInvitation() {
-		return i;
+		return invitation;
 	}
 
 	public SOAPLogin getSoapLogin() {
@@ -447,7 +453,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	}
 
 	public static FastDateFormat getIsoDateFormat() {
-		return get().ISO8601FORMAT;
+		return get().iso8601Format;
 	}
 
 	public static FastDateFormat getDateFormat() {
@@ -490,7 +496,7 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 	}
 
 	public String getClientTZCode() {
-		TimeZone _zone = browserTz;
+		TimeZone curZone = browserTz;
 		if (browserTz == null) {
 			try {
 				browserTz = getClientInfo().getProperties().getTimeZone();
@@ -503,15 +509,15 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 						}
 					}
 				}
-				_zone = browserTz;
+				curZone = browserTz;
 			} catch (Exception e) {
 				//no-op
 			}
 			if (browserTz == null) {
-				_zone = Calendar.getInstance(getLocale()).getTimeZone();
+				curZone = Calendar.getInstance(getLocale()).getTimeZone();
 			}
 		}
-		return _zone == null ? null : _zone.getID();
+		return curZone == null ? null : curZone.getID();
 	}
 
 	public static TimeZone getClientTimeZone() {
@@ -589,11 +595,6 @@ public class WebSession extends AbstractAuthenticatedWebSession implements IWebS
 		if (save) {
 			dashboardContext.getDashboardPersister().save(dashboard);
 		}
-	}
-
-	@Override
-	public long getOmLanguage() {
-		return getLanguage();
 	}
 
 	private static void checkIsInvalid() {

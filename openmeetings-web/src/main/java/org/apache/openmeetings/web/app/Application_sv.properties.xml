@@ -53,7 +53,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="54"><![CDATA[OK]]></entry>
 	<entry key="59"><![CDATA[Språk]]></entry>
 	<entry key="62"><![CDATA[Rensa vita tavlan]]></entry>
-	<entry key="64"><![CDATA[Fråga inte igen]]></entry>
 	<entry key="70"><![CDATA[Ångra]]></entry>
 	<entry key="72"><![CDATA[Välj ett objekt]]></entry>
 	<entry key="73"><![CDATA[Text]]></entry>
@@ -157,7 +156,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="314"><![CDATA[Via Användarnamn]]></entry>
 	<entry key="315"><![CDATA[Din E-postadress]]></entry>
 	<entry key="316"><![CDATA[Ditt Användarnamn]]></entry>
-	<entry key="317"><![CDATA[OK]]></entry>
+	<entry key="317"><![CDATA[Send email with a reset link]]></entry>
 	<entry key="321"><![CDATA[Ett e-postmeddelande med en speciallänk har skickats till den e-postadress som är registrerad för användaren vars data uppgavs]]></entry>
 	<entry key="325"><![CDATA[Återställ ditt lösenord]]></entry>
 	<entry key="327"><![CDATA[Ändra lösenord]]></entry>
@@ -191,11 +190,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[Radera Serverns Chatlogg]]></entry>
 	<entry key="482"><![CDATA[Deltagare]]></entry>
 	<entry key="498"><![CDATA[Det finns ingen moderator i detta rum, men det finns några deltagare. Du kan ansöka om att bli moderator eller vänta.]]></entry>
-	<entry key="499"><![CDATA[Feedback för {0}]]></entry>
 	<entry key="500"><![CDATA[{0} - Inbjudan]]></entry>
 	<entry key="501"><![CDATA[Meddelande från användare:]]></entry>
 	<entry key="502"><![CDATA[Meddelande:]]></entry>
-	<entry key="503"><![CDATA[Klicka på denna länk för att delta i mötet [länken kanske är giltig bara under en viss tid]:]]></entry>
 	<entry key="504"><![CDATA[Klicka här för att gå in i rummet.]]></entry>
 	<entry key="505"><![CDATA[Om du har problem med länken, var vänlig kopiera och klistra in detta i din webbläsare:]]></entry>
 	<entry key="506"><![CDATA[{0} Kontodetaljer]]></entry>
@@ -225,8 +222,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="557"><![CDATA[Pekare]]></entry>
 	<entry key="565"><![CDATA[Typ av meddelande]]></entry>
 	<entry key="569"><![CDATA[Location]]></entry>
-	<entry key="570"><![CDATA[Början]]></entry>
-	<entry key="571"><![CDATA[Slut]]></entry>
 	<entry key="572"><![CDATA[Titel]]></entry>
 	<entry key="582"><![CDATA[Dashboard]]></entry>
 	<entry key="583"><![CDATA[Se inspelade möten och händelser]]></entry>
@@ -291,7 +286,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[Ansök om att bli moderator]]></entry>
 	<entry key="785"><![CDATA[Apply for whiteboard access]]></entry>
 	<entry key="786"><![CDATA[Ansök om tillgång till audio/video]]></entry>
-	<entry key="788"><![CDATA[START]]></entry>
 	<entry key="792"><![CDATA[Rum]]></entry>
 	<entry key="797"><![CDATA[Varning]]></entry>
 	<entry key="799"><![CDATA[Dag]]></entry>
@@ -363,8 +357,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[Skapad av]]></entry>
 	<entry key="1151"><![CDATA[Ny {0} konferens:]]></entry>
 	<entry key="1152"><![CDATA[Detaljer:]]></entry>
-	<entry key="1153"><![CDATA[Början:]]></entry>
-	<entry key="1154"><![CDATA[Slut:]]></entry>
 	<entry key="1155"><![CDATA[{0}-konferensen ändrades:]]></entry>
 	<entry key="1156"><![CDATA[Organisatör:]]></entry>
 	<entry key="1157"><![CDATA[{0}-konferensen ställdes in:]]></entry>
@@ -378,7 +370,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[Visa kontaktuppgifterna bara till kontakter]]></entry>
 	<entry key="1169"><![CDATA[Visa inte kontaktuppgifterna till någon]]></entry>
 	<entry key="1170"><![CDATA[Min profil]]></entry>
-	<entry key="1171"><![CDATA[Redigera inställningar]]></entry>
 	<entry key="1172"><![CDATA[Sök användare]]></entry>
 	<entry key="1177"><![CDATA[Användaren erbjuder]]></entry>
 	<entry key="1178"><![CDATA[Användaren söker]]></entry>
@@ -569,9 +560,11 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[Maximal filstorlek]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[Maximal storlek för inspelningar]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[Maximalt antal rum]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[minutes]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[Inspelningarna går ut efter]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[Expire reminder sent in]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[Tagg]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[New user notification interval]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[OAuth-användarattibut]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[OM-användarattribut]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[Request info method]]></entry>
@@ -628,8 +621,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[Är du säker att du vill radera alla temporära filer? Denna operation kan inte ångras.]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[Allmänna administrativa funktioner]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[Administrativa funktioner]]></entry>
+	<entry key="dont.ask.again"><![CDATA[Fråga inte igen]]></entry>
 	<entry key="download.pdf"><![CDATA[Ladda ner som PDF]]></entry>
 	<entry key="download.png"><![CDATA[Ladda ner som PNG]]></entry>
+	<entry key="edit.settings"><![CDATA[Redigera inställningar]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[Felaktigt användarnamn/e-postadress och/eller lösenord.]]></entry>
 	<entry key="error.bad.password"><![CDATA[Ogiltigt Lösenord!]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[En konfiguration med den angivna nyckeln finns redan, vänligen ange en annan nyckel eller redigera den befintliga konfigurationen]]></entry>
@@ -649,11 +644,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[Fel]]></entry>
 	<entry key="error.type.info"><![CDATA[Meddelande]]></entry>
 	<entry key="error.unknown"><![CDATA[Okänt Fel. Var vänlig rapportera detta till ditt Service-Team.]]></entry>
+	<entry key="file.name.interview"><![CDATA[Interview]]></entry>
+	<entry key="file.name.recording"><![CDATA[Recording]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[Original]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[Gruppfiler]]></entry>
 	<entry key="find.user"><![CDATA[Hitta användare]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Fixed video pod size]]></entry>
 	<entry key="goto.first"><![CDATA[Gå till första]]></entry>
 	<entry key="goto.last"><![CDATA[Gå till sista]]></entry>
 	<entry key="goto.next"><![CDATA[Gå till nästa]]></entry>
@@ -819,8 +817,13 @@ till dess kan bli oanvändbara.
 
 	<br />
  ]]></entry>
+	<entry key="internal.error"><![CDATA[Unfortunately something bad just happen :(, <br/>
+please check <tt>openmeetings.log</tt> and contact OpenMeetings developers]]></entry>
 	<entry key="invalid.hash"><![CDATA[Invalid hash]]></entry>
 	<entry key="label.dock.panel"><![CDATA[Click to dock panel]]></entry>
+	<entry key="label.end"><![CDATA[Slut]]></entry>
+	<entry key="label.hangup"><![CDATA[Hang-up]]></entry>
+	<entry key="label.start"><![CDATA[Början]]></entry>
 	<entry key="label.undock.panel"><![CDATA[Click to undock panel]]></entry>
 	<entry key="lbl.cancel"><![CDATA[Avbryt]]></entry>
 	<entry key="lbl.email"><![CDATA[E-postadress]]></entry>
@@ -831,6 +834,7 @@ till dess kan bli oanvändbara.
 	<entry key="lbl.refresh"><![CDATA[Uppdatera]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Inställningar för vita tavlan]]></entry>
 	<entry key="lbl.update"><![CDATA[Uppdatera]]></entry>
+	<entry key="lbl.video"><![CDATA[Video]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[E-posthantering]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[Check e-mails processing by the system]]></entry>
 	<entry key="menu.polls"><![CDATA[Enkäter]]></entry>
@@ -869,6 +873,8 @@ till dess kan bli oanvändbara.
 	<entry key="network.test.upl.bytes"><![CDATA[Uppladdade bytes]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[Uppladdningshastighet]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[Uppladningstid]]></entry>
+	<entry key="notification.chat.message"><![CDATA[You have new chat message(s)]]></entry>
+	<entry key="notification.room.activity"><![CDATA[You have new activities, please check "Activities&Action"]]></entry>
 	<entry key="poll.clone"><![CDATA[Klona]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[Numerisk 1-10]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[Ja/Nej]]></entry>
@@ -890,6 +896,13 @@ till dess kan bli oanvändbara.
 	<entry key="send.on.enter"><![CDATA[Skicka när <enter> pressas]]></entry>
 	<entry key="sound.enable"><![CDATA[Aktivera ljud]]></entry>
 	<entry key="sound.mute"><![CDATA[Tysta ljudet]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Dear "{0}" group moderator,<br/>
+<br/>
+{1} new users were added to the group in the last {2} hours<br/>
+Please visit {3} OM server and check them under Admin -> Groups]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[Regards,<br/>
+{0} Support Team.]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] New "{1}" group users]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[Din inspelning {0} nyligen blir automatiskt raderad 
 		efter {1} dagar. Om du vill spara inspelningen, 
 vänligen ladda ned den dessförrinnan. ]]></entry>
@@ -898,6 +911,8 @@ vänligen ladda ned den dessförrinnan. ]]></entry>
 	<entry key="template.recording.expiring.greetings"><![CDATA[Hej {0}]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[Inspelningen kommer att raderas]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ Rum[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Click this link to view the conference recording video. [The link may only work for a certain period.]]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[Klicka på denna länk för att delta i mötet [länken kanske är giltig bara under en viss tid]:]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Tillåt denna användare att använda mikrofonen]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Be om tillstånd att använda mikrofonen]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Tysta användare och ta bort hans rätt att sätta på sin mikrofon]]></entry>

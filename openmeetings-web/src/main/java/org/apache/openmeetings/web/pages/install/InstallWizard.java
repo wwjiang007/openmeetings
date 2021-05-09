@@ -54,6 +54,8 @@ import org.apache.openmeetings.web.app.Application;
 import org.apache.openmeetings.web.app.WebSession;
 import org.apache.openmeetings.web.common.ErrorMessagePanel;
 import org.apache.openmeetings.web.common.OmLabel;
+import org.apache.openmeetings.web.util.OmTooltipBehavior;
+import org.apache.openmeetings.web.util.ThreadHelper;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
@@ -91,9 +93,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.orm.jpa.LocalEntityManagerFactoryBean;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
-
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.BootstrapAjaxButton;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.ButtonBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.button.Buttons;
@@ -120,6 +119,7 @@ public class InstallWizard extends BootstrapWizard {
 	private NotificationPanel feedback;
 	private final CompoundPropertyModel<InstallationConfig> model;
 	private final List<Button> buttons = new ArrayList<>(4);
+	private WizardButtonBar btnBar;
 
 	@SpringBean
 	private ImportInitvalues initvalues;
@@ -163,7 +163,7 @@ public class InstallWizard extends BootstrapWizard {
 
 	@Override
 	protected Component newButtonBar(String id) {
-		return new WizardButtonBar(id, this) {
+		btnBar = new WizardButtonBar(id, this) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -222,6 +222,8 @@ public class InstallWizard extends BootstrapWizard {
 				return button;
 			}
 		};
+		btnBar.setOutputMarkupId(true);
+		return btnBar;
 	}
 
 	private abstract class BaseStep extends DynamicWizardStep {
@@ -412,28 +414,14 @@ public class InstallWizard extends BootstrapWizard {
 			pass.setVisible(props.getDbType() != DbType.H2);
 			try {
 				switch (props.getDbType()) {
-					case MSSQL: {
-						String url = props.getURL().substring("jdbc:sqlserver://".length());
-						String[] parts = url.split(";");
-						String[] hp = parts[0].split(":");
-						host.setModelObject(hp[0]);
-						port.setModelObject(Integer.parseInt(hp[1]));
-						dbname.setModelObject(parts[1].substring(parts[1].indexOf('=') + 1));
-						}
+					case MSSQL:
+						dbMssql(props);
 						break;
-					case ORACLE: {
-						String[] parts = props.getURL().split(":");
-						host.setModelObject(parts[3].substring(1));
-						port.setModelObject(Integer.parseInt(parts[4]));
-						dbname.setModelObject(parts[5]);
-						}
+					case ORACLE:
+						dbOracle(props);
 						break;
-					case H2: {
-						host.setModelObject("");
-						port.setModelObject(0);
-						String[] parts = props.getURL().split(";");
-						dbname.setModelObject(parts[0].substring("jdbc:h2:".length()));
-						}
+					case H2:
+						dbH2(props);
 						break;
 					default:
 						URI uri = URI.create(props.getURL().substring(5));
@@ -448,6 +436,29 @@ public class InstallWizard extends BootstrapWizard {
 			if (target != null) {
 				target.add(form);
 			}
+		}
+
+		private void dbMssql(ConnectionProperties props) {
+			String url = props.getURL().substring("jdbc:sqlserver://".length());
+			String[] parts = url.split(";");
+			String[] hp = parts[0].split(":");
+			host.setModelObject(hp[0]);
+			port.setModelObject(Integer.parseInt(hp[1]));
+			dbname.setModelObject(parts[1].substring(parts[1].indexOf('=') + 1));
+		}
+
+		private void dbOracle(ConnectionProperties props) {
+			String[] parts = props.getURL().split(":");
+			host.setModelObject(parts[3].substring(1));
+			port.setModelObject(Integer.parseInt(parts[4]));
+			dbname.setModelObject(parts[5]);
+		}
+
+		private void dbH2(ConnectionProperties props) {
+			host.setModelObject("");
+			port.setModelObject(0);
+			String[] parts = props.getURL().split(";");
+			dbname.setModelObject(parts[0].substring("jdbc:h2:".length()));
 		}
 
 		@Override
@@ -610,14 +621,15 @@ public class InstallWizard extends BootstrapWizard {
 					target.add(feedback);
 				}
 			});
-			add(new TooltipBehavior(".text-info"));
+			add(new OmTooltipBehavior());
 		}
 
 		private void reportSuccess(TextField<String> path) {
 			path.success(path.getLabel().getObject() + " - " + getString("54"));
 		}
-		private boolean checkToolPath(TextField<String> path, String[] args) {
-			ProcessResult result = ProcessHelper.executeScript(path.getInputName() + " path:: '" + path.getValue() + "'", args);
+
+		private boolean checkToolPath(TextField<String> path, List<String> args) {
+			ProcessResult result = ProcessHelper.exec(path.getInputName() + " path:: '" + path.getValue() + "'", args);
 			if (!result.isOk()) {
 				path.error(result.getError().replaceAll(REGEX, ""));
 			} else {
@@ -627,15 +639,15 @@ public class InstallWizard extends BootstrapWizard {
 		}
 
 		private boolean checkMagicPath() {
-			return checkToolPath(imageMagicPath, new String[] {getToolPath(imageMagicPath.getValue(), "convert" + EXEC_EXT), OPT_VERSION});
+			return checkToolPath(imageMagicPath, List.of(getToolPath(imageMagicPath.getValue(), "convert" + EXEC_EXT), OPT_VERSION));
 		}
 
 		private boolean checkFfmpegPath() {
-			return checkToolPath(ffmpegPath, new String[] {getToolPath(ffmpegPath.getValue(), "ffmpeg" + EXEC_EXT), OPT_VERSION});
+			return checkToolPath(ffmpegPath, List.of(getToolPath(ffmpegPath.getValue(), "ffmpeg" + EXEC_EXT), OPT_VERSION));
 		}
 
 		private boolean checkSoxPath() {
-			return checkToolPath(soxPath, new String[] {getToolPath(soxPath.getValue(), "sox" + EXEC_EXT), "--version"});
+			return checkToolPath(soxPath, List.of(getToolPath(soxPath.getValue(), "sox" + EXEC_EXT), "--version"));
 		}
 
 		private boolean checkOfficePath() {
@@ -682,11 +694,11 @@ public class InstallWizard extends BootstrapWizard {
 			return installStep;
 		}
 
-		private String getToolPath(String _path, String app) {
+		private String getToolPath(String inPath, String app) {
 			StringBuilder path = new StringBuilder();
-			if (!Strings.isEmpty(_path)) {
-				path.append(_path);
-				if (!_path.endsWith(File.separator)) {
+			if (!Strings.isEmpty(inPath)) {
+				path.append(inPath);
+				if (!inPath.endsWith(File.separator)) {
 					path.append(File.separator);
 				}
 			}
@@ -710,9 +722,7 @@ public class InstallWizard extends BootstrapWizard {
 			add(new CheckBox("sipEnable"));
 			add(new TextField<String>("sipRoomPrefix"));
 			add(new TextField<String>("sipExtenContext"));
-			Options options = new Options();
-			options.set("content", "function () { return $(this).prop('title'); }");
-			add(new TooltipBehavior(".text-info", options));
+			add(new OmTooltipBehavior());
 		}
 
 		@Override
@@ -771,7 +781,7 @@ public class InstallWizard extends BootstrapWizard {
 				stop(target);
 				progressBar.setVisible(false);
 				congrat.show(initDbType != dbType);
-				target.add(container, desc.setVisible(false));
+				target.add(container, desc.setVisible(false), btnBar.setVisible(false));
 			}
 		};
 		private final Label desc = new Label("desc", "");
@@ -784,14 +794,12 @@ public class InstallWizard extends BootstrapWizard {
 		@Override
 		public void applyState() {
 			started = true;
-			new Thread(new InstallProcess(initvalues)
-				, "Openmeetings - Installation").start();
+			ThreadHelper.startRunnable(new InstallProcess(initvalues)
+				, "Openmeetings - Installation");
 			desc.setDefaultModelObject(getString("install.wizard.install.started"));
 			RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
 				progressBar.restart(target).setModelObject(0);
-				buttons.forEach(b -> {
-					target.add(b.setEnabled(false));
-				});
+				buttons.forEach(b -> target.add(b.setEnabled(false)));
 				target.add(desc, container);
 			});
 		}
@@ -857,7 +865,7 @@ public class InstallWizard extends BootstrapWizard {
 		WizardDropDown(String id) {
 			super(id);
 			propModel = model.bind(id);
-			setModel(new PropertyModel<T>(this, "option"));
+			setModel(new PropertyModel<>(this, "option"));
 		}
 
 		@Override
@@ -906,7 +914,7 @@ public class InstallWizard extends BootstrapWizard {
 
 		SelectOptionDropDown(String id) {
 			super(id);
-			setChoiceRenderer(new ChoiceRenderer<SelectOption>("value", "key"));
+			setChoiceRenderer(new ChoiceRenderer<>("value", "key"));
 		}
 
 		@Override

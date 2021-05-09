@@ -53,7 +53,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="54"><![CDATA[ঠিক আছে]]></entry>
 	<entry key="59"><![CDATA[ভাষা]]></entry>
 	<entry key="62"><![CDATA[হোয়াইটবোর্ড সাফ করুন]]></entry>
-	<entry key="64"><![CDATA[আর জিজ্ঞাসা করবেন না]]></entry>
 	<entry key="70"><![CDATA[আনডু]]></entry>
 	<entry key="72"><![CDATA[একটি বস্তু নির্ধারন করুন]]></entry>
 	<entry key="73"><![CDATA[লিখিত]]></entry>
@@ -190,11 +189,9 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="442"><![CDATA[সার্ভার চ্যাট লগ মুছুন]]></entry>
 	<entry key="482"><![CDATA[অংশগ্রহণকারীসমূহ]]></entry>
 	<entry key="498"><![CDATA[এই রুমে কোনো মডারেটর নেই, কিন্তু কিছু অংশগ্রহণকারী আছে। আপনাকে মডারেটর হতে হবে বা অপেক্ষা করতে হবে।]]></entry>
-	<entry key="499"><![CDATA[প্রতিক্রিয়া {0}]]></entry>
 	<entry key="500"><![CDATA[{0} - আমন্ত্রণ]]></entry>
 	<entry key="501"><![CDATA[ইউজার থেকে বার্তা:]]></entry>
 	<entry key="502"><![CDATA[বার্তা:]]></entry>
-	<entry key="503"><![CDATA[সম্মেলনে অংশগ্রহণ করতে এই লিঙ্কটি ক্লিক করুন [লিঙ্কটি শুধুমাত্র একটি নির্দিষ্ট সময় পর্যন্ত কাজ করতে পারে।]:]]></entry>
 	<entry key="504"><![CDATA[রুমে প্রবেশ করতে এখানে ক্লিক করুন]]></entry>
 	<entry key="505"><![CDATA[যদি আপনার লিঙ্কে সমস্যা থাকে, তাহলে দয়া করে আপনার ব্রাউজারে কপি এবং পেস্ট করুন:]]></entry>
 	<entry key="506"><![CDATA[{0} অ্যাকাউন্ট বিবরণ]]></entry>
@@ -224,8 +221,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="557"><![CDATA[পয়েন্টার]]></entry>
 	<entry key="565"><![CDATA[বিজ্ঞপ্তির ধরনের]]></entry>
 	<entry key="569"><![CDATA[অবস্থান]]></entry>
-	<entry key="570"><![CDATA[শুরু]]></entry>
-	<entry key="571"><![CDATA[শেষ]]></entry>
 	<entry key="572"><![CDATA[শিরোনাম]]></entry>
 	<entry key="582"><![CDATA[ড্যাশবোর্ড]]></entry>
 	<entry key="583"><![CDATA[ধারণকৃত মিটিংসমূহ বা ঘটনাবলী দেখুন]]></entry>
@@ -290,7 +285,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="784"><![CDATA[মডারেটর হতে আবেদন করুন]]></entry>
 	<entry key="785"><![CDATA[হোয়াইটবোর্ড অ্যাক্সেসের জন্য আবেদন করুন]]></entry>
 	<entry key="786"><![CDATA[অডিও / ভিডিও অ্যাক্সেসের জন্য আবেদন করুন]]></entry>
-	<entry key="788"><![CDATA[শুরু]]></entry>
 	<entry key="792"><![CDATA[রুমসমূহ]]></entry>
 	<entry key="797"><![CDATA[সতর্কতা]]></entry>
 	<entry key="799"><![CDATA[দিন]]></entry>
@@ -301,7 +295,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="816"><![CDATA[ডিফল্ট মডারেটর]]></entry>
 	<entry key="817"><![CDATA[সুপার]]></entry>
 	<entry key="823"><![CDATA[If the room is moderated, any users with a moderator or administrator level access are automatically set to moderator when they enter the room]]></entry>
-	<entry key="828"><![CDATA[If you add an usergroup to the room only users of that usergroup have access to it]]></entry>
+	<entry key="828"><![CDATA[If you add a usergroup to the room only users of that usergroup have access to it]]></entry>
 	<entry key="830"><![CDATA[Limitations]]></entry>
 	<entry key="832"><![CDATA[Are you sure?]]></entry>
 	<entry key="833"><![CDATA[Do you really want to delete this item?]]></entry>
@@ -319,16 +313,16 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="880"><![CDATA[Turn this off to prevent any user from disturbing you in this room]]></entry>
 	<entry key="881"><![CDATA[Rights]]></entry>
 	<entry key="887"><![CDATA[There were errors in processing the recording]]></entry>
-	<entry key="888"><![CDATA[The recording is not yet ready for watching]]></entry>
+	<entry key="888"><![CDATA[The recording is not yet ready to watch]]></entry>
 	<entry key="923"><![CDATA[Home drive size]]></entry>
 	<entry key="924"><![CDATA[Public drive size]]></entry>
 	<entry key="996"><![CDATA[Status]]></entry>
 	<entry key="1001"><![CDATA[SIP-Settings]]></entry>
-	<entry key="1002"><![CDATA[The conference number and PIN is automatically created via the OpenXG RPC-Gateway]]></entry>
+	<entry key="1002"><![CDATA[The conference number and PIN are automatically created via the OpenXG RPC-Gateway]]></entry>
 	<entry key="1003"><![CDATA[SIP number]]></entry>
 	<entry key="1004"><![CDATA[PIN]]></entry>
 	<entry key="1005"><![CDATA[Clear objects on current slide only.]]></entry>
-	<entry key="1065"><![CDATA[Backup the system. The backup includes all user generated data. The configuration is not included as well as the language labels. Because those values are imported with the system installer. To update your system, export your old system (1) re-install into a new database the new package (2) and import the backup file again (3). The backup should be imported before generating data in the newly installed system.]]></entry>
+	<entry key="1065"><![CDATA[System Backup. The backup includes are user generated data but does not include configuration or language labels since those are imported with the system installer. To update your system, export your old system (1) re-install the new package into a new database (2) and import the backup file again (3). The backup should be imported before generating data in the newly installed system.]]></entry>
 	<entry key="1066"><![CDATA[System backup]]></entry>
 	<entry key="1076"><![CDATA[Audio only room]]></entry>
 	<entry key="1077"><![CDATA[Turn this flag on and the users will have only the audio option and no video in a conference room. This can be good to save bandwidth.]]></entry>
@@ -347,7 +341,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1112"><![CDATA[Updated]]></entry>
 	<entry key="1114"><![CDATA[The config files are in the folder OM_DATA_FOLDER/conf. You need to manually upload the files to this folder. Changes to the config file are immediately online.]]></entry>
 	<entry key="1115"><![CDATA[Config file name]]></entry>
-	<entry key="1116"><![CDATA[If you enable "Add Domain to user name" the value of the field "domain" is added to each login that the user enters in the login box. This is useful if the login in the LDAP is stored including the domain name. Example: user enters "hans" domain is specified as "localhost.com", login that is verified against LDAP is: hans@localhost.com]]></entry>
+	<entry key="1116"><![CDATA[If you enable "Add Domain to Username" the value of the field "domain" is added to each login that the user enters in the login box. This is useful if the login in the LDAP is stored including the domain name. Example: user enters "hans" domain is specified as "localhost.com", login that is verified against LDAP is: hans@localhost.com]]></entry>
 	<entry key="1117"><![CDATA[Add domain to user name]]></entry>
 	<entry key="1118"><![CDATA[Domain]]></entry>
 	<entry key="1121"><![CDATA[Remote clipboard text]]></entry>
@@ -362,8 +356,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1147"><![CDATA[Created by]]></entry>
 	<entry key="1151"><![CDATA[New {0} conference:]]></entry>
 	<entry key="1152"><![CDATA[Details:]]></entry>
-	<entry key="1153"><![CDATA[Start:]]></entry>
-	<entry key="1154"><![CDATA[End:]]></entry>
 	<entry key="1155"><![CDATA[Changed {0} conference:]]></entry>
 	<entry key="1156"><![CDATA[Organizer:]]></entry>
 	<entry key="1157"><![CDATA[Canceled {0} conference:]]></entry>
@@ -377,7 +369,6 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1168"><![CDATA[Show contact data to contacts only]]></entry>
 	<entry key="1169"><![CDATA[Show contact data to nobody]]></entry>
 	<entry key="1170"><![CDATA[My Profile]]></entry>
-	<entry key="1171"><![CDATA[Edit settings]]></entry>
 	<entry key="1172"><![CDATA[Search users]]></entry>
 	<entry key="1177"><![CDATA[User offers]]></entry>
 	<entry key="1178"><![CDATA[User looks for]]></entry>
@@ -424,16 +415,16 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1259"><![CDATA[Add folders and organize your messages.]]></entry>
 	<entry key="1261"><![CDATA[Add]]></entry>
 	<entry key="1262"><![CDATA[Delete folder]]></entry>
-	<entry key="1268"><![CDATA[The user does not share his personal contact data.]]></entry>
+	<entry key="1268"><![CDATA[The user does not share personal contact data.]]></entry>
 	<entry key="1269"><![CDATA[The user shares their personal contact data only to contacts.]]></entry>
-	<entry key="1287"><![CDATA[Choose your nick name]]></entry>
+	<entry key="1287"><![CDATA[Choose your nickname]]></entry>
 	<entry key="1296"><![CDATA[Member since]]></entry>
 	<entry key="1301"><![CDATA[New private message:]]></entry>
 	<entry key="1302"><![CDATA[Click here to visit your profile to see the full message ...]]></entry>
 	<entry key="1308"><![CDATA[Owner ID]]></entry>
 	<entry key="1312"><![CDATA[Load directly to the Whiteboard]]></entry>
 	<entry key="1313"><![CDATA[Do you really want to remove this whiteboard? This action cannot be undone.]]></entry>
-	<entry key="1315"><![CDATA[Do not forget to 'Start recording', if you want have the meeting recorded.]]></entry>
+	<entry key="1315"><![CDATA[Do not forget to 'Start recording', if you want to have the meeting recorded.]]></entry>
 	<entry key="1316"><![CDATA[Start recording]]></entry>
 	<entry key="1323"><![CDATA[Clip arts]]></entry>
 	<entry key="1340"><![CDATA[Do you really want to delete the complete content on the whiteboard?]]></entry>
@@ -456,7 +447,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="1421"><![CDATA[Are you sure you want to delete this poll? The results will be deleted as well.]]></entry>
 	<entry key="1422"><![CDATA[Language ISO code]]></entry>
 	<entry key="1429"><![CDATA[Cam resolution]]></entry>
-	<entry key="1430"><![CDATA[Changing the resolution affects bandwidth, bigger picture needs more bandwith.]]></entry>
+	<entry key="1430"><![CDATA[Changing the resolution affects bandwidth, a bigger picture uses more bandwidth.]]></entry>
 	<entry key="1443"><![CDATA[Layout options]]></entry>
 	<entry key="1444"><![CDATA[New Event]]></entry>
 	<entry key="1445"><![CDATA[Password protected are the links to the conference that are send to the participents when you save the calendar event, not the room! That means if you save the event multiple times but with different passwords every participent receives a new link that has a different password. But old links still work once send!]]></entry>
@@ -568,9 +559,11 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="admin.group.form.maxFilesSize"><![CDATA[Maximum files size]]></entry>
 	<entry key="admin.group.form.maxRecordingsSize"><![CDATA[Maximum recordings size]]></entry>
 	<entry key="admin.group.form.maxRooms"><![CDATA[Maximum room number]]></entry>
+	<entry key="admin.group.form.minutes"><![CDATA[minutes]]></entry>
 	<entry key="admin.group.form.recordingTtl"><![CDATA[Recordings expire in]]></entry>
 	<entry key="admin.group.form.reminderDays"><![CDATA[Expire reminder sent in]]></entry>
 	<entry key="admin.group.form.tag"><![CDATA[Tag]]></entry>
+	<entry key="admin.group.new.users.notification.interval"><![CDATA[New user notification interval]]></entry>
 	<entry key="admin.oauth.attr.oauth"><![CDATA[OAuth User attribute]]></entry>
 	<entry key="admin.oauth.attr.om"><![CDATA[OM User attribute]]></entry>
 	<entry key="admin.oauth.req.info.method"><![CDATA[Request info method]]></entry>
@@ -627,8 +620,10 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="dashboard.widget.admin.cleanup.warn"><![CDATA[Are you sure you want to delete all temporary files? This operation cannot be undone.]]></entry>
 	<entry key="dashboard.widget.admin.desc"><![CDATA[General Admin functions]]></entry>
 	<entry key="dashboard.widget.admin.title"><![CDATA[Admin functions]]></entry>
+	<entry key="dont.ask.again"><![CDATA[আর জিজ্ঞাসা করবেন না]]></entry>
 	<entry key="download.pdf"><![CDATA[Download as PDF]]></entry>
 	<entry key="download.png"><![CDATA[Download as PNG]]></entry>
+	<entry key="edit.settings"><![CDATA[Edit settings]]></entry>
 	<entry key="error.bad.credentials"><![CDATA[Username/email and/or password are incorrect.]]></entry>
 	<entry key="error.bad.password"><![CDATA[Invalid password]]></entry>
 	<entry key="error.cfg.exist"><![CDATA[Configuration with given key already exists, please specify another key or edit existent configuration]]></entry>
@@ -648,11 +643,14 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="error.type.error"><![CDATA[Error]]></entry>
 	<entry key="error.type.info"><![CDATA[Message]]></entry>
 	<entry key="error.unknown"><![CDATA[Unknown error. Please report this to the administrator.]]></entry>
+	<entry key="file.name.interview"><![CDATA[Interview]]></entry>
+	<entry key="file.name.recording"><![CDATA[Recording]]></entry>
 	<entry key="files.download.jpg"><![CDATA[JPG]]></entry>
 	<entry key="files.download.original"><![CDATA[Original]]></entry>
 	<entry key="files.download.pdf"><![CDATA[PDF]]></entry>
 	<entry key="files.root.group"><![CDATA[Group files]]></entry>
 	<entry key="find.user"><![CDATA[Find user]]></entry>
+	<entry key="fixed.video.pod.size"><![CDATA[Fixed video pod size]]></entry>
 	<entry key="goto.first"><![CDATA[Go to first]]></entry>
 	<entry key="goto.last"><![CDATA[Go to last]]></entry>
 	<entry key="goto.next"><![CDATA[Go to next]]></entry>
@@ -821,8 +819,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 
 	<br />
 	]]></entry>
+	<entry key="internal.error"><![CDATA[Unfortunately something bad just happen :(, <br/>
+please check <tt>openmeetings.log</tt> and contact OpenMeetings developers]]></entry>
 	<entry key="invalid.hash"><![CDATA[Invalid hash]]></entry>
 	<entry key="label.dock.panel"><![CDATA[Click to dock panel]]></entry>
+	<entry key="label.end"><![CDATA[শেষ]]></entry>
+	<entry key="label.hangup"><![CDATA[Hang-up]]></entry>
+	<entry key="label.start"><![CDATA[শুরু]]></entry>
 	<entry key="label.undock.panel"><![CDATA[Click to undock panel]]></entry>
 	<entry key="lbl.cancel"><![CDATA[Cancel]]></entry>
 	<entry key="lbl.email"><![CDATA[ইমেইল]]></entry>
@@ -833,6 +836,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="lbl.refresh"><![CDATA[Refresh]]></entry>
 	<entry key="lbl.settings.whiteboard"><![CDATA[Whiteboard Settings]]></entry>
 	<entry key="lbl.update"><![CDATA[Update]]></entry>
+	<entry key="lbl.video"><![CDATA[Video]]></entry>
 	<entry key="main.menu.admin.email"><![CDATA[Email management]]></entry>
 	<entry key="main.menu.admin.email.desc"><![CDATA[Check e-mails processing by the system]]></entry>
 	<entry key="menu.polls"><![CDATA[Polls]]></entry>
@@ -871,6 +875,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="network.test.upl.bytes"><![CDATA[Bytes uploaded]]></entry>
 	<entry key="network.test.upl.speed"><![CDATA[Upload speed]]></entry>
 	<entry key="network.test.upl.time"><![CDATA[Upload time]]></entry>
+	<entry key="notification.chat.message"><![CDATA[You have new chat message(s)]]></entry>
+	<entry key="notification.room.activity"><![CDATA[You have new activities, please check "Activities&Action"]]></entry>
 	<entry key="poll.clone"><![CDATA[Clone]]></entry>
 	<entry key="poll.type.NUMERIC"><![CDATA[Numeric 1-10]]></entry>
 	<entry key="poll.type.YES_NO"><![CDATA[Yes/No]]></entry>
@@ -892,6 +898,13 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="send.on.enter"><![CDATA[Send on Enter]]></entry>
 	<entry key="sound.enable"><![CDATA[Enable sound]]></entry>
 	<entry key="sound.mute"><![CDATA[Mute sound]]></entry>
+	<entry key="template.new.group.users.notification.body"><![CDATA[Dear "{0}" group moderator,<br/>
+<br/>
+{1} new users were added to the group in the last {2} hours<br/>
+Please visit {3} OM server and check them under Admin -> Groups]]></entry>
+	<entry key="template.new.group.users.notification.footer"><![CDATA[Regards,<br/>
+{0} Support Team.]]></entry>
+	<entry key="template.new.group.users.notification.subject"><![CDATA[[{0}] New "{1}" group users]]></entry>
 	<entry key="template.recording.expiring.body"><![CDATA[Your recent {0} recording will be automatically deleted
 		in {1} days. If you would like to save this recording, please download it before then.]]></entry>
 	<entry key="template.recording.expiring.footer"><![CDATA[Regards,<br/>
@@ -899,6 +912,8 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="template.recording.expiring.greetings"><![CDATA[Hello {0}]]></entry>
 	<entry key="template.recording.expiring.subj.prefix"><![CDATA[Recording will be deleted]]></entry>
 	<entry key="template.recording.expiring.subj.room"><![CDATA[ -- Room[{0}]]]></entry>
+	<entry key="template.recording.invitation.text"><![CDATA[Click this link to view the conference recording video. [The link may only work for a certain period.]]]></entry>
+	<entry key="template.room.invitation.text"><![CDATA[সম্মেলনে অংশগ্রহণ করতে এই লিঙ্কটি ক্লিক করুন [লিঙ্কটি শুধুমাত্র একটি নির্দিষ্ট সময় পর্যন্ত কাজ করতে পারে।]:]]></entry>
 	<entry key="ulist.right.audio.grant"><![CDATA[Allow this user to use microphone]]></entry>
 	<entry key="ulist.right.audio.request"><![CDATA[Request permission to use microphone]]></entry>
 	<entry key="ulist.right.audio.revoke"><![CDATA[Mute user and remove the right to turn on microphone]]></entry>
@@ -943,7 +958,7 @@ see https://openmeetings.apache.org/LanguageEditor.html for Details
 	<entry key="volume.label"><![CDATA[Adjust volume]]></entry>
 	<entry key="wait-moderator.message"><![CDATA[Please wait until a <b>moderator</b> enters the room]]></entry>
 	<entry key="wait-moderator.title"><![CDATA[Please be patient ...]]></entry>
-	<entry key="warn.nogroup"><![CDATA[User added but you need to assign this user to an usergroup, otherwise they won't be able to log in]]></entry>
+	<entry key="warn.nogroup"><![CDATA[User added but you need to assign this user to a usergroup, otherwise they won't be able to log in]]></entry>
 	<entry key="warn.notverified"><![CDATA[You have successfully signed up. An email with a verification code will be sent to your mailbox.]]></entry>
 	<entry key="wb.tool.math.formula"><![CDATA[Math formula]]></entry>
 	<entry key="wb.tool.math.guide.lbl"><![CDATA[Guide to LaTeX Syntax]]></entry>
